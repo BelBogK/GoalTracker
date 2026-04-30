@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>aspnet-GoalTracker-2ce48534-8ac7-4d75-b3a0-6f0a0f183d03</UserSecretsId>
+    <UserSecretsId>aspnet-GoalTracker-24013aea-8cf5-4f13-b91a-93e4c87e3f68</UserSecretsId>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
   </PropertyGroup>
 
