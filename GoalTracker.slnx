@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="GoalTracker/GoalTracker.Client/GoalTracker.Client.csproj" />
+  <Project Path="GoalTracker/GoalTracker/GoalTracker.csproj" />
+</Solution>
