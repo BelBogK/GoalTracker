@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GoalTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260501140725_Init")]
+    [Migration("20260501145052_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -33,17 +33,7 @@ namespace GoalTracker.Infrastructure.Migrations
                     b.Property<int>("LifeAreasId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("LifeAreaId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("LifeAreaId1")
-                        .HasColumnType("int");
-
                     b.HasKey("GoalsId", "LifeAreasId");
-
-                    b.HasIndex("LifeAreaId");
-
-                    b.HasIndex("LifeAreaId1");
 
                     b.HasIndex("LifeAreasId");
 
@@ -341,15 +331,46 @@ namespace GoalTracker.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ProjectScenarioId")
+                        .HasColumnType("int");
+
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProjectScenarioId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("GoalTracker.Domain.Entities.ProjectScenario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("GoalId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GoalId");
+
+                    b.ToTable("ProjectScenarios");
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.Reaction", b =>
@@ -548,16 +569,6 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     b.HasOne("GoalTracker.Domain.Entities.LifeArea", null)
                         .WithMany()
-                        .HasForeignKey("LifeAreaId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("GoalTracker.Domain.Entities.LifeArea", null)
-                        .WithMany()
-                        .HasForeignKey("LifeAreaId1")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("GoalTracker.Domain.Entities.LifeArea", null)
-                        .WithMany()
                         .HasForeignKey("LifeAreasId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -588,7 +599,7 @@ namespace GoalTracker.Infrastructure.Migrations
                     b.HasOne("GoalTracker.Domain.Entities.Base.GoalTrackerUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -637,6 +648,10 @@ namespace GoalTracker.Infrastructure.Migrations
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.Project", b =>
                 {
+                    b.HasOne("GoalTracker.Domain.Entities.ProjectScenario", null)
+                        .WithMany("Projects")
+                        .HasForeignKey("ProjectScenarioId");
+
                     b.HasOne("GoalTracker.Domain.Entities.Base.GoalTrackerUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -644,6 +659,17 @@ namespace GoalTracker.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GoalTracker.Domain.Entities.ProjectScenario", b =>
+                {
+                    b.HasOne("GoalTracker.Domain.Entities.Goal", "Goal")
+                        .WithMany()
+                        .HasForeignKey("GoalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Goal");
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.Reaction", b =>
@@ -770,6 +796,11 @@ namespace GoalTracker.Infrastructure.Migrations
             modelBuilder.Entity("GoalTracker.Domain.Entities.Plan", b =>
                 {
                     b.Navigation("PlanItems");
+                });
+
+            modelBuilder.Entity("GoalTracker.Domain.Entities.ProjectScenario", b =>
+                {
+                    b.Navigation("Projects");
                 });
 #pragma warning restore 612, 618
         }

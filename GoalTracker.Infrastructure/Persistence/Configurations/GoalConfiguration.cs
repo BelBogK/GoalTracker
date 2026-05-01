@@ -11,22 +11,18 @@ namespace GoalTracker.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<Goal> builder)
         {
+            // Отключаем cascade для связи Goal -> User
+            builder
+                .HasOne(g => g.User)
+                .WithMany()
+                .HasForeignKey(g => g.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Many-to-Many с LifeArea
             builder
                 .HasMany(g => g.LifeAreas)
                 .WithMany(l => l.Goals)
                 .UsingEntity(j => j.ToTable("GoalLifeArea"));
-
-            // Отключаем CASCADE для связи Goal -> LifeArea
-            builder
-                .HasMany(g => g.LifeAreas)
-                .WithMany(l => l.Goals)
-                .UsingEntity(j =>
-                {
-                    j.ToTable("GoalLifeArea");
-                    j.HasOne(typeof(LifeArea))
-                        .WithMany()
-                        .OnDelete(DeleteBehavior.NoAction);
-                });
         }
     }
 }

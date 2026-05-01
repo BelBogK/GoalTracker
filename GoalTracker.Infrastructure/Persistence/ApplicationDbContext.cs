@@ -19,11 +19,12 @@ namespace GoalTracker.Data
         public DbSet<Event> Events { get; set; }
         public DbSet<Reaction> Reactions { get; set; }
         public DbSet<GoalScenario> Scenarios { get; set; }
+        public DbSet<ProjectScenario> ProjectScenarios { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            base.OnModelCreating(builder);
-           
+            base.OnModelCreating(builder); 
+            builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         }
 
     }

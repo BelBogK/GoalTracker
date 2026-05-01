@@ -207,8 +207,7 @@ namespace GoalTracker.Infrastructure.Migrations
                         name: "FK_Goals_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -227,27 +226,6 @@ namespace GoalTracker.Infrastructure.Migrations
                     table.PrimaryKey("PK_LifeAreas", x => x.Id);
                     table.ForeignKey(
                         name: "FK_LifeAreas_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Projects",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Projects", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Projects_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
@@ -276,13 +254,32 @@ namespace GoalTracker.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ProjectScenarios",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    GoalId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProjectScenarios", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProjectScenarios_Goals_GoalId",
+                        column: x => x.GoalId,
+                        principalTable: "Goals",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "GoalLifeArea",
                 columns: table => new
                 {
                     GoalsId = table.Column<int>(type: "int", nullable: false),
-                    LifeAreasId = table.Column<int>(type: "int", nullable: false),
-                    LifeAreaId = table.Column<int>(type: "int", nullable: true),
-                    LifeAreaId1 = table.Column<int>(type: "int", nullable: true)
+                    LifeAreasId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -294,49 +291,9 @@ namespace GoalTracker.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_GoalLifeArea_LifeAreas_LifeAreaId",
-                        column: x => x.LifeAreaId,
-                        principalTable: "LifeAreas",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_GoalLifeArea_LifeAreas_LifeAreaId1",
-                        column: x => x.LifeAreaId1,
-                        principalTable: "LifeAreas",
-                        principalColumn: "Id");
-                    table.ForeignKey(
                         name: "FK_GoalLifeArea_LifeAreas_LifeAreasId",
                         column: x => x.LifeAreasId,
                         principalTable: "LifeAreas",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "PlanItems",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PlanId = table.Column<int>(type: "int", nullable: false),
-                    ItemOrder = table.Column<int>(type: "int", nullable: false),
-                    ProjectId = table.Column<int>(type: "int", nullable: false),
-                    IsCompleted = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PlanItems", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_PlanItems_Plans_PlanId",
-                        column: x => x.PlanId,
-                        principalTable: "Plans",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_PlanItems_Projects_ProjectId",
-                        column: x => x.ProjectId,
-                        principalTable: "Projects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -358,6 +315,55 @@ namespace GoalTracker.Infrastructure.Migrations
                         name: "FK_Events_GoalScenario_GoalScenarioId",
                         column: x => x.GoalScenarioId,
                         principalTable: "GoalScenario",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Projects",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ProjectScenarioId = table.Column<int>(type: "int", nullable: true),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Projects", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Projects_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Projects_ProjectScenarios_ProjectScenarioId",
+                        column: x => x.ProjectScenarioId,
+                        principalTable: "ProjectScenarios",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Reactions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SuccedeCount = table.Column<int>(type: "int", nullable: false),
+                    FailCount = table.Column<int>(type: "int", nullable: false),
+                    EventId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Reactions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Reactions_Events_EventId",
+                        column: x => x.EventId,
+                        principalTable: "Events",
                         principalColumn: "Id");
                 });
 
@@ -390,25 +396,33 @@ namespace GoalTracker.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Reactions",
+                name: "PlanItems",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SuccedeCount = table.Column<int>(type: "int", nullable: false),
-                    FailCount = table.Column<int>(type: "int", nullable: false),
-                    EventId = table.Column<int>(type: "int", nullable: true)
+                    PlanId = table.Column<int>(type: "int", nullable: false),
+                    ItemOrder = table.Column<int>(type: "int", nullable: false),
+                    ProjectId = table.Column<int>(type: "int", nullable: false),
+                    IsCompleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Reactions", x => x.Id);
+                    table.PrimaryKey("PK_PlanItems", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Reactions_Events_EventId",
-                        column: x => x.EventId,
-                        principalTable: "Events",
-                        principalColumn: "Id");
+                        name: "FK_PlanItems_Plans_PlanId",
+                        column: x => x.PlanId,
+                        principalTable: "Plans",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PlanItems_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -471,16 +485,6 @@ namespace GoalTracker.Infrastructure.Migrations
                 column: "GoalScenarioId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_GoalLifeArea_LifeAreaId",
-                table: "GoalLifeArea",
-                column: "LifeAreaId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_GoalLifeArea_LifeAreaId1",
-                table: "GoalLifeArea",
-                column: "LifeAreaId1");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_GoalLifeArea_LifeAreasId",
                 table: "GoalLifeArea",
                 column: "LifeAreasId");
@@ -511,9 +515,19 @@ namespace GoalTracker.Infrastructure.Migrations
                 column: "ProjectId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Projects_ProjectScenarioId",
+                table: "Projects",
+                column: "ProjectScenarioId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Projects_UserId",
                 table: "Projects",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectScenarios_GoalId",
+                table: "ProjectScenarios",
+                column: "GoalId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Reactions_EventId",
@@ -568,6 +582,9 @@ namespace GoalTracker.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Events");
+
+            migrationBuilder.DropTable(
+                name: "ProjectScenarios");
 
             migrationBuilder.DropTable(
                 name: "GoalScenario");
