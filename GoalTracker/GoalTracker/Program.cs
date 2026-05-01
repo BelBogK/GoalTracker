@@ -2,9 +2,11 @@ using GoalTracker.Client.Pages;
 using GoalTracker.Components;
 using GoalTracker.Components.Account;
 using GoalTracker.Data;
+using GoalTracker.Domain.Entities;
 using GoalTracker.Domain.Entities.Base;
 using Microsoft.AspNetCore.Identity; 
 using Microsoft.EntityFrameworkCore;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +24,7 @@ builder.Services.AddAuthentication(options =>
         options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
     })
     .AddIdentityCookies();
+builder.Services.AddMudServices();
 builder.Services.AddAuthorization();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -41,7 +44,6 @@ builder.Services.AddIdentityCore<GoalTrackerUser>(options =>
 builder.Services.AddSingleton<IEmailSender<GoalTrackerUser>, IdentityNoOpEmailSender>();
 
 var app = builder.Build();
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
