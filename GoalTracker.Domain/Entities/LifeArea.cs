@@ -5,11 +5,12 @@ using System.Text;
 
 namespace GoalTracker.Domain.Entities
 {
-    public class Goal: BaseWithUser
+    public class LifeArea: BaseWithUser
     {
         public int Id { get; set; }
-        public string Description { get; set; } 
+        public string Name { get; set; }
+        public string Description { get; set; }
         public string IdealVision { get; set; }
-        public virtual ICollection<LifeArea> LifeAreas { get; set; }= new List<LifeArea>();
+        public virtual ICollection<Goal> Goals { get; set; } = new List<Goal>();
     }
 }

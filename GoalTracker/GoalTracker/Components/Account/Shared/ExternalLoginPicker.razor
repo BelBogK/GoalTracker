@@ -1,8 +1,9 @@
 ﻿@using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
 @using GoalTracker.Data
+@using GoalTracker.Domain.Entities.Base
 
-@inject SignInManager<ApplicationUser> SignInManager
+@inject SignInManager<GoalTrackerUser> SignInManager
 @inject IdentityRedirectManager RedirectManager
 
 @if (externalLogins.Length == 0)

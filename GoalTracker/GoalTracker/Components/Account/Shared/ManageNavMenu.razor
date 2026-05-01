@@ -1,7 +1,8 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using GoalTracker.Data
+@using GoalTracker.Domain.Entities.Base
 
-@inject SignInManager<ApplicationUser> SignInManager
+@inject SignInManager<GoalTrackerUser> SignInManager
 
 <ul class="nav nav-pills flex-column">
     <li class="nav-item">

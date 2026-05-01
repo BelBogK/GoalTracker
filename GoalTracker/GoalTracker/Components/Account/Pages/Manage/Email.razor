@@ -6,9 +6,10 @@
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using GoalTracker.Data
+@using GoalTracker.Domain.Entities.Base
 
-@inject UserManager<ApplicationUser> UserManager
-@inject IEmailSender<ApplicationUser> EmailSender
+@inject UserManager<GoalTrackerUser> UserManager
+@inject IEmailSender<GoalTrackerUser> EmailSender
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
@@ -55,7 +56,7 @@
 
 @code {
     private string? message;
-    private ApplicationUser? user;
+    private GoalTrackerUser? user;
     private string? email;
     private bool isEmailConfirmed;
 

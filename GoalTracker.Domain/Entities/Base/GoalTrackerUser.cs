@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace GoalTracker.Data
+namespace GoalTracker.Domain.Entities.Base
 {
     // Add profile data for application users by adding properties to the ApplicationUser class
-    public class ApplicationUser : IdentityUser
+    public class GoalTrackerUser : IdentityUser
     {
     }
 

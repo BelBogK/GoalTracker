@@ -3,9 +3,10 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
 @using GoalTracker.Data
+@using GoalTracker.Domain.Entities.Base
 
-@inject SignInManager<ApplicationUser> SignInManager
-@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<GoalTrackerUser> SignInManager
+@inject UserManager<GoalTrackerUser> UserManager
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<LoginWithRecoveryCode> Logger
 
@@ -35,7 +36,7 @@
 
 @code {
     private string? message;
-    private ApplicationUser user = default!;
+    private GoalTrackerUser user = default!;
 
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = default!;

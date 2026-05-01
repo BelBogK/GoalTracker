@@ -4,9 +4,10 @@
 @using Microsoft.AspNetCore.Identity
 @using System.ComponentModel.DataAnnotations
 @using System.Buffers.Text
+@using GoalTracker.Domain.Entities.Base
 
-@inject UserManager<ApplicationUser> UserManager
-@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<GoalTrackerUser> UserManager
+@inject SignInManager<GoalTrackerUser> SignInManager
 @inject IdentityRedirectManager RedirectManager
 
 <PageTitle>Manage your passkeys</PageTitle>
@@ -62,7 +63,7 @@ else
 @code {
     private const int MaxPasskeyCount = 100;
 
-    private ApplicationUser? user;
+    private GoalTrackerUser? user;
     private IList<UserPasskeyInfo>? currentPasskeys;
 
     [CascadingParameter]

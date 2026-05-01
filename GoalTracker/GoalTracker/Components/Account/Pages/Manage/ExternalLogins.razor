@@ -3,10 +3,11 @@
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
 @using GoalTracker.Data
+@using GoalTracker.Domain.Entities.Base
 
-@inject UserManager<ApplicationUser> UserManager
-@inject SignInManager<ApplicationUser> SignInManager
-@inject IUserStore<ApplicationUser> UserStore
+@inject UserManager<GoalTrackerUser> UserManager
+@inject SignInManager<GoalTrackerUser> SignInManager
+@inject IUserStore<GoalTrackerUser> UserStore
 @inject IdentityRedirectManager RedirectManager
 
 <PageTitle>Manage your external logins</PageTitle>
@@ -65,7 +66,7 @@
 @code {
     public const string LinkLoginCallbackAction = "LinkLoginCallback";
 
-    private ApplicationUser? user;
+    private GoalTrackerUser? user;
     private IList<UserLoginInfo>? currentLogins;
     private IList<AuthenticationScheme>? otherLogins;
     private bool showRemoveButton;
@@ -97,7 +98,7 @@
             .ToList();
 
         string? passwordHash = null;
-        if (UserStore is IUserPasswordStore<ApplicationUser> userPasswordStore)
+        if (UserStore is IUserPasswordStore<GoalTrackerUser> userPasswordStore)
         {
             passwordHash = await userPasswordStore.GetPasswordHashAsync(user, HttpContext.RequestAborted);
         }

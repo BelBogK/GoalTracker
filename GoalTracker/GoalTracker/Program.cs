@@ -2,7 +2,8 @@ using GoalTracker.Client.Pages;
 using GoalTracker.Components;
 using GoalTracker.Components.Account;
 using GoalTracker.Data;
-using Microsoft.AspNetCore.Identity;
+using GoalTracker.Domain.Entities.Base;
+using Microsoft.AspNetCore.Identity; 
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,7 +29,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddIdentityCore<ApplicationUser>(options =>
+builder.Services.AddIdentityCore<GoalTrackerUser>(options =>
     {
         options.SignIn.RequireConfirmedAccount = true;
         options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
@@ -37,7 +38,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+builder.Services.AddSingleton<IEmailSender<GoalTrackerUser>, IdentityNoOpEmailSender>();
 
 var app = builder.Build();
 
