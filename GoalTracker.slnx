@@ -1,4 +1,6 @@
 <Solution>
+  <Project Path="GoalTracker.Domain/GoalTracker.Domain.csproj" Id="23de92be-e50e-47a4-b35e-764bcce393e9" />
+  <Project Path="GoalTracker.Infrastructure/GoalTracker.Infrastructure.csproj" Id="b053b170-6812-495d-9b0f-b7237f8db82b" />
   <Project Path="GoalTracker.Shared/GoalTracker.Shared.csproj" />
   <Project Path="GoalTracker/GoalTracker.Client/GoalTracker.Client.csproj" />
   <Project Path="GoalTracker/GoalTracker/GoalTracker.csproj" />
