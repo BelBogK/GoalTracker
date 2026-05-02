@@ -1,0 +1,122 @@
+﻿@using GoalTracker.Client.Feautures.Projects
+@using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
+@using MudBlazor
+@inject ProjectsAPIClient ProjectApi
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+    <MudText Typo="Typo.caption" Color="Color.Secondary">@_projects.Count projects</MudText>
+    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="AddNewRow">+ Add project</MudButton>
+</div>
+
+<MudTable Items="@_projects" Hover="true" Dense="true" Bordered="true">
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Description</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Type</MudTh>
+        <MudTh>Priority</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        @if (context == _editingRow)
+        {
+            <MudTd><MudTextField @bind-Value="context.Name" Margin="Margin.Dense" /></MudTd>
+            <MudTd><MudTextField @bind-Value="context.Description" Margin="Margin.Dense" /></MudTd>
+            <MudTd>
+                <MudSelect @bind-Value="context.CurrentStatus" T="CurrentStatus" Margin="Margin.Dense">
+                    @foreach (var s in Enum.GetValues<CurrentStatus>())
+                    {
+                        <MudSelectItem T="CurrentStatus" Value="@s">@s</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudTd>
+            <MudTd>
+                <MudSelect @bind-Value="context.GoalType" T="ProjectType" Margin="Margin.Dense">
+                    @foreach (var t in Enum.GetValues<ProjectType>())
+                    {
+                        <MudSelectItem T="ProjectType" Value="@t">@t</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudTd>
+            <MudTd>
+                <MudSelect @bind-Value="context.Priority" T="Priority" Margin="Margin.Dense">
+                    @foreach (var p in Enum.GetValues<Priority>())
+                    {
+                        <MudSelectItem T="Priority" Value="@p">@p</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudTd>
+            <MudTd>
+                <MudButton Size="Size.Small" Color="Color.Success" OnClick="() => SaveRow(context)">Save</MudButton>
+                <MudButton Size="Size.Small" OnClick="CancelRow">Cancel</MudButton>
+            </MudTd>
+        }
+        else
+        {
+            <MudTd>@context.Name</MudTd>
+            <MudTd>@context.Description</MudTd>
+            <MudTd><MudChip T="string" Size="Size.Small" Color="Color.Success">@context.CurrentStatus</MudChip></MudTd>
+            <MudTd><MudChip T="string" Size="Size.Small" Color="Color.Info">@context.GoalType</MudChip></MudTd>
+            <MudTd><MudChip T="string" Size="Size.Small" Color="Color.Error">@context.Priority</MudChip></MudTd>
+            <MudTd>
+                <MudButton Size="Size.Small" Color="Color.Error" OnClick="() => DeleteRow(context)">Delete</MudButton>
+            </MudTd>
+        }
+    </RowTemplate>
+</MudTable>
+
+@code {
+    [Parameter] public int GoalId { get; set; }
+
+    private List<ProjectDTO> _projects = [];
+    private ProjectDTO? _editingRow;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _projects = await ProjectApi.GetProjectsForGoalAsync(GoalId);
+    }
+
+    private void AddNewRow()
+    {
+        var newProject = new ProjectDTO
+        {
+            CurrentStatus = CurrentStatus.Analyzing,
+            GoalType = ProjectType.Action,
+            Priority = Priority.Medium
+        };
+        _projects.Add(newProject);
+        _editingRow = newProject;
+    }
+
+    private async Task SaveRow(ProjectDTO project)
+    {
+        if (project.Id == 0)
+        {
+            var saved = await ProjectApi.SaveProject(project, GoalId);
+            if (saved is not null)
+            {
+                var index = _projects.IndexOf(project);
+                _projects[index] = saved;
+            }
+        }
+        else
+        {
+            // await ProjectApi.UpdateProjectAsync(project);
+        }
+        _editingRow = null;
+    }
+
+    private void CancelRow()
+    {
+        if (_editingRow?.Id == 0)
+            _projects.Remove(_editingRow);
+        _editingRow = null;
+    }
+
+    private async Task DeleteRow(ProjectDTO project)
+    {
+        // await ProjectApi.DeleteProjectAsync(project.Id);
+        _projects.Remove(project);
+    }
+}

@@ -16,5 +16,6 @@ builder.Services.AddScoped(sp =>
     sp.GetRequiredService<IHttpClientFactory>().CreateClient("GoalTrackerAPI"));
 builder.Services.AddScoped<GoalTracker.Client.Feautures.Goals.GoalsApiClient>();
 builder.Services.AddScoped<GoalTracker.Client.Feautures.LifeAreas.LifeAreaApiClient>();
+builder.Services.AddScoped<GoalTracker.Client.Feautures.Projects.ProjectsAPIClient>();
 
 await builder.Build().RunAsync();

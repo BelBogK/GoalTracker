@@ -1,19 +1,18 @@
-﻿using GoalTracker.Domain.Entities.Base;
-using GoalTracker.Shared.Enums;
+﻿using GoalTracker.Shared.Enums;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace GoalTracker.Domain.Entities
+namespace GoalTracker.Shared
 {
-    public class Project: BaseWithUser
+    public class ProjectDTO
     {
         public int Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public string? Result { get; set; }
-
         public CurrentStatus CurrentStatus { get; set; }
         public ProjectType GoalType { get; set; }
         public Priority Priority { get; set; }
-        public virtual ICollection<Goal> Goals { get; set; } = new List<Goal>();
-
     }
 }

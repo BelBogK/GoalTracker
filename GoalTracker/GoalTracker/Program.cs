@@ -56,6 +56,7 @@ builder.Services.AddIdentityCore<GoalTrackerUser>(options =>
     .AddDefaultTokenProviders();
 builder.Services.AddScoped<ILifeAreaRepository, LifeAreaRepository>();
 builder.Services.AddScoped<IGoalRepository, GoalRepository>();
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<AppMapper>();
 //builder.Services.AddInfrastructure(builder.Configuration);
 

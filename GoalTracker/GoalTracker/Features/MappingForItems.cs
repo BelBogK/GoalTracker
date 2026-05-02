@@ -7,7 +7,7 @@ namespace GoalTracker.Features
         public static void Map(WebApplication app)
         {
             LifeArea.MappingsForLifeArea.Map(app);
-            MappingsForGoals.Map(app);
+            MappingsForProject.Map(app);
         }
     }
 }

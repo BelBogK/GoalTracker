@@ -66,8 +66,15 @@ else
     {
         { nameof(GoalEditDialog.Goal), newGoal }
     };
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,  // Small, Medium, Large, ExtraLarge, False
+            FullWidth = true,
+            CloseOnEscapeKey = true,
+            CloseButton = true
+        };
 
-        var dialog = await DialogService.ShowAsync<GoalEditDialog>("Create goal", parameters);
+        var dialog = await DialogService.ShowAsync<GoalEditDialog>("Edit goal", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled && result.Data is GoalDTO created)

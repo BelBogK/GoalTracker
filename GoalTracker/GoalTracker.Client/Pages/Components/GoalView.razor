@@ -45,8 +45,9 @@
         <MudButton Variant="Variant.Outlined" OnClick="OpenEditDialog">Edit</MudButton>
         <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="ConfirmDelete">Delete</MudButton>
     </MudCardActions>
+    
 </MudCard>
-
+<ProjectsTable GoalId="@Goal.Id" />
 @code {
     [Parameter] public GoalDTO Goal { get; set; }
     [Parameter] public EventCallback OnDeleted { get; set; }
@@ -67,7 +68,15 @@
         };
         try
         {
-            var dialog = await DialogService.ShowAsync<GoalEditDialog>("Edit goal", parameters);
+            var options = new DialogOptions
+            {
+                MaxWidth = MaxWidth.Medium,  // Small, Medium, Large, ExtraLarge, False
+                FullWidth = true,
+                CloseOnEscapeKey = true,
+                CloseButton = true
+            };
+
+            var dialog = await DialogService.ShowAsync<GoalEditDialog>("Edit goal", parameters, options);
             var result = await dialog.Result;
         }
         catch (Exception ex)
