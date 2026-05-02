@@ -1,0 +1,73 @@
+﻿@page "/life-area"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@using GoalTracker.Shared
+@using MudBlazor
+@inject GoalTracker.Client.Feautures.LifeAreas.LifeAreaApiClient LifeAreaApi
+
+<h3>LifeArea</h3>
+@if(_hasOwnLifeAreas)
+{
+    @foreach (var lifeArea in _lifeAreas)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">@lifeArea.Name</h5>
+            <p class="card-text">@lifeArea.Description</p>
+        </div>
+    </div>
+}
+}
+else
+{
+<MudDropContainer T="LifeAreaDTO" Items="_lifeAreas" ItemsSelector="@((item, dropzone) =>string.Compare( item.IsDefault.ToString(), dropzone,true)==0)" ItemDropped="AddedToPersonalArea" Class="d-flex flex-wrap flex-grow-1">
+    <ChildContent>
+        <MudDropZone T="LifeAreaDTO" Identifier="true" Class="rounded mud-background-gray pa-6 ma-8 flex-grow-1">
+            <MudText Typo="Typo.h6" Class="mb-4">Recomended life area</MudText>
+         </MudDropZone>
+        <MudDropZone T="LifeAreaDTO" Identifier=false" Class="rounded mud-background-gray pa-6 ma-8 flex-grow-1">
+            <MudText Typo="Typo.h6" Class="mb-4">Your life area</MudText>
+        </MudDropZone>
+    </ChildContent>
+    <ItemRenderer>
+        <MudPaper Elevation="25" Class="pa-4 my-4">@context.Name</MudPaper>
+    </ItemRenderer>
+</MudDropContainer>
+}
+
+
+<MudBlazor.MudButton OnClick="ReloadData">Reload Data   </MudBlazor.MudButton>
+<MudBlazor.MudButton OnClick="SaveData">Save   </MudBlazor.MudButton>
+
+
+@code {
+    private List<LifeAreaDTO> _lifeAreas = [];
+    private bool _hasOwnLifeAreas = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _lifeAreas = await LifeAreaApi.GetLifeAreasAsync();
+        _hasOwnLifeAreas = _lifeAreas.Any(x => !x.IsDefault);
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        await base.OnAfterRenderAsync(firstRender); 
+    }
+
+    protected async Task ReloadData()
+    {
+        _lifeAreas = await LifeAreaApi.GetLifeAreasAsync();
+        StateHasChanged();
+    }
+
+    protected async Task AddedToPersonalArea(MudItemDropInfo<LifeAreaDTO> lifeArea)
+    {
+        lifeArea.Item.IsDefault = !lifeArea.Item.IsDefault;
+    }
+    private async Task SaveData(MouseEventArgs args)
+    {
+        _lifeAreas = await LifeAreaApi.SaveToPersonalArea(_lifeAreas);
+        _hasOwnLifeAreas = _lifeAreas.Any(x => !x.IsDefault);
+        StateHasChanged();
+    }
+}

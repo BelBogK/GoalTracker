@@ -21,7 +21,10 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityRedirectManager>();
-
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.PropertyNameCaseInsensitive = true;
+});
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultScheme = IdentityConstants.ApplicationScheme;
@@ -56,6 +59,7 @@ builder.Services.AddSingleton<IEmailSender<GoalTrackerUser>, IdentityNoOpEmailSe
 
 var app = builder.Build();
 GetLifeAreasEndpoint.Map(app);
+AddLifeAreasEndpoint.Map(app);
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

@@ -15,6 +15,15 @@ namespace GoalTracker.Infrastructure.Repositories
             throw new NotImplementedException();
         }
 
+        public async Task<IEnumerable<LifeArea>> CreateRangeAsync(IEnumerable<LifeArea> entities)
+        {
+            var list = entities.ToList();
+            using var context = contextFactory.CreateDbContext();
+            context.LifeAreas.AddRange(list);
+            await context.SaveChangesAsync();
+            return list;
+        }
+
         public Task DeleteAsync(int id)
         {
             throw new NotImplementedException();
