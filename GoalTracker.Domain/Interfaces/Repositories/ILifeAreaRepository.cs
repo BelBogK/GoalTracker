@@ -1,11 +1,9 @@
 ﻿using GoalTracker.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace GoalTracker.Domain.Interfaces.Repositories
 {
     public interface ILifeAreaRepository:IBaseRepo<LifeArea>
-    { 
+    {
+        Task<IEnumerable<LifeArea>> GetDefaultLifeAreas();
     }
 }

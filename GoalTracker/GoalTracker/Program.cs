@@ -4,6 +4,10 @@ using GoalTracker.Components.Account;
 using GoalTracker.Data;
 using GoalTracker.Domain.Entities;
 using GoalTracker.Domain.Entities.Base;
+using GoalTracker.Domain.Interfaces.Repositories;
+using GoalTracker.Features.LifeArea;
+using GoalTracker.Infrastructure;
+using GoalTracker.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity; 
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
@@ -28,9 +32,14 @@ builder.Services.AddMudServices();
 builder.Services.AddAuthorization();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+
+//builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//    options.UseSqlServer(connectionString));
+builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>options.UseSqlServer(connectionString));
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 builder.Services.AddIdentityCore<GoalTrackerUser>(options =>
     {
@@ -40,10 +49,13 @@ builder.Services.AddIdentityCore<GoalTrackerUser>(options =>
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
+builder.Services.AddScoped<ILifeAreaRepository, LifeAreaRepository>();
+//builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddSingleton<IEmailSender<GoalTrackerUser>, IdentityNoOpEmailSender>();
 
 var app = builder.Build();
+GetLifeAreasEndpoint.Map(app);
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
