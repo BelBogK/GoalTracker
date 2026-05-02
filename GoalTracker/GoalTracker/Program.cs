@@ -5,6 +5,7 @@ using GoalTracker.Data;
 using GoalTracker.Domain.Entities;
 using GoalTracker.Domain.Entities.Base;
 using GoalTracker.Domain.Interfaces.Repositories;
+using GoalTracker.Features;
 using GoalTracker.Features.LifeArea;
 using GoalTracker.Infrastructure;
 using GoalTracker.Infrastructure.Repositories;
@@ -58,8 +59,8 @@ builder.Services.AddScoped<ILifeAreaRepository, LifeAreaRepository>();
 builder.Services.AddSingleton<IEmailSender<GoalTrackerUser>, IdentityNoOpEmailSender>();
 
 var app = builder.Build();
-GetLifeAreasEndpoint.Map(app);
-AddLifeAreasEndpoint.Map(app);
+MappingForItems.Map(app);
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

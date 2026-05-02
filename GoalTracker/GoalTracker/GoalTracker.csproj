@@ -31,4 +31,8 @@
 		<ProjectReference Include="..\GoalTracker.Client\GoalTracker.Client.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Features\Goal\" />
+	</ItemGroup>
+
 </Project>
