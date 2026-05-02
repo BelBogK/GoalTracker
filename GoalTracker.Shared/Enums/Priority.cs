@@ -1,4 +1,4 @@
-﻿namespace GoalTracker.Domain.Entities
+﻿namespace GoalTracker.Shared.Enums
 {
     public enum Priority
     {

@@ -1,0 +1,92 @@
+﻿@page "/Goals"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@using GoalTracker.Client.Pages.Components
+@using MudBlazor
+@using GoalTracker.Shared
+@using GoalTracker.Client.Feautures.Goals
+@inject GoalsApiClient _goalsApiClient
+@inject IDialogService DialogService
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPopoverProvider />
+<h3>Goals</h3>
+<MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
+<MudSwitch @bind-Value="_isDarkMode" Color="Color.Primary" Class="ma-4" T="bool" Label="Toggle Light/Dark Mode" />
+
+@if (_goals.Count == 0)
+{
+    <MudText Class="ma-4">No goals found.</MudText>
+}
+else
+{
+    <MudExpansionPanels MultiExpansion="true"> 
+      @foreach (var goal in _goals)
+{
+    var g = goal;
+    <MudExpansionPanel Text="@g.Name" MaxHeight="1000"
+                               ExpandedChanged="@(() => OnPanelExpanded( g.Id))">
+        @if (_expandedGoals.Contains(g.Id))
+        {
+            <GoalView Goal="@g" />
+        }
+    </MudExpansionPanel>
+}
+        </MudExpansionPanels>
+}
+
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ma-4" OnClick="OpenCreateDialog">
+    Add goal
+</MudButton>
+
+@code {
+    private MudTheme _theme = new();
+    private bool _isDarkMode=true;
+
+
+    private List<GoalDTO> _goals { get; set; } = [];
+    private List<int> _expandedGoals = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _goals = await _goalsApiClient.GetGoalsAsync();
+    }
+
+    protected Task OnExpandedChanged(int goalId)
+    {
+        // Handle expansion changed logic here
+        return Task.CompletedTask;
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var newGoal = new GoalDTO();
+
+        var parameters = new DialogParameters
+    {
+        { nameof(GoalEditDialog.Goal), newGoal }
+    };
+
+        var dialog = await DialogService.ShowAsync<GoalEditDialog>("Create goal", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is GoalDTO created)
+        {
+            var saved = await _goalsApiClient.SaveGoal(created);
+            if (saved is not null)
+            {
+                _goals.Add(saved);
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void OnPanelExpanded(int goalId)
+    {
+        if ( !_expandedGoals.Contains(goalId))
+        {
+            _expandedGoals.Add(goalId);
+            StateHasChanged();
+        }
+    }
+}

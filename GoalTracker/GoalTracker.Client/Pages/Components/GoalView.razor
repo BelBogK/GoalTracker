@@ -1,0 +1,101 @@
+﻿@using GoalTracker.Client.Feautures.Goals
+@using GoalTracker.Shared
+@using MudBlazor
+@inject IDialogService DialogService
+@inject GoalsApiClient GoalsApi
+
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Goal</MudText>
+            <MudText Typo="Typo.h6">@Goal.Name</MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <MudChip T="string" Size="Size.Small" Color="Color.Info">@Goal.GoalType</MudChip>
+            <MudChip T="string" Size="Size.Small" Color="Color.Error">@Goal.Priority</MudChip>
+            <MudChip T="string" Size="Size.Small" Color="Color.Success">@Goal.CurrentStatus</MudChip>
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudGrid>
+            <MudItem xs="6">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Description</MudText>
+                <MudText Typo="Typo.body2">@Goal.Description</MudText>
+            </MudItem>
+            <MudItem xs="6">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Ideal vision</MudText>
+                <MudText Typo="Typo.body2">@Goal.IdealVision</MudText>
+            </MudItem>
+            <MudItem xs="4">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Start date</MudText>
+                <MudText Typo="Typo.body2">@Goal.StartDate?.ToString("dd.MM.yyyy")</MudText>
+            </MudItem>
+            <MudItem xs="4">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Target date</MudText>
+                <MudText Typo="Typo.body2">@Goal.TargetDate?.ToString("dd.MM.yyyy")</MudText>
+            </MudItem>
+            <MudItem xs="4">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Reward</MudText>
+                <MudText Typo="Typo.body2">@Goal.Reward</MudText>
+            </MudItem>
+        </MudGrid>
+    </MudCardContent>
+    <MudCardActions>
+        <MudSpacer />
+        <MudButton Variant="Variant.Outlined" OnClick="OpenEditDialog">Edit</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="ConfirmDelete">Delete</MudButton>
+    </MudCardActions>
+</MudCard>
+
+@code {
+    [Parameter] public GoalDTO Goal { get; set; }
+    [Parameter] public EventCallback OnDeleted { get; set; }
+    [Parameter] public EventCallback<GoalDTO> OnUpdated { get; set; }
+
+    private GoalDTO _goal = new();
+
+    protected override void OnInitialized()
+    {
+        _goal = Goal ?? new GoalDTO();
+    }
+
+    private async Task OpenEditDialog()
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(GoalEditDialog.Goal), _goal }
+        };
+        try
+        {
+            var dialog = await DialogService.ShowAsync<GoalEditDialog>("Edit goal", parameters);
+            var result = await dialog.Result;
+        }
+        catch (Exception ex)
+        {
+            // Handle dialog exceptions if necessary
+            Console.Error.WriteLine($"Error opening edit dialog: {ex.Message}");
+            return;
+        }
+    // if (!result.Canceled && result.Data is GoalDTO updated)
+    //     {
+    //         _goal = updated;
+    //         await OnUpdated.InvokeAsync(_goal);
+    //         StateHasChanged();
+    //     }
+    }
+
+    private async Task ConfirmDelete()
+    {
+        // var confirmed = await DialogService.ShowMessageBox(
+        //     "Delete goal",
+        //     $"Are you sure you want to delete '{_goal.Name}'?",
+        //     yesText: "Delete",
+        //     cancelText: "Cancel");
+
+        // if (confirmed == true)
+        // {
+        //     // await GoalsApi.DeleteGoalAsync(_goal.Id);
+        //     await OnDeleted.InvokeAsync();
+        // }
+    }
+}

@@ -7,6 +7,7 @@ using GoalTracker.Domain.Entities.Base;
 using GoalTracker.Domain.Interfaces.Repositories;
 using GoalTracker.Features;
 using GoalTracker.Features.LifeArea;
+using GoalTracker.Features.Mapper;
 using GoalTracker.Infrastructure;
 using GoalTracker.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity; 
@@ -54,6 +55,8 @@ builder.Services.AddIdentityCore<GoalTrackerUser>(options =>
     .AddSignInManager()
     .AddDefaultTokenProviders();
 builder.Services.AddScoped<ILifeAreaRepository, LifeAreaRepository>();
+builder.Services.AddScoped<IGoalRepository, GoalRepository>();
+builder.Services.AddScoped<AppMapper>();
 //builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddSingleton<IEmailSender<GoalTrackerUser>, IdentityNoOpEmailSender>();

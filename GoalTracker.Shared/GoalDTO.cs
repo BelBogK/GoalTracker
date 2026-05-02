@@ -1,12 +1,11 @@
-﻿using GoalTracker.Domain.Entities.Base;
-using GoalTracker.Shared.Enums;
+﻿using GoalTracker.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace GoalTracker.Domain.Entities
+namespace GoalTracker.Shared
 {
-    public class Goal: BaseWithUser
+    public class GoalDTO
     {
         public int Id { get; set; }
         public string Name { get; set; }
@@ -17,9 +16,6 @@ namespace GoalTracker.Domain.Entities
         public CurrentStatus CurrentStatus { get; set; }
         public GoalType GoalType { get; set; }
         public Priority Priority { get; set; }
-        public string? IdealVision { get; set; }
-        public virtual ICollection<GoalScenario> Scenarios { get; set; } = new List<GoalScenario>();
-        public virtual ICollection<Project> Projects { get; set; }
-        public virtual ICollection<LifeArea> LifeAreas { get; set; }= new List<LifeArea>();
+        public string IdealVision { get; set; }
     }
 }

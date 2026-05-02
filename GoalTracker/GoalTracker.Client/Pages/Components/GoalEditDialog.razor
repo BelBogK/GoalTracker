@@ -1,0 +1,45 @@
+﻿@using GoalTracker.Shared
+@using MudBlazor
+<MudDialog>
+    <TitleContent>Edit goal</TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="Goal.Name" Label="Name" />
+        <MudTextField @bind-Value="Goal.Description" Label="Description" Lines="3" />
+        <MudTextField @bind-Value="Goal.IdealVision" Label="Ideal vision" Lines="2" />
+        <MudTextField @bind-Value="Goal.Reward" Label="Reward" />
+        <MudDatePicker @bind-Date="Goal.StartDate" Label="Start date" />
+        <MudDatePicker @bind-Date="Goal.TargetDate" Label="Target date" />
+        <MudSelect @bind-Value="Goal.CurrentStatus" Label="Status" T="GoalTracker.Shared.Enums.CurrentStatus">
+            @foreach (var status in Enum.GetValues<GoalTracker.Shared.Enums.CurrentStatus>())
+            {
+                <MudSelectItem T="GoalTracker.Shared.Enums.CurrentStatus" Value="@status">@status</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudSelect @bind-Value="Goal.Priority" Label="Priority" T="GoalTracker.Shared.Enums.Priority">
+            @foreach (var priority in Enum.GetValues<GoalTracker.Shared.Enums.Priority>())
+            {
+                <MudSelectItem T="GoalTracker.Shared.Enums.Priority" Value="@priority">@priority</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudSelect @bind-Value="Goal.GoalType" Label="Type" T="GoalTracker.Shared.Enums.GoalType">
+            @foreach (var type in Enum.GetValues<GoalTracker.Shared.Enums.GoalType>())
+            {
+                <MudSelectItem T="GoalTracker.Shared.Enums.GoalType" Value="@type">@type</MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public GoalDTO Goal { get; set; } = new();
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(Goal));
+    private void Cancel() => MudDialog.Cancel();
+}
