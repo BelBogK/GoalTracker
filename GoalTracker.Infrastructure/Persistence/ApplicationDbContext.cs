@@ -20,7 +20,7 @@ namespace GoalTracker.Data
         public DbSet<Reaction> Reactions { get; set; }
         public DbSet<GoalScenario> Scenarios { get; set; }
         public DbSet<ProjectScenario> ProjectScenarios { get; set; }
-
+        public DbSet<TaskItem> TaskItems { get; set; } 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder); 

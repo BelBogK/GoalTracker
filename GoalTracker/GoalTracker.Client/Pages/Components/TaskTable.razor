@@ -1,0 +1,205 @@
+﻿@using GoalTracker.Client.Feautures.Tasks
+@using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
+@using MudBlazor
+@inject TaskItemApiClient TaskApi
+@inject NavigationManager Navigation
+
+<MudPopoverProvider />
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+    <MudText Typo="Typo.caption" Color="Color.Secondary">@_filtered.Count tasks</MudText>
+    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="AddNewRow">+ Add task</MudButton>
+</div>
+
+<div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+    <MudTextField @bind-Value="_searchName" Placeholder="Search by name..."
+                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                  Immediate="true" TextChanged="@(_ => ApplyFilter())"
+                  Margin="Margin.Dense" Style="max-width: 240px;" />
+
+    <MudTextField @bind-Value="_searchProject" Placeholder="Filter by project..."
+                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.FolderOpen"
+                  Immediate="true" TextChanged="@(_ => ApplyFilter())"
+                  Margin="Margin.Dense" Style="max-width: 200px;" />
+
+    <MudSelect T="CurrentStatus?" @bind-Value="_filterStatus"
+               Placeholder="Filter by status" Clearable="true"
+               Margin="Margin.Dense" Style="max-width: 180px;">
+        @foreach (var s in Enum.GetValues<CurrentStatus>())
+        {
+            <MudSelectItem T="CurrentStatus?" Value="@((CurrentStatus?)s)">@s</MudSelectItem>
+        }
+    </MudSelect> 
+</div>
+
+<MudTable Items="@_filtered" Hover="true" Dense="true" Bordered="true"
+    SortLabel="Sort by" AllowUnsorted="false">
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortBy="new Func<TaskItemDTO, object>(x => x.Name)">Name</MudTableSortLabel></MudTh>
+        <MudTh>Description</MudTh>
+        <MudTh>Effort</MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<TaskItemDTO, object>(x => x.Procents)">%</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<TaskItemDTO, object>(x => x.CurrentStatus)">Status</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<TaskItemDTO, object>(x => x.Created)">Created</MudTableSortLabel></MudTh>
+        <MudTh>Projects</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        @if (context == _editingRow)
+        {
+            <MudTd><MudTextField @bind-Value="context.Name" Margin="Margin.Dense" /></MudTd>
+            <MudTd><MudTextField @bind-Value="context.Description" Margin="Margin.Dense" /></MudTd>
+            <MudTd><MudTextField @bind-Value="context.Effort" Margin="Margin.Dense" /></MudTd>
+            <MudTd>
+                <MudNumericField @bind-Value="context.Procents" Margin="Margin.Dense"
+                    Min="-100" Max="100" Adornment="Adornment.End" AdornmentText="%" />
+            </MudTd>
+            <MudTd>
+                <MudSelect @bind-Value="context.CurrentStatus" T="CurrentStatus" Margin="Margin.Dense">
+                    @foreach (var s in Enum.GetValues<CurrentStatus>())
+                    {
+                        <MudSelectItem T="CurrentStatus" Value="@s">@s</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudTd>
+            <MudTd>@context.Created.ToString("dd.MM.yyyy")</MudTd>
+            <MudTd></MudTd>
+            <MudTd>
+                <MudButton Size="Size.Small" Color="Color.Success" OnClick="() => SaveRow(context)">Save</MudButton>
+                <MudButton Size="Size.Small" OnClick="CancelRow">Cancel</MudButton>
+            </MudTd>
+        }
+        else
+        {
+            <MudTd>@context.Name</MudTd>
+            <MudTd>@context.Description</MudTd>
+            <MudTd>@context.Effort</MudTd>
+            <MudTd>
+                <MudText Color="@(context.Procents >= 0 ? Color.Success : Color.Error)">
+                    @(context.Procents >= 0 ? "+" : "")@context.Procents%
+                </MudText>
+            </MudTd>
+            <MudTd>
+                @{ var (color, icon) = GetStatusStyle(context.CurrentStatus); }
+                <MudChip T="string" Size="Size.Small" Color="@color" Icon="@icon">@context.CurrentStatus</MudChip>
+            </MudTd>
+            <MudTd>@context.Created.ToString("dd.MM.yyyy")</MudTd>
+            <MudTd>
+                @foreach (var project in context.Projects)
+                {
+                    @if (project.CurrentStatus == CurrentStatus.Achieved)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Warning"
+                            Icon="@Icons.Material.Filled.EmojiEvents">@project.Name</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Default">@project.Name</MudChip>
+                    }
+                }
+            </MudTd>
+            <MudTd>
+                <MudButton Size="Size.Small" OnClick="() => StartEdit(context)">Edit</MudButton>
+                <MudButton Size="Size.Small" Color="Color.Error" OnClick="() => DeleteRow(context)">Delete</MudButton>
+            </MudTd>
+        }
+    </RowTemplate>
+</MudTable>
+
+@code {
+    [Parameter] public int ProjectId { get; set; }
+
+    private List<TaskItemDTO> _tasks = [];
+    private List<TaskItemDTO> _filtered = [];
+    private TaskItemDTO? _editingRow;
+    private string _searchName = "";
+    private string _searchProject = ""; 
+    private CurrentStatus? _filterStatus;
+    private CurrentStatus? FilterStatus
+    {
+        get => _filterStatus;
+        set { _filterStatus = value; ApplyFilter(); }
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        _tasks = await TaskApi.GetTasksByProjectAsync(ProjectId);
+        ApplyFilter();
+    }
+
+    private void ApplyFilter(string _ = "")
+    {
+        _filtered = _tasks
+            .Where(t =>
+                (string.IsNullOrEmpty(_searchName) ||
+                    t.Name.Contains(_searchName, StringComparison.OrdinalIgnoreCase)) &&
+                (_filterStatus == null || t.CurrentStatus == _filterStatus) &&
+                (string.IsNullOrEmpty(_searchProject) ||
+                    t.Projects.Any(p => p.Name.Contains(_searchProject, StringComparison.OrdinalIgnoreCase))))
+            .ToList();
+    }
+
+    private void AddNewRow()
+    {
+        var newTask = new TaskItemDTO
+        {
+            Created = DateTime.Now,
+            CurrentStatus = CurrentStatus.Analyzing
+        };
+        _tasks.Add(newTask);
+        _editingRow = newTask;
+        ApplyFilter();
+    }
+
+    private void StartEdit(TaskItemDTO task)
+    {
+        _editingRow = task;
+    }
+
+    private async Task SaveRow(TaskItemDTO task)
+    {
+        if (task.Id == 0)
+        {
+            var saved = await TaskApi.CreateTaskAsync(ProjectId, task);
+            if (saved is not null)
+            {
+                var index = _tasks.IndexOf(task);
+                _tasks[index] = saved;
+            }
+        }
+        else
+        {
+            await TaskApi.UpdateTaskAsync(task);
+        }
+        _editingRow = null;
+        ApplyFilter();
+    }
+
+    private void CancelRow()
+    {
+        if (_editingRow?.Id == 0)
+        {
+            _tasks.Remove(_editingRow);
+            ApplyFilter();
+        }
+        _editingRow = null;
+    }
+
+    private async Task DeleteRow(TaskItemDTO task)
+    {
+        await TaskApi.DeleteTaskAsync(task.Id);
+        _tasks.Remove(task);
+        ApplyFilter();
+    }
+
+    private (Color color, string icon) GetStatusStyle(CurrentStatus status) => status switch
+    {
+        CurrentStatus.Achieved   => (Color.Success,   Icons.Material.Filled.CheckCircle),
+        CurrentStatus.Active     => (Color.Info,      Icons.Material.Filled.PlayArrow),
+        CurrentStatus.Cancel     => (Color.Error,     Icons.Material.Filled.Cancel),
+        CurrentStatus.Planning   => (Color.Warning,   Icons.Material.Filled.Schedule),
+        CurrentStatus.Analyzing  => (Color.Default,   Icons.Material.Filled.Search),
+        CurrentStatus.MaybeInOneDay => (Color.Secondary, Icons.Material.Filled.WatchLater),
+        _ => (Color.Default, "")
+    };
+}

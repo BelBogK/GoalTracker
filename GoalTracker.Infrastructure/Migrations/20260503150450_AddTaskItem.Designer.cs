@@ -4,6 +4,7 @@ using GoalTracker.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GoalTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260503150450_AddTaskItem")]
+    partial class AddTaskItem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -412,9 +415,6 @@ namespace GoalTracker.Infrastructure.Migrations
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("TaskItemId")
-                        .HasColumnType("int");
-
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -424,8 +424,6 @@ namespace GoalTracker.Infrastructure.Migrations
                     b.HasIndex("ProjectId");
 
                     b.HasIndex("ProjectScenarioId");
-
-                    b.HasIndex("TaskItemId");
 
                     b.HasIndex("UserId");
 
@@ -488,44 +486,6 @@ namespace GoalTracker.Infrastructure.Migrations
                     b.HasIndex("EventId");
 
                     b.ToTable("Reactions");
-                });
-
-            modelBuilder.Entity("GoalTracker.Domain.Entities.TaskItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("CurrentStatus")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Effort")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Procents")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("TaskItems");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -798,10 +758,6 @@ namespace GoalTracker.Infrastructure.Migrations
                         .WithMany("Projects")
                         .HasForeignKey("ProjectScenarioId");
 
-                    b.HasOne("GoalTracker.Domain.Entities.TaskItem", null)
-                        .WithMany("Projects")
-                        .HasForeignKey("TaskItemId");
-
                     b.HasOne("GoalTracker.Domain.Entities.Base.GoalTrackerUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -827,17 +783,6 @@ namespace GoalTracker.Infrastructure.Migrations
                     b.HasOne("GoalTracker.Domain.Entities.Event", null)
                         .WithMany("Reactions")
                         .HasForeignKey("EventId");
-                });
-
-            modelBuilder.Entity("GoalTracker.Domain.Entities.TaskItem", b =>
-                {
-                    b.HasOne("GoalTracker.Domain.Entities.Base.GoalTrackerUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -965,11 +910,6 @@ namespace GoalTracker.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.ProjectScenario", b =>
-                {
-                    b.Navigation("Projects");
-                });
-
-            modelBuilder.Entity("GoalTracker.Domain.Entities.TaskItem", b =>
                 {
                     b.Navigation("Projects");
                 });

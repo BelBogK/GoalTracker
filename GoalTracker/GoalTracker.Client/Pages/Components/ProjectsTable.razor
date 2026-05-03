@@ -3,6 +3,7 @@
 @using GoalTracker.Shared.Enums
 @using MudBlazor
 @inject ProjectsAPIClient ProjectApi
+@inject NavigationManager Navigation
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
     <MudText Typo="Typo.caption" Color="Color.Secondary">@_projects.Count projects</MudText>
@@ -14,8 +15,11 @@
         <MudTh>Name</MudTh>
         <MudTh>Description</MudTh>
         <MudTh>Status</MudTh>
-        <MudTh>Type</MudTh>
-        <MudTh>Priority</MudTh>
+        <MudTh>Goals</MudTh>
+        <MudTh>Type</MudTh> 
+        <MudTh>Priority</MudTh> 
+        <MudTh>Start</MudTh>
+        <MudTh>End</MudTh>
         <MudTh></MudTh>
     </HeaderContent>
     <RowTemplate>
@@ -31,6 +35,7 @@
                     }
                 </MudSelect>
             </MudTd>
+            <MudTd></MudTd> 
             <MudTd>
                 <MudSelect @bind-Value="context.GoalType" T="ProjectType" Margin="Margin.Dense">
                     @foreach (var t in Enum.GetValues<ProjectType>())
@@ -47,6 +52,8 @@
                     }
                 </MudSelect>
             </MudTd>
+            <MudTd><MudDatePicker @bind-Date="_startDate" Margin="Margin.Dense" /></MudTd>
+            <MudTd><MudDatePicker @bind-Date="_endDate" Margin="Margin.Dense" /></MudTd>
             <MudTd>
                 <MudButton Size="Size.Small" Color="Color.Success" OnClick="() => SaveRow(context)">Save</MudButton>
                 <MudButton Size="Size.Small" OnClick="CancelRow">Cancel</MudButton>
@@ -54,11 +61,31 @@
         }
         else
         {
-            <MudTd>@context.Name</MudTd>
+            <MudTd>
+                <MudLink OnClick="() => OpenProject(context.Id)" Underline="Underline.Hover" Style="cursor: pointer;">
+                    @context.Name
+                </MudLink>
+            </MudTd>
             <MudTd>@context.Description</MudTd>
             <MudTd><MudChip T="string" Size="Size.Small" Color="Color.Success">@context.CurrentStatus</MudChip></MudTd>
+            
+            <MudTd>
+                @if (context.Goals?.Any() == true)
+                {
+                    @foreach (var goal in context.Goals)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary">@goal.Name</MudChip>
+                    }
+                }
+                else
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">—</MudText>
+                }
+            </MudTd>
             <MudTd><MudChip T="string" Size="Size.Small" Color="Color.Info">@context.GoalType</MudChip></MudTd>
             <MudTd><MudChip T="string" Size="Size.Small" Color="Color.Error">@context.Priority</MudChip></MudTd>
+            <MudTd>@context.StartTime.ToString("dd.MM.yyyy")</MudTd>
+            <MudTd>@context.EndTime.ToString("dd.MM.yyyy")</MudTd>
             <MudTd>
                 <MudButton Size="Size.Small" Color="Color.Error" OnClick="() => DeleteRow(context)">Delete</MudButton>
             </MudTd>
@@ -67,14 +94,19 @@
 </MudTable>
 
 @code {
-    [Parameter] public int GoalId { get; set; }
+    [Parameter] public int? GoalId { get; set; }
 
     private List<ProjectDTO> _projects = [];
     private ProjectDTO? _editingRow;
+    private DateTime? _startDate;
+    private DateTime? _endDate;
 
     protected override async Task OnParametersSetAsync()
     {
-        _projects = await ProjectApi.GetProjectsForGoalAsync(GoalId);
+        if (GoalId.HasValue)
+            _projects = await ProjectApi.GetProjectsForGoalAsync(GoalId.Value);
+        else
+            _projects = await ProjectApi.GetProjectsAsync();
     }
 
     private void AddNewRow()
@@ -83,17 +115,27 @@
         {
             CurrentStatus = CurrentStatus.Analyzing,
             GoalType = ProjectType.Action,
-            Priority = Priority.Medium
+            Priority = Priority.Medium,
+            StartTime = DateTime.Now,
+            EndTime = DateTime.Now.AddMonths(1)
         };
+        _startDate = newProject.StartTime;
+        _endDate = newProject.EndTime;
         _projects.Add(newProject);
         _editingRow = newProject;
     }
 
     private async Task SaveRow(ProjectDTO project)
     {
+        project.StartTime = _startDate ?? DateTime.Now;
+        project.EndTime = _endDate ?? DateTime.Now.AddMonths(1);
+
         if (project.Id == 0)
         {
-            var saved = await ProjectApi.SaveProject(project, GoalId);
+            ProjectDTO? saved = GoalId.HasValue
+                ? await ProjectApi.SaveProject(project, GoalId.Value)
+                : await ProjectApi.SaveProject(project);
+
             if (saved is not null)
             {
                 var index = _projects.IndexOf(project);
@@ -118,5 +160,10 @@
     {
         // await ProjectApi.DeleteProjectAsync(project.Id);
         _projects.Remove(project);
+    }
+
+    private void OpenProject(int projectId)
+    {
+        Navigation.NavigateTo($"/project/{projectId}");
     }
 }

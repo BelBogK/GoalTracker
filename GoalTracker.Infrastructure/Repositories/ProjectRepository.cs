@@ -2,20 +2,24 @@
 using GoalTracker.Domain.Entities;
 using GoalTracker.Domain.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 
 namespace GoalTracker.Infrastructure.Repositories
 {
     public class ProjectRepository(IDbContextFactory<ApplicationDbContext> contextFactory) : IProjectRepository
     {
-        public Task<Project> CreateAsync(Project entity)
+        public async Task<Project> CreateAsync(Project entity)
         {
-            throw new NotImplementedException();
+            await using var context = await contextFactory.CreateDbContextAsync();
+            context.Projects.Add(entity);
+            await context.SaveChangesAsync();
+            return entity;
         }
 
         public async Task<Project> CreateAsync(Project entity, int goalId)
         {
             await using var context = await contextFactory.CreateDbContextAsync();
-
+            entity.Created = DateTime.UtcNow;
             var goal = await context.Goals.FindAsync(goalId);
             if (goal != null)
             {
@@ -35,18 +39,19 @@ namespace GoalTracker.Infrastructure.Repositories
         public async Task<IEnumerable<Project>> GetAllAsync(string userId)
         {
             using var context = contextFactory.CreateDbContext();
-            return await context.Projects.Where(p => p.UserId == userId).ToListAsync();
+            return await context.Projects.Where(p => p.UserId == userId).Include(x => x.Goals).ToListAsync();
         }
 
         public async Task<IEnumerable<Project>> GetByGoalAsync(string userId, int goalId)
         {
             using var context = contextFactory.CreateDbContext();
-            return await context.Projects.Where(p => p.UserId == userId && p.Goals.Any(g=>g.Id == goalId)).ToListAsync();
+            return await context.Projects.Where(p => p.UserId == userId && p.Goals.Any(g=>g.Id == goalId)).Include(x=>x.Goals).ToListAsync();
         }
 
-        public Task<Project?> GetByIdAsync(int id)
+        public async Task<Project?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            using var context = contextFactory.CreateDbContext();
+            return await context.Projects.FirstOrDefaultAsync(p => p.Id == id);
         }
 
         public Task<Project> UpdateAsync(Project entity)
