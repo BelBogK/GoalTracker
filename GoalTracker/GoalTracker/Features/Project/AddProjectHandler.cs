@@ -17,7 +17,16 @@ namespace GoalTracker.Features.Goal
                 return null;
             }
             item.UserId = request.UserId;
-            var result = await repository.CreateAsync(item);
+            GoalTracker.Domain.Entities.Project result;
+            if(request.goalId.HasValue)
+            {
+                result = await repository.CreateAsync(item, request.goalId.Value);
+            }
+            else
+            {
+                result = await repository.CreateAsync(item);
+            }
+            
             return mapper.ToDto(result);
         }
     }

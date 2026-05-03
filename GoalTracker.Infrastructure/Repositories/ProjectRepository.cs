@@ -2,10 +2,6 @@
 using GoalTracker.Domain.Entities;
 using GoalTracker.Domain.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace GoalTracker.Infrastructure.Repositories
 {
@@ -16,14 +12,30 @@ namespace GoalTracker.Infrastructure.Repositories
             throw new NotImplementedException();
         }
 
+        public async Task<Project> CreateAsync(Project entity, int goalId)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+
+            var goal = await context.Goals.FindAsync(goalId);
+            if (goal != null)
+            {
+                entity.Goals.Add(goal);
+            }
+
+            context.Projects.Add(entity);
+            await context.SaveChangesAsync();
+            return entity;
+        }
+
         public Task DeleteAsync(int id)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<Project>> GetAllAsync(string userId)
+        public async Task<IEnumerable<Project>> GetAllAsync(string userId)
         {
-            throw new NotImplementedException();
+            using var context = contextFactory.CreateDbContext();
+            return await context.Projects.Where(p => p.UserId == userId).ToListAsync();
         }
 
         public async Task<IEnumerable<Project>> GetByGoalAsync(string userId, int goalId)

@@ -18,7 +18,7 @@ namespace GoalTracker.Features.Goal
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                 var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
-                var result = await mediator.Send(new AddProjectCommand(userId, items!));
+                var result = await mediator.Send(new AddProjectCommand(userId, items!,null));
                 return Results.Ok(result);
             }).RequireAuthorization();
 
@@ -32,7 +32,7 @@ namespace GoalTracker.Features.Goal
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                 var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
-                var result = await mediator.Send(new AddGoalProjectCommand(userId, goalId, items!));
+                var result = await mediator.Send(new AddProjectCommand(userId, items!, goalId));
                 return Results.Ok(result);
             }).RequireAuthorization();
         }
