@@ -5,14 +5,11 @@
 @using GoalTracker.Shared
 @using GoalTracker.Client.Feautures.Goals
 @inject GoalsApiClient _goalsApiClient
-@inject IDialogService DialogService
+@inject IDialogService DialogService 
 <MudDialogProvider />
 <MudSnackbarProvider />
 <MudPopoverProvider />
-<h3>Goals</h3>
-<MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
-<MudSwitch @bind-Value="_isDarkMode" Color="Color.Primary" Class="ma-4" T="bool" Label="Toggle Light/Dark Mode" />
-
+<h3>Goals</h3> 
 @if (_goals.Count == 0)
 {
     <MudText Class="ma-4">No goals found.</MudText>
@@ -39,11 +36,7 @@ else
     Add goal
 </MudButton>
 
-@code {
-    private MudTheme _theme = new();
-    private bool _isDarkMode=true;
-
-
+@code {  
     private List<GoalDTO> _goals { get; set; } = [];
     private List<int> _expandedGoals = [];
 

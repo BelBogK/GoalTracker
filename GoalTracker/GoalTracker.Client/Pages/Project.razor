@@ -1,8 +1,13 @@
 ﻿@page "/Project/{id:int}"
 @using GoalTracker.Client.Pages.Components
-@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@using MudBlazor
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false)) 
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
 <h3>Project</h3>
 <TaskTable ProjectId="@id" />
+
 @code {
     [Parameter]
     public int id { get; set; }
