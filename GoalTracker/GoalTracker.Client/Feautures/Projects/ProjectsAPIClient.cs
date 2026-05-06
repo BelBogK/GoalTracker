@@ -25,5 +25,26 @@ namespace GoalTracker.Client.Feautures.Projects
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<ProjectDTO>();
         }
+
+        public async Task<ProjectDTO?> GetProjectByIdAsync(int id)
+        {
+            return await http.GetFromJsonAsync<ProjectDTO>($"/api/projects/{id}");
+        }
+
+        public async Task UpdateProjectAsync(ProjectDTO project)
+        {
+            var response = await http.PutAsJsonAsync($"/api/projects/{project.Id}", project);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task AddGoalToProjectAsync(int projectId, int goalId)
+        {
+            var response = await http.PostAsync($"/api/projects/{projectId}/goals/{goalId}", null);
+            response.EnsureSuccessStatusCode();
+        }
+        public async Task RemoveGoalFromProjectAsync(int projectId, int goalId)
+        {
+            await http.DeleteAsync($"/api/projects/{projectId}/goals/{goalId}");
+        }
     }
 }

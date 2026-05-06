@@ -51,12 +51,18 @@ namespace GoalTracker.Infrastructure.Repositories
         public async Task<Project?> GetByIdAsync(int id)
         {
             using var context = contextFactory.CreateDbContext();
-            return await context.Projects.FirstOrDefaultAsync(p => p.Id == id);
+            return await context.Projects
+                .Include(x=>x.Goals)
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        public Task<Project> UpdateAsync(Project entity)
+        public async Task<Project> UpdateAsync(Project entity)
         {
-            throw new NotImplementedException();
+            using var context = await contextFactory.CreateDbContextAsync();
+            context.Projects.Update(entity);
+            await context.SaveChangesAsync();
+            return entity;
+
         }
     }
 }

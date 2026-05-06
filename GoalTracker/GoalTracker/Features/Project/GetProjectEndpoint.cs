@@ -1,4 +1,6 @@
-﻿using GoalTracker.Features.LifeArea;
+﻿using GoalTracker.Features.Goal;
+using GoalTracker.Features.LifeArea;
+using GoalTracker.Shared;
 using MediatR;
 using System.Security.Claims;
 using System.Text.Json;
@@ -27,6 +29,75 @@ namespace GoalTracker.Features.Project
                 var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
                 var result = await mediator.Send(new GetProjectQuery(userId, goalId));
                 return Results.Ok(result);
+            }).RequireAuthorization();
+            app.MapGet("/api/projects/{id}", async (
+    int id,
+    IMediator mediator,
+    ClaimsPrincipal user) =>
+            {
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                var result = await mediator.Send(new GetProjectByIdQuery(userId, id));
+                return result is null ? Results.NotFound() : Results.Ok(result);
+            }).RequireAuthorization();
+
+            app.MapPost("/api/projects", async (
+HttpContext httpContext,
+IMediator mediator,
+ClaimsPrincipal user) =>
+            {
+                var items = await httpContext.Request.ReadFromJsonAsync<ProjectDTO>(
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                var result = await mediator.Send(new AddProjectCommand(userId, items!, null));
+                return Results.Ok(result);
+            }).RequireAuthorization();
+
+            app.MapPost("/api/goals/{goalId}/projects", async (
+                int goalId,
+    HttpContext httpContext,
+    IMediator mediator,
+    ClaimsPrincipal user) =>
+            {
+                var items = await httpContext.Request.ReadFromJsonAsync<ProjectDTO>(
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                var result = await mediator.Send(new AddProjectCommand(userId, items!, goalId));
+                return Results.Ok(result);
+            }).RequireAuthorization();
+
+            app.MapPut("/api/projects/{id}", async (
+    int id,
+    HttpContext httpContext,
+    IMediator mediator,
+    ClaimsPrincipal user) =>
+            {
+                var item = await httpContext.Request.ReadFromJsonAsync<ProjectDTO>(
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                var result = await mediator.Send(new UpdateProjectCommand(userId, item!));
+                return Results.Ok(result);
+            }).RequireAuthorization();
+            app.MapPost("/api/projects/{projectId}/goals/{goalId}", async (
+    int projectId,
+    int goalId,
+    IMediator mediator,
+    ClaimsPrincipal user) =>
+            {
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                await mediator.Send(new AddGoalToProjectCommand(userId, projectId, goalId));
+                return Results.Ok();
+            }).RequireAuthorization();
+            app.MapDelete("/api/projects/{projectId}/goals/{goalId}", async (
+    int projectId,
+    int goalId,
+    IMediator mediator,
+    ClaimsPrincipal user) =>
+            {
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                await mediator.Send(new RemoveGoalFromProjectCommand(userId, projectId, goalId));
+                return Results.Ok();
             }).RequireAuthorization();
         }
     }

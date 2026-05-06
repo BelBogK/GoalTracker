@@ -13,7 +13,7 @@ namespace GoalTracker.Domain.Entities
         public string Description { get; set; }//SMART goal description
         public DateTime? TargetDate { get; set; }
         public DateTime? StartDate { get; set; }
-        public string Reward { get; set; }
+        public string? Reward { get; set; }
         public CurrentStatus CurrentStatus { get; set; }
         public GoalType GoalType { get; set; }
         public Priority Priority { get; set; }
