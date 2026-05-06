@@ -1,8 +1,10 @@
 ﻿@using GoalTracker.Client.Feautures.Goals
+@using GoalTracker.Client.Feautures.GoalsScenario
 @using GoalTracker.Shared
 @using MudBlazor
 @inject IDialogService DialogService
 @inject GoalsApiClient GoalsApi
+@inject GoalScenarioApiClient GoalScenarioApi
 
 <MudCard>
     <MudCardHeader>
@@ -47,7 +49,11 @@
     </MudCardActions>
     
 </MudCard>
+<GoalScenarioTable Scenarios="@_goal.Scenarios"
+                   OnSave="SaveScenario"
+                   OnDelete="DeleteScenario" />
 <ProjectsTable GoalId="@Goal.Id" />
+
 @code {
     [Parameter] public GoalDTO Goal { get; set; }
     [Parameter] public EventCallback OnDeleted { get; set; }
@@ -85,12 +91,12 @@
             Console.Error.WriteLine($"Error opening edit dialog: {ex.Message}");
             return;
         }
-    // if (!result.Canceled && result.Data is GoalDTO updated)
-    //     {
-    //         _goal = updated;
-    //         await OnUpdated.InvokeAsync(_goal);
-    //         StateHasChanged();
-    //     }
+        // if (!result.Canceled && result.Data is GoalDTO updated)
+        //     {
+        //         _goal = updated;
+        //         await OnUpdated.InvokeAsync(_goal);
+        //         StateHasChanged();
+        //     }
     }
 
     private async Task ConfirmDelete()
@@ -106,5 +112,15 @@
         //     // await GoalsApi.DeleteGoalAsync(_goal.Id);
         //     await OnDeleted.InvokeAsync();
         // }
+    }
+
+    private async Task SaveScenario(GoalScenarioDTO args)
+    {
+        var newScenario = await GoalScenarioApi.AddToGoalAsync(_goal.Id, args);
+      
+    }
+    private async Task DeleteScenario(GoalScenarioDTO args)
+    {
+        await GoalScenarioApi.DeleteAsync(args.Id);
     }
 }

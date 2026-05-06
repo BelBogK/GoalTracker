@@ -58,6 +58,7 @@ builder.Services.AddScoped<ILifeAreaRepository, LifeAreaRepository>();
 builder.Services.AddScoped<IGoalRepository, GoalRepository>();
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<ITaskItemRepository, TaskItemRepository>();
+builder.Services.AddScoped<IGoalScenarioRepository, GoalScenarioRepository>();
 builder.Services.AddScoped<AppMapper>();
 //builder.Services.AddInfrastructure(builder.Configuration);
 

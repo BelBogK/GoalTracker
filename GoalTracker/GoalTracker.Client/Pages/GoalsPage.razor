@@ -36,13 +36,13 @@ else
     Add goal
 </MudButton>
 
-@code {  
+@code {
     private List<GoalDTO> _goals { get; set; } = [];
     private List<int> _expandedGoals = [];
 
     protected override async Task OnInitializedAsync()
     {
-        _goals = await _goalsApiClient.GetGoalsAsync();
+        _goals = await _goalsApiClient.GetGoalsAsync(); 
     }
 
     protected Task OnExpandedChanged(int goalId)

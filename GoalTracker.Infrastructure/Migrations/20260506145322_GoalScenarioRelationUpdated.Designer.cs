@@ -4,6 +4,7 @@ using GoalTracker.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GoalTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260506145322_GoalScenarioRelationUpdated")]
+    partial class GoalScenarioRelationUpdated
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -65,6 +68,21 @@ namespace GoalTracker.Infrastructure.Migrations
                     b.HasIndex("ProjectsId");
 
                     b.ToTable("GoalProject");
+                });
+
+            modelBuilder.Entity("GoalScenarioGoalScenario", b =>
+                {
+                    b.Property<int>("ChildGoalScenariosId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ParentGoalScenariosId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ChildGoalScenariosId", "ParentGoalScenariosId");
+
+                    b.HasIndex("ParentGoalScenariosId");
+
+                    b.ToTable("GoalScenarioGoalScenario");
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.AlternativeScenarioProject", b =>
@@ -766,6 +784,21 @@ namespace GoalTracker.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("GoalScenarioGoalScenario", b =>
+                {
+                    b.HasOne("GoalTracker.Domain.Entities.GoalScenario", null)
+                        .WithMany()
+                        .HasForeignKey("ChildGoalScenariosId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GoalTracker.Domain.Entities.GoalScenario", null)
+                        .WithMany()
+                        .HasForeignKey("ParentGoalScenariosId")
+                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("GoalTracker.Domain.Entities.AlternativeScenarioProject", b =>
                 {
                     b.HasOne("GoalTracker.Domain.Entities.Event", null)
@@ -802,7 +835,7 @@ namespace GoalTracker.Infrastructure.Migrations
                     b.HasOne("GoalTracker.Domain.Entities.Base.GoalTrackerUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -811,15 +844,15 @@ namespace GoalTracker.Infrastructure.Migrations
             modelBuilder.Entity("GoalTracker.Domain.Entities.GoalScenarioRelation", b =>
                 {
                     b.HasOne("GoalTracker.Domain.Entities.GoalScenario", "Child")
-                        .WithMany("ParentRelations")
+                        .WithMany()
                         .HasForeignKey("ChildId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("GoalTracker.Domain.Entities.GoalScenario", "Parent")
-                        .WithMany("ChildRelations")
+                        .WithMany()
                         .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Child");
@@ -1024,11 +1057,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.GoalScenario", b =>
                 {
-                    b.Navigation("ChildRelations");
-
                     b.Navigation("Events");
-
-                    b.Navigation("ParentRelations");
 
                     b.Navigation("Projects");
                 });

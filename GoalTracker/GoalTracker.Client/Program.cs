@@ -1,3 +1,4 @@
+using GoalTracker.Client.Feautures.GoalsScenario;
 using GoalTracker.Client.Feautures.LifeAreas;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
@@ -18,5 +19,6 @@ builder.Services.AddScoped<GoalTracker.Client.Feautures.Goals.GoalsApiClient>();
 builder.Services.AddScoped<GoalTracker.Client.Feautures.LifeAreas.LifeAreaApiClient>();
 builder.Services.AddScoped<GoalTracker.Client.Feautures.Projects.ProjectsAPIClient>();
 builder.Services.AddScoped<GoalTracker.Client.Feautures.Tasks.TaskItemApiClient>();
+builder.Services.AddScoped<GoalScenarioApiClient>();
 
 await builder.Build().RunAsync();

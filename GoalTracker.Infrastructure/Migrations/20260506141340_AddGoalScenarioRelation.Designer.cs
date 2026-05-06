@@ -4,6 +4,7 @@ using GoalTracker.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GoalTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260506141340_AddGoalScenarioRelation")]
+    partial class AddGoalScenarioRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -65,6 +68,21 @@ namespace GoalTracker.Infrastructure.Migrations
                     b.HasIndex("ProjectsId");
 
                     b.ToTable("GoalProject");
+                });
+
+            modelBuilder.Entity("GoalScenarioGoalScenario", b =>
+                {
+                    b.Property<int>("ChildGoalScenariosId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ParentGoalScenariosId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ChildGoalScenariosId", "ParentGoalScenariosId");
+
+                    b.HasIndex("ParentGoalScenariosId");
+
+                    b.ToTable("GoalScenarioGoalScenario");
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.AlternativeScenarioProject", b =>
@@ -255,32 +273,20 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("GoalScenario");
                 });
 
-            modelBuilder.Entity("GoalTracker.Domain.Entities.GoalScenarioRelation", b =>
+            modelBuilder.Entity("GoalTracker.Domain.Entities.GoalScenarioRelations", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -288,17 +294,22 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ChildId")
+                    b.Property<int>("CurrentGoalScenarioId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ParentId")
+                    b.Property<int>("GoalScenarioChildId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GoalScenarioParentId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ChildId");
+                    b.HasIndex("CurrentGoalScenarioId");
 
-                    b.HasIndex("ParentId");
+                    b.HasIndex("GoalScenarioChildId");
+
+                    b.HasIndex("GoalScenarioParentId");
 
                     b.ToTable("GoalScenarioRelations");
                 });
@@ -766,6 +777,21 @@ namespace GoalTracker.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("GoalScenarioGoalScenario", b =>
+                {
+                    b.HasOne("GoalTracker.Domain.Entities.GoalScenario", null)
+                        .WithMany()
+                        .HasForeignKey("ChildGoalScenariosId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GoalTracker.Domain.Entities.GoalScenario", null)
+                        .WithMany()
+                        .HasForeignKey("ParentGoalScenariosId")
+                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("GoalTracker.Domain.Entities.AlternativeScenarioProject", b =>
                 {
                     b.HasOne("GoalTracker.Domain.Entities.Event", null)
@@ -797,34 +823,31 @@ namespace GoalTracker.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("GoalTracker.Domain.Entities.GoalScenario", b =>
+            modelBuilder.Entity("GoalTracker.Domain.Entities.GoalScenarioRelations", b =>
                 {
-                    b.HasOne("GoalTracker.Domain.Entities.Base.GoalTrackerUser", "User")
+                    b.HasOne("GoalTracker.Domain.Entities.GoalScenario", "CurrentGoalScenario")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .HasForeignKey("CurrentGoalScenarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("GoalTracker.Domain.Entities.GoalScenarioRelation", b =>
-                {
-                    b.HasOne("GoalTracker.Domain.Entities.GoalScenario", "Child")
-                        .WithMany("ParentRelations")
-                        .HasForeignKey("ChildId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                    b.HasOne("GoalTracker.Domain.Entities.GoalScenario", "GoalScenarioChild")
+                        .WithMany()
+                        .HasForeignKey("GoalScenarioChildId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GoalTracker.Domain.Entities.GoalScenario", "Parent")
-                        .WithMany("ChildRelations")
-                        .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                    b.HasOne("GoalTracker.Domain.Entities.GoalScenario", "GoalScenarioParent")
+                        .WithMany()
+                        .HasForeignKey("GoalScenarioParentId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Child");
+                    b.Navigation("CurrentGoalScenario");
 
-                    b.Navigation("Parent");
+                    b.Navigation("GoalScenarioChild");
+
+                    b.Navigation("GoalScenarioParent");
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.LifeArea", b =>
@@ -1024,11 +1047,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.GoalScenario", b =>
                 {
-                    b.Navigation("ChildRelations");
-
                     b.Navigation("Events");
-
-                    b.Navigation("ParentRelations");
 
                     b.Navigation("Projects");
                 });

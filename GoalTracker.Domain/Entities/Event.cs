@@ -1,5 +1,8 @@
 ﻿namespace GoalTracker.Domain.Entities
 {
+    /// <summary>
+    /// Event what should happend when 
+    /// </summary>
     public class Event
     {
         public int Id { get; set; }

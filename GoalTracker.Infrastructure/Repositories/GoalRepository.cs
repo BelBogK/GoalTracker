@@ -27,8 +27,12 @@ namespace GoalTracker.Infrastructure.Repositories
 
         public async Task<IEnumerable<Goal>> GetAllAsync(string userId)
         {
-           using var context = contextFactory.CreateDbContext();
-            return await context.Goals.Where(g => g.UserId == userId).ToListAsync();
+            using var context = contextFactory.CreateDbContext();
+            return await context.Goals.Where(g => g.UserId == userId)
+                .Include(x => x.Scenarios)
+                .ThenInclude(x => x.ChildRelations)
+                .ThenInclude(c=>c.Child)
+                .ToListAsync();
         }
 
         public Task<Goal> GetByIdAsync(int id)

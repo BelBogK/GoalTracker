@@ -1,0 +1,150 @@
+﻿@using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
+@using MudBlazor
+
+<MudTable Items="@Scenarios" Hover="true" Dense="true" Bordered="true">
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Description</MudTh>
+        <MudTh>Active</MudTh>
+        <MudTh>Projects</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                @if (context.ChildRelations?.Any() == true)
+                {
+                    <MudIconButton Icon="@(_expanded.Contains(context.Id) ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                                   Size="Size.Small" OnClick="() => ToggleExpand(context.Id)" />
+                }
+                else
+                {
+                    <div style="width: 34px;"></div>
+                }
+                @if (context == _editingRow)
+                {
+                    <MudTextField @bind-Value="context.Name" Margin="Margin.Dense" />
+                }
+                else
+                {
+                    <span>@context.Name</span>
+                }
+            </div>
+        </MudTd>
+        <MudTd>
+            @if (context == _editingRow)
+            {
+                <MudTextField @bind-Value="context.Description" Margin="Margin.Dense" />
+            }
+            else
+            {
+                @context.Description
+            }
+        </MudTd>
+        <MudTd>
+            @if (context == _editingRow)
+            {
+                <MudCheckBox @bind-Value="context.IsActive" />
+            }
+            else
+            {
+                @if (context.IsActive)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Small" />
+                }
+            }
+        </MudTd>
+        <MudTd>
+            <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                @foreach (var project in context.Projects)
+                {
+                    <div style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 99px; background-color: var(--mud-palette-primary); color: var(--mud-palette-primary-text); font-size: 12px;">
+                        @project.Name
+                    </div>
+                }
+            </div>
+        </MudTd>
+        <MudTd>
+            @if (context == _editingRow)
+            {
+                <MudButton Size="Size.Small" Color="Color.Success" OnClick="() => SaveRow(context)">Save</MudButton>
+                <MudButton Size="Size.Small" OnClick="CancelRow">Cancel</MudButton>
+            }
+            else
+            {
+                <MudButton Size="Size.Small" OnClick="() => _editingRow = context">Edit</MudButton>
+                <MudButton Size="Size.Small" Color="Color.Error" OnClick="() => DeleteRow(context)">Delete</MudButton>
+            }
+        </MudTd>
+    </RowTemplate>
+    <ChildRowContent>
+        @if (_expanded.Contains(context.Id) && context.ChildRelations?.Any() == true)
+        {
+            <MudTr>
+                <MudTd ColSpan="5" Style="padding-left: 48px;">
+                    <GoalScenarioTable Scenarios="@context.ChildRelations"
+                                       OnSave="OnSave"
+                                       OnDelete="OnDelete"
+                                       Depth="@(Depth + 1)" />
+                </MudTd>
+            </MudTr>
+        }
+    </ChildRowContent>
+</MudTable>
+
+@if (Depth == 0)
+{
+    <MudButton Variant="Variant.Outlined" Size="Size.Small"
+               OnClick="AddNewRow" Style="margin-top: 8px;">
+        + Add scenario
+    </MudButton>
+}
+
+@code {
+    [Parameter] public List<GoalScenarioDTO> Scenarios { get; set; } = [];
+    [Parameter] public EventCallback<GoalScenarioDTO> OnSave { get; set; }
+    [Parameter] public EventCallback<GoalScenarioDTO> OnDelete { get; set; }
+    [Parameter] public int Depth { get; set; } = 0;
+
+    private GoalScenarioDTO? _editingRow;
+    private HashSet<int> _expanded = new();
+
+    private void ToggleExpand(int id)
+    {
+        if (_expanded.Contains(id))
+            _expanded.Remove(id);
+        else
+            _expanded.Add(id);
+    }
+
+    private void AddNewRow()
+    {
+        var newScenario = new GoalScenarioDTO { IsActive = true };
+        Scenarios.Add(newScenario);
+        _editingRow = newScenario;
+    }
+
+    private async Task SaveRow(GoalScenarioDTO scenario)
+    {
+        _editingRow = null;
+        await OnSave.InvokeAsync(scenario);
+    }
+
+    private void CancelRow()
+    {
+        if (_editingRow?.Id == 0)
+            Scenarios.Remove(_editingRow);
+        _editingRow = null;
+    }
+
+    private async Task DeleteRow(GoalScenarioDTO scenario)
+    {
+        Scenarios.Remove(scenario);
+        await OnDelete.InvokeAsync(scenario);
+    }
+}
