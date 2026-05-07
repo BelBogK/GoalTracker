@@ -9,7 +9,7 @@ using GoalTracker.Features;
 using GoalTracker.Features.LifeArea;
 using GoalTracker.Features.Mapper;
 using GoalTracker.Infrastructure;
-using GoalTracker.Infrastructure.Repositories;
+using GoalTracker.Infrastructure.Repositories; 
 using Microsoft.AspNetCore.Identity; 
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
@@ -66,7 +66,7 @@ builder.Services.AddSingleton<IEmailSender<GoalTrackerUser>, IdentityNoOpEmailSe
 
 var app = builder.Build();
 MappingForItems.Map(app);
-
+await SeedData.SeedAsync(app.Services);
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

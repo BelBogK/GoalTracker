@@ -22,23 +22,23 @@ namespace GoalTracker.Infrastructure.Persistence.Configurations
             //var userId = Guid.Empty;
             //builder.HasData(new LifeArea
             //{
-            //    Id=1,
-            //    Name = "Body", 
-            //    Description = "Физическое здоровье", 
-            //    UserId=userId.ToString()
-            //});
-
-            //builder.HasData(new LifeArea
-            //{
-            //    Id=2,
-            //    Name = "Brain",
-            //    Description = "То как хорошо работает мозг", 
+            //    Id = 1,
+            //    Name = "Body",
+            //    Description = "Физическое здоровье",
             //    UserId = userId.ToString()
             //});
 
             //builder.HasData(new LifeArea
             //{
-            //    Id=3,
+            //    Id = 2,
+            //    Name = "Brain",
+            //    Description = "То как хорошо работает мозг",
+            //    UserId = userId.ToString()
+            //});
+
+            //builder.HasData(new LifeArea
+            //{
+            //    Id = 3,
             //    Name = "MentalHealth",
             //    Description = "Душевное здоровье",
             //    UserId = userId.ToString()
@@ -46,7 +46,7 @@ namespace GoalTracker.Infrastructure.Persistence.Configurations
 
             //builder.HasData(new LifeArea
             //{
-            //    Id=4,
+            //    Id = 4,
             //    Name = "Money",
             //    Description = "Финансовое состояние",
             //    UserId = userId.ToString()
@@ -54,7 +54,7 @@ namespace GoalTracker.Infrastructure.Persistence.Configurations
 
             //builder.HasData(new LifeArea
             //{
-            //    Id=5,
+            //    Id = 5,
             //    Name = "Business",
             //    Description = "Бизнес и предпринимательство, как деньги приносит и развитие",
             //    UserId = userId.ToString()
@@ -62,7 +62,7 @@ namespace GoalTracker.Infrastructure.Persistence.Configurations
 
             //builder.HasData(new LifeArea
             //{
-            //    Id=6,
+            //    Id = 6,
             //    Name = "Family",
             //    Description = "Семейные отношения",
             //    UserId = userId.ToString()
@@ -70,7 +70,7 @@ namespace GoalTracker.Infrastructure.Persistence.Configurations
 
             //builder.HasData(new LifeArea
             //{
-            //    Id=7,
+            //    Id = 7,
             //    Name = "Romantic",
             //    Description = "Любовные отношения",
             //    UserId = userId.ToString()
@@ -78,7 +78,7 @@ namespace GoalTracker.Infrastructure.Persistence.Configurations
 
             //builder.HasData(new LifeArea
             //{
-            //    Id=8,
+            //    Id = 8,
             //    Name = "Friendship",
             //    Description = "Дружеские отношения",
             //    UserId = userId.ToString()

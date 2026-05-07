@@ -6,7 +6,8 @@
         Planning = 1,
         Active = 2,
         Cancel = 3,
-        MaybeInOneDay = 4,
-        Achieved = 5
+        Done = 4,
+        Achieved = 5,
+        MaybeInOneDay =6
     }
 }

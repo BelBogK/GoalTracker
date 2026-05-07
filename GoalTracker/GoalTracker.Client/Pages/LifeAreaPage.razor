@@ -3,19 +3,49 @@
 @using GoalTracker.Shared
 @using MudBlazor
 @inject GoalTracker.Client.Feautures.LifeAreas.LifeAreaApiClient LifeAreaApi
+@inject NavigationManager Navigation
 
 <h3>LifeArea</h3>
 @if(_hasOwnLifeAreas)
 {
+    <MudGrid>
     @foreach (var lifeArea in _lifeAreas)
-{
-    <div class="card mb-3">
-        <div class="card-body">
-            <h5 class="card-title">@lifeArea.Name</h5>
-            <p class="card-text">@lifeArea.Description</p>
-        </div>
-    </div>
-}
+    {
+        <MudItem xs="12" sm="6" md="4" lg="3">
+            <MudCard Style="height: 100%;">
+                <MudCardContent>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                            <MudLink OnClick="() => NavigationToLifeArea(lifeArea.Id)"
+                            Typo="Typo.h6" Underline="Underline.Hover" Style="cursor: pointer;">
+                            @lifeArea.Name
+                        </MudLink>
+                        @if (lifeArea.IsDefault)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info">Default</MudChip>
+                        }
+                    </div>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Style="margin-bottom: 12px;">
+                        @lifeArea.Description
+                    </MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Progress</MudText>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+                        <MudText Typo="Typo.subtitle2">
+                            <span style="color: var(--mud-palette-success);">@lifeArea.AchievePoints</span>
+                            <span style="color: var(--mud-palette-text-secondary);"> / @lifeArea.GoalPoints</span>
+                        </MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            @GetProgress(lifeArea).ToString("0")%
+                        </MudText>
+                    </div>
+                    <MudProgressLinear Value="@GetProgress(lifeArea)"
+                        Color="Color.Success" Rounded="true" Size="Size.Small"
+                        Style="margin-top: 4px;" />
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    }
+</MudGrid>
+ 
 }
 else
 {
@@ -69,5 +99,14 @@ else
         _lifeAreas = await LifeAreaApi.SaveToPersonalArea(_lifeAreas);
         _hasOwnLifeAreas = _lifeAreas.Any(x => !x.IsDefault);
         StateHasChanged();
+    }
+    private double GetProgress(LifeAreaDTO lifeArea)
+    {
+        if (lifeArea.GoalPoints == 0) return 0;
+        return (double)lifeArea.AchievePoints / lifeArea.GoalPoints * 100;
+    }
+    private void NavigationToLifeArea(int lifeAreaId)
+    {
+        Navigation.NavigateTo($"/LifeArea/{lifeAreaId}");
     }
 }

@@ -11,5 +11,7 @@ namespace GoalTracker.Shared
         public string Description { get; set; }
         public string? IdealVision { get; set; }
         public bool IsDefault { get; set; } = false;
+        public int GoalPoints { get; set; }
+        public int AchievePoints { get;}
     }
 }
