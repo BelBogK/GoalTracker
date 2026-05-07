@@ -8,6 +8,8 @@ namespace GoalTracker.Infrastructure.Repositories
 {
     public class ProjectRepository(IDbContextFactory<ApplicationDbContext> contextFactory) : IProjectRepository
     {
+       
+
         public async Task<Project> CreateAsync(Project entity)
         {
             await using var context = await contextFactory.CreateDbContextAsync();
@@ -30,7 +32,20 @@ namespace GoalTracker.Infrastructure.Repositories
             await context.SaveChangesAsync();
             return entity;
         }
-
+        public async Task<Project> AddProjectToScenAsync(Project entity, int scenId)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+            entity.Created = DateTime.UtcNow;
+            context.Projects.Add(entity);
+            var scens = await context.Scenarios.FindAsync(scenId);
+            if (scens != null)
+            {
+                scens.Projects.Add(entity);
+            }
+            
+            await context.SaveChangesAsync();
+            return entity;
+        }
         public Task DeleteAsync(int id)
         {
             throw new NotImplementedException();
@@ -54,6 +69,16 @@ namespace GoalTracker.Infrastructure.Repositories
             return await context.Projects
                 .Include(x=>x.Goals)
                 .FirstOrDefaultAsync(p => p.Id == id);
+        }
+
+        public async Task<IEnumerable<Project>> GetByScenIdAsync(string userId, int scenId)
+        {
+            using var context = contextFactory.CreateDbContext();
+            var scen = await context.Scenarios
+                .Include(x => x.Projects)
+                .ThenInclude(g => g.Goals)
+                .FirstOrDefaultAsync(x => x.Id == scenId);
+            return scen.Projects;
         }
 
         public async Task<Project> UpdateAsync(Project entity)

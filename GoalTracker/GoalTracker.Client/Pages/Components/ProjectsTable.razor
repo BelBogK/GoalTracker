@@ -95,6 +95,7 @@
 
 @code {
     [Parameter] public int? GoalId { get; set; }
+    [Parameter] public int? ScenarioId { get; set; }
 
     private List<ProjectDTO> _projects = [];
     private ProjectDTO? _editingRow;
@@ -105,8 +106,11 @@
     {
         if (GoalId.HasValue)
             _projects = await ProjectApi.GetProjectsForGoalAsync(GoalId.Value);
+        else if (ScenarioId.HasValue)
+            _projects = await ProjectApi.GetProjectsForScenAsync(ScenarioId.Value);
         else
             _projects = await ProjectApi.GetProjectsAsync();
+
     }
 
     private void AddNewRow()
@@ -129,12 +133,21 @@
     {
         project.StartTime = _startDate ?? DateTime.Now;
         project.EndTime = _endDate ?? DateTime.Now.AddMonths(1);
-
+        ProjectDTO? saved;
         if (project.Id == 0)
         {
-            ProjectDTO? saved = GoalId.HasValue
-                ? await ProjectApi.SaveProject(project, GoalId.Value)
-                : await ProjectApi.SaveProject(project);
+            if(GoalId.HasValue)
+            {
+                saved=await ProjectApi.SaveProject(project, GoalId.Value);
+            }else if(ScenarioId.HasValue)
+            {
+                saved= await ProjectApi.SaveToScenari(project, ScenarioId.Value);
+            }
+            else
+            {
+                saved = await ProjectApi.SaveProject(project);
+                
+            } 
 
             if (saved is not null)
             {

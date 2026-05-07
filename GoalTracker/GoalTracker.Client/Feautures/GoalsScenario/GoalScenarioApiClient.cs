@@ -8,6 +8,9 @@ namespace GoalTracker.Client.Feautures.GoalsScenario
         public async Task<List<GoalScenarioDTO>> GetByGoalAsync(int goalId)
             => await http.GetFromJsonAsync<List<GoalScenarioDTO>>(
                 $"/api/goals/{goalId}/scenarios") ?? [];
+        public async Task<GoalScenarioDTO> GetByIdAsync(int scenId)
+            => await http.GetFromJsonAsync<GoalScenarioDTO>(
+                $"/api/scenarios/{scenId}") ;
 
         public async Task<GoalScenarioDTO?> AddToGoalAsync(int goalId, GoalScenarioDTO scenario)
         {

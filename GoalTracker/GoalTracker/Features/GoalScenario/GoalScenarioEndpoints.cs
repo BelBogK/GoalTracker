@@ -20,6 +20,16 @@ namespace GoalTracker.Features.GoalScenario
                 return Results.Ok(result);
             }).RequireAuthorization();
 
+            app.MapGet("/api/scenarios/{scenId}", async (
+               int scenId,
+               IMediator mediator,
+               ClaimsPrincipal user) =>
+            {
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                var result = await mediator.Send(new GetScenariosByIdQuery(userId, scenId));
+                return Results.Ok(result);
+            }).RequireAuthorization();
+
             // Add scenario to goal
             app.MapPost("/api/goals/{goalId}/scenarios", async (
                 int goalId,

@@ -1,6 +1,7 @@
 ﻿@using GoalTracker.Shared
 @using GoalTracker.Shared.Enums
 @using MudBlazor
+@inject NavigationManager Navigation
 
 <MudTable Items="@Scenarios" Hover="true" Dense="true" Bordered="true">
     <HeaderContent>
@@ -28,7 +29,9 @@
                 }
                 else
                 {
-                    <span>@context.Name</span>
+                    <MudLink OnClick="() => OpenScenario(context.Id)" Underline="Underline.Hover" Style="cursor: pointer;">
+                        @context.Name
+                    </MudLink> 
                 }
             </div>
         </MudTd>
@@ -146,5 +149,10 @@
     {
         Scenarios.Remove(scenario);
         await OnDelete.InvokeAsync(scenario);
+    }
+
+    private void OpenScenario(int scenId)
+    {
+        Navigation.NavigateTo($"/Scenario/{scenId}");
     }
 }

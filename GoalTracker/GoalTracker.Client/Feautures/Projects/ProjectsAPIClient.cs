@@ -13,12 +13,23 @@ namespace GoalTracker.Client.Feautures.Projects
         {
             return await http.GetFromJsonAsync<List<ProjectDTO>>($"/api/goals/{goalId}/projects") ?? [];
         } 
+        public async Task<List<ProjectDTO>> GetProjectsForScenAsync(int scenId)
+        {
+            return await http.GetFromJsonAsync<List<ProjectDTO>>($"/api/scens/{scenId}/projects") ?? [];
+        } 
         public async Task<ProjectDTO> SaveProject(ProjectDTO project, int goalId)
         {
             var response = await http.PostAsJsonAsync($"/api/goals/{goalId}/projects", project);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<ProjectDTO>();
         }
+        public async Task<ProjectDTO> SaveToScenari(ProjectDTO project, int scenId)
+        {
+            var response = await http.PostAsJsonAsync($"/api/scens/{scenId}/projects", project);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<ProjectDTO>();
+        }
+        
         public async Task<ProjectDTO> SaveProject(ProjectDTO project)
         {
             var response = await http.PostAsJsonAsync("/api/projects", project);

@@ -1,0 +1,149 @@
+﻿@page "/Scenario/{id:int}"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@using GoalTracker.Client.Pages.Components
+@using GoalTracker.Client.Feautures.GoalsScenario
+@using GoalTracker.Shared
+@using MudBlazor
+@inject GoalScenarioApiClient ScenarioApi
+@inject NavigationManager Navigation
+
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+@if (_scenario is null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"  
+            />
+        <MudText Typo="Typo.h5">@_scenario.Name</MudText>
+        <MudChip T="string" Size="Size.Small" 
+            Color="@(_scenario.IsActive ? Color.Success : Color.Default)">
+            @(_scenario.IsActive ? "Active" : "Inactive")
+        </MudChip>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_scenario.Description))
+    {
+        <MudText Typo="Typo.body1" Style="margin-bottom: 16px;">
+            @_scenario.Description
+        </MudText>
+    }
+
+    @* Projects *@
+    <MudText Typo="Typo.subtitle1" Style="margin-bottom: 8px;">Projects</MudText>
+    <ProjectsTable ScenarioId="@id" />
+
+    @* Child scenarios *@
+    @if (_scenario.ChildRelations?.Any() == true)
+    {
+      
+        <MudDivider Style="margin: 16px 0;" />
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <MudText Typo="Typo.subtitle1">Child scenarios</MudText>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" 
+                OnClick="OpenAddChildDialog">+ Add child</MudButton>
+        </div>
+        @foreach (var child in _scenario.ChildRelations)
+        {
+            <MudCard Style="margin-bottom: 12px;">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <MudIcon Icon="@(_scenario.IsActive ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.PauseCircle)"
+                                Color="@(child.IsActive ? Color.Success : Color.Default)"
+                                Size="Size.Small" />
+                            <MudLink OnClick="() => OpenScenario(child.Id)" Underline="Underline.Hover" Style="cursor: pointer;">
+                                @child.Name
+                            </MudLink> 
+                        </div>
+                        @if (!string.IsNullOrEmpty(child.Description))
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                @child.Description
+                            </MudText>
+                        }
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                            Size="Size.Small" 
+                            />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                            Color="Color.Error" Size="Size.Small"
+                            OnClick="() => RemoveChild(child.Id)" />
+                    </CardHeaderActions>
+                </MudCardHeader>
+            </MudCard>
+        }
+    }
+    else
+    {
+        <MudDivider Style="margin: 16px 0;" />
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <MudText Typo="Typo.subtitle1">Child scenarios</MudText>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined"
+                OnClick="OpenAddChildDialog">+ Add child</MudButton>
+        </div>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">No child scenarios.</MudText>
+    }
+}
+
+@* Add child dialog *@
+<MudDialog @bind-Visible="_addChildVisible">
+    <TitleContent>Add child scenario</TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_newChild.Name" Label="Name" />
+        <MudTextField @bind-Value="_newChild.Description" Label="Description" Lines="3" />
+        <MudCheckBox @bind-Value="_newChild.IsActive" Label="Active" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _addChildVisible = false">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="SaveChild">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public int id { get; set; }
+
+    private GoalScenarioDTO? _scenario;
+    private bool _addChildVisible;
+    private GoalScenarioDTO _newChild = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _scenario = await ScenarioApi.GetByIdAsync(id);
+    }
+
+    private void OpenAddChildDialog()
+    {
+        _newChild = new GoalScenarioDTO { IsActive = true };
+        _addChildVisible = true;
+    }
+
+    private async Task SaveChild()
+    {
+        var saved = await ScenarioApi.AddChildAsync(id, _newChild);
+        if (saved is not null)
+        {
+            _scenario!.ChildRelations ??= [];
+            _scenario.ChildRelations.Add(saved);
+            StateHasChanged();
+        }
+        _addChildVisible = false;
+    }
+
+    private async Task RemoveChild(int childId)
+    {
+        await ScenarioApi.DeleteAsync(childId);
+        _scenario?.ChildRelations?.RemoveAll(c => c.Id == childId);
+        StateHasChanged();
+    }
+    private void OpenScenario(int scenId)
+    {
+        Navigation.NavigateTo($"/Scenario/{scenId}");
+    }
+}

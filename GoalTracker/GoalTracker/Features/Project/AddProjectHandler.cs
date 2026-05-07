@@ -30,4 +30,29 @@ namespace GoalTracker.Features.Goal
             return mapper.ToDto(result);
         }
     }
+
+    public class AddProjecToScentHandler(IProjectRepository repository, AppMapper mapper)
+     : IRequestHandler<AddProjectToScenCommand, ProjectDTO>
+    {
+        public async Task<ProjectDTO> Handle(AddProjectToScenCommand request, CancellationToken cancellationToken)
+        {
+            var item = mapper.ToEntity(request.project);
+            if (item == null)
+            {
+                return null;
+            }
+            item.UserId = request.UserId;
+            GoalTracker.Domain.Entities.Project result;
+            if (request.scenId.HasValue)
+            {
+                result = await repository.AddProjectToScenAsync(item, request.scenId.Value);
+            }
+            else
+            {
+                result = await repository.CreateAsync(item);
+            }
+
+            return mapper.ToDto(result);
+        }
+    }
 }

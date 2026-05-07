@@ -1,0 +1,146 @@
+﻿@using GoalTracker.Client.Feautures.GoalsScenario
+@using GoalTracker.Shared
+@using MudBlazor
+@inject GoalScenarioApiClient ScenarioApi
+
+<MudCard Style="@($"margin-left: {Depth * 24}px; margin-bottom: 12px;")">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                @if (Scenario.IsActive)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" 
+                        Color="Color.Success" Size="Size.Small" />
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.PauseCircle" 
+                        Color="Color.Default" Size="Size.Small" />
+                }
+                <MudText Typo="Typo.subtitle1">@Scenario.Name</MudText>
+            </div>
+            @if (!string.IsNullOrEmpty(Scenario.Description))
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    @Scenario.Description
+                </MudText>
+            }
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                Size="Size.Small" OnClick="OpenEditDialog" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                Color="Color.Error" Size="Size.Small" OnClick="ConfirmDelete" />
+            <MudIconButton Icon="@Icons.Material.Filled.AddCircle"
+                Size="Size.Small" Color="Color.Primary" OnClick="OpenAddChildDialog"
+                Title="Add child scenario" />
+        </CardHeaderActions>
+    </MudCardHeader>
+
+    <MudCardContent>
+        @* Projects *@
+        <MudText Typo="Typo.caption" Color="Color.Secondary" 
+            Style="margin-bottom: 4px;">Projects</MudText>
+        <ProjectsTable ScenarioId="ScenId" />
+
+        @* Child scenarios — рекурсия *@
+        @if (Scenario.ChildRelations?.Any() == true)
+        {
+            <MudDivider Style="margin: 12px 0;" />
+            <MudText Typo="Typo.caption" Color="Color.Secondary" 
+                Style="margin-bottom: 8px;">Child scenarios</MudText>
+            @foreach (var child in Scenario.ChildRelations)
+            {
+                <ScenarioCard Scenario="@child" ScenId="@ScenId"
+                    Depth="@(Depth + 1)"
+                    OnUpdated="OnUpdated"
+                    OnDeleted="OnDeleted" />
+            }
+        }
+    </MudCardContent>
+</MudCard>
+
+@* Edit dialog *@
+<MudDialog @bind-Visible="_editDialogVisible">
+    <TitleContent>Edit scenario</TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_editModel.Name" Label="Name" />
+        <MudTextField @bind-Value="_editModel.Description" Label="Description" Lines="3" />
+        <MudCheckBox @bind-Value="_editModel.IsActive" Label="Active" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _editDialogVisible = false">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="SaveEdit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* Add child dialog *@
+<MudDialog @bind-Visible="_addChildDialogVisible">
+    <TitleContent>Add child scenario</TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_newChild.Name" Label="Name" />
+        <MudTextField @bind-Value="_newChild.Description" Label="Description" Lines="3" />
+        <MudCheckBox @bind-Value="_newChild.IsActive" Label="Active" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _addChildDialogVisible = false">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="SaveChild">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public GoalScenarioDTO Scenario { get; set; } = new();
+    [Parameter] public int ScenId { get; set; }
+    [Parameter] public int Depth { get; set; } = 0;
+    [Parameter] public EventCallback<GoalScenarioDTO> OnUpdated { get; set; }
+    [Parameter] public EventCallback<int> OnDeleted { get; set; }
+
+    private bool _editDialogVisible;
+    private bool _addChildDialogVisible;
+    private GoalScenarioDTO _editModel = new();
+    private GoalScenarioDTO _newChild = new();
+
+    private void OpenEditDialog()
+    {
+        _editModel = new GoalScenarioDTO
+        {
+            Id = Scenario.Id,
+            Name = Scenario.Name,
+            Description = Scenario.Description,
+            IsActive = Scenario.IsActive
+        };
+        _editDialogVisible = true;
+    }
+
+    private async Task SaveEdit()
+    {
+        var updated = await ScenarioApi.UpdateAsync(_editModel);
+        if (updated is not null)
+            await OnUpdated.InvokeAsync(updated);
+        _editDialogVisible = false;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        await ScenarioApi.DeleteAsync(Scenario.Id);
+        await OnDeleted.InvokeAsync(Scenario.Id);
+    }
+
+    private void OpenAddChildDialog()
+    {
+        _newChild = new GoalScenarioDTO { IsActive = true };
+        _addChildDialogVisible = true;
+    }
+
+    private async Task SaveChild()
+    {
+        var saved = await ScenarioApi.AddChildAsync(Scenario.Id, _newChild);
+        if (saved is not null)
+        {
+            Scenario.ChildRelations ??= [];
+            Scenario.ChildRelations.Add(saved);
+            StateHasChanged();
+        }
+        _addChildDialogVisible = false;
+    }
+}

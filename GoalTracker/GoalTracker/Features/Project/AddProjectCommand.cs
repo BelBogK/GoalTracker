@@ -8,5 +8,10 @@ namespace GoalTracker.Features.Goal
       string UserId,
       ProjectDTO project,
       int? goalId) : IRequest<ProjectDTO>;
-     
+
+    public record AddProjectToScenCommand(
+      string UserId,
+      ProjectDTO project,
+      int? scenId) : IRequest<ProjectDTO>;
+
 }

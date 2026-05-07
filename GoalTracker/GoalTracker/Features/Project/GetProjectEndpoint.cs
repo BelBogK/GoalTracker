@@ -30,6 +30,17 @@ namespace GoalTracker.Features.Project
                 var result = await mediator.Send(new GetProjectQuery(userId, goalId));
                 return Results.Ok(result);
             }).RequireAuthorization();
+
+            app.MapGet("/api/scens/{scenId}/projects", async (
+              int scenId,
+              IMediator mediator,
+              ClaimsPrincipal user) =>
+            {
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                var result = await mediator.Send(new GetProjectsByScenQuery(userId, scenId));
+                return Results.Ok(result);
+            }).RequireAuthorization();
+
             app.MapGet("/api/projects/{id}", async (
     int id,
     IMediator mediator,
@@ -64,6 +75,20 @@ ClaimsPrincipal user) =>
 
                 var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
                 var result = await mediator.Send(new AddProjectCommand(userId, items!, goalId));
+                return Results.Ok(result);
+            }).RequireAuthorization();
+
+            app.MapPost("/api/scens/{scenId}/projects", async (
+                int scenId,
+    HttpContext httpContext,
+    IMediator mediator,
+    ClaimsPrincipal user) =>
+            {
+                var items = await httpContext.Request.ReadFromJsonAsync<ProjectDTO>(
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                var result = await mediator.Send(new AddProjectToScenCommand(userId, items!, scenId));
                 return Results.Ok(result);
             }).RequireAuthorization();
 
