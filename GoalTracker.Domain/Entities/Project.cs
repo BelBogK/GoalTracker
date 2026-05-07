@@ -18,5 +18,6 @@ namespace GoalTracker.Domain.Entities
         public DateTime EndTime { get; set; }
         public DateTime? CompletedTime { get; set; }        
         public virtual ICollection<Goal> Goals { get; set; } = new List<Goal>();
+        public virtual ICollection<TaskItem> TaskItems { get; set; }
     }
 }

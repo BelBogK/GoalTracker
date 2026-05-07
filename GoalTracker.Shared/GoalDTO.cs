@@ -17,6 +17,7 @@ namespace GoalTracker.Shared
         public GoalType GoalType { get; set; }
         public Priority Priority { get; set; }
         public string IdealVision { get; set; }
-        public List<GoalScenarioDTO> Scenarios { get; set; } = new List<GoalScenarioDTO>();
+        public List<GoalScenarioDTO> Scenarios { get; set; } = new List<GoalScenarioDTO>(); 
+        public List<LifeAreaDTO> LifeAreas { get; set; } = [];
     }
 }

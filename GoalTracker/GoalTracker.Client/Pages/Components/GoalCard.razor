@@ -1,0 +1,72 @@
+﻿@using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
+@using MudBlazor
+@inject NavigationManager Navigation
+
+<MudCard Class="mb-4">
+    <MudCardContent>
+        
+        @* Header *@
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+            <MudText Typo="Typo.h6">@Goal.Name</MudText>
+            <div style="display: flex; gap: 6px;">
+                <MudChip T="string" Size="Size.Small" Color="Color.Info">@Goal.GoalType</MudChip>
+                <MudChip T="string" Size="Size.Small" Color="@GetPriorityColor(Goal.Priority)">@Goal.Priority</MudChip>
+                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(Goal.CurrentStatus)">@Goal.CurrentStatus</MudChip>
+            </div>
+        </div>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Style="margin-bottom: 16px;">
+            @Goal.Description
+        </MudText>
+
+        @* Projects *@
+        @if (Goal.Scenarios.SelectMany(s => s.Projects).Any())
+        {
+            <MudDivider Style="margin-bottom: 8px;" />
+            <MudText Typo="Typo.caption" Color="Color.Secondary" 
+                Style="font-weight: 500; letter-spacing: 1px; margin-bottom: 8px; display: block;">
+                PROJECTS
+            </MudText>
+            @foreach (var project in Goal.Scenarios.SelectMany(s => s.Projects).DistinctBy(p => p.Id))
+            {
+                <ProjectRow Project="@project" />
+            }
+        }
+
+        @* Scenarios *@
+        @if (Goal.Scenarios?.Any() == true)
+        {
+            <MudDivider Style="margin: 12px 0 8px;" />
+            <MudText Typo="Typo.caption" Color="Color.Secondary"
+                Style="font-weight: 500; letter-spacing: 1px; margin-bottom: 8px; display: block;">
+                SCENARIOS
+            </MudText>
+            @foreach (var scenario in Goal.Scenarios)
+            {
+                <ScenarioRow Scenario="@scenario" />
+            }
+        }
+
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter] public GoalDTO Goal { get; set; } = new();
+
+    private Color GetPriorityColor(Priority p) => p switch
+    {
+        Priority.High => Color.Error,
+        Priority.Medium => Color.Warning,
+        Priority.Low => Color.Default,
+        _ => Color.Default
+    };
+
+    private Color GetStatusColor(CurrentStatus s) => s switch
+    {
+        CurrentStatus.Active => Color.Success,
+        CurrentStatus.Achieved => Color.Success,
+        CurrentStatus.Cancel => Color.Error,
+        CurrentStatus.Planning => Color.Warning,
+        _ => Color.Default
+    };
+}

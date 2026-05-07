@@ -36,9 +36,10 @@ namespace GoalTracker.Infrastructure.Repositories
             return result;
         }
 
-        public Task<LifeArea?> GetByIdAsync(int id)
+        public async Task<LifeArea?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            using var context=await contextFactory.CreateDbContextAsync();
+            return await context.LifeAreas.FirstOrDefaultAsync(x=>x.Id == id);
         }
 
         public async Task<IEnumerable<LifeArea>> GetDefaultLifeAreas()

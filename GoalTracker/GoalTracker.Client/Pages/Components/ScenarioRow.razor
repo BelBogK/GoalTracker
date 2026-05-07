@@ -1,0 +1,59 @@
+﻿@using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
+@using MudBlazor
+@inject NavigationManager Navigation
+
+<div style="margin-bottom: 4px;">
+    <div style="display: flex; align-items: center; gap: 6px; padding: 4px 0;">
+        
+        @* Expand button *@
+        @if (Scenario.ChildRelations?.Any() == true)
+        {
+            <MudIconButton Icon="@(_expanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                Size="Size.Small" OnClick="() => _expanded = !_expanded" />
+        }
+        else
+        {
+            <div style="width: 34px;"></div>
+        }
+
+        @* Active indicator *@
+        <MudIcon Icon="@(Scenario.IsActive ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.PauseCircle)"
+            Color="@(Scenario.IsActive ? Color.Success : Color.Default)"
+            Size="Size.Small" />
+
+        @* Name *@
+        <MudLink OnClick="() => NavigateToScen(Scenario.Id)"
+            Underline="Underline.Hover" Style="cursor: pointer;">
+            @Scenario.Name
+        </MudLink>
+
+        @if (Scenario.Projects?.Any() == true)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Info">
+                @Scenario.Projects.Count projects
+            </MudChip>
+        }
+    </div>
+
+    @* Children — рекурсия *@
+    @if (_expanded && Scenario.ChildRelations?.Any() == true)
+    {
+        <div style="margin-left: 32px; border-left: 2px solid var(--mud-palette-divider); padding-left: 8px;">
+            @foreach (var child in Scenario.ChildRelations)
+            {
+                <ScenarioRow Scenario="@child" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public GoalScenarioDTO Scenario { get; set; } = new();
+    private bool _expanded = false;
+
+    private void NavigateToScen(int scenId)
+    {
+        Navigation.NavigateTo($"/Scenario/{scenId}");
+    }
+}

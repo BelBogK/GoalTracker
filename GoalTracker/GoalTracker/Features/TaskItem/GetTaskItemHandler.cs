@@ -25,4 +25,14 @@ namespace GoalTracker.Features.TaskItem
             return projects.Select(mapper.ToDto);
         }
     }
+
+    public class DeleteTaskItemHandler(ITaskItemRepository repository, AppMapper mapper)
+      : IRequestHandler<DeleteTaskItemQuery, TaskItemDTO>
+    { 
+        public async Task<TaskItemDTO> Handle(DeleteTaskItemQuery request, CancellationToken cancellationToken)
+        {
+            await repository.DeleteAsync(request.taskID);
+            return null;
+        }
+    }
 }

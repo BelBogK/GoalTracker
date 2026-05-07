@@ -2,6 +2,8 @@
 @using GoalTracker.Client.Feautures.GoalsScenario
 @using GoalTracker.Shared
 @using MudBlazor
+@using GoalTracker.Client.Feautures.LifeAreas
+@inject LifeAreaApiClient LifeAreaApi
 @inject IDialogService DialogService
 @inject GoalsApiClient GoalsApi
 @inject GoalScenarioApiClient GoalScenarioApi
@@ -60,6 +62,7 @@
     [Parameter] public EventCallback<GoalDTO> OnUpdated { get; set; }
 
     private GoalDTO _goal = new();
+    private List<LifeAreaDTO> _allLifeAreas { get; set; }=[];
 
     protected override void OnInitialized()
     {
@@ -68,10 +71,16 @@
 
     private async Task OpenEditDialog()
     {
-        var parameters = new DialogParameters
+        if(!_allLifeAreas.Any())
         {
-            { nameof(GoalEditDialog.Goal), _goal }
-        };
+            _allLifeAreas =await LifeAreaApi.GetLifeAreasAsync();
+        }
+        var parameters = new DialogParameters
+{
+    { nameof(GoalEditDialog.Goal), _goal },
+    { nameof(GoalEditDialog.AllLifeAreas), _allLifeAreas },
+    { nameof(GoalEditDialog.SelectedLifeAreas), _goal.LifeAreas ?? [] }
+};
         try
         {
             var options = new DialogOptions
@@ -84,6 +93,12 @@
 
             var dialog = await DialogService.ShowAsync<GoalEditDialog>("Edit goal", parameters, options);
             var result = await dialog.Result;
+            if (!result.Canceled && result.Data is GoalDTO updated)
+            {
+                _goal = updated;
+                await OnUpdated.InvokeAsync(_goal);
+                StateHasChanged();
+            }
         }
         catch (Exception ex)
         {
@@ -91,12 +106,7 @@
             Console.Error.WriteLine($"Error opening edit dialog: {ex.Message}");
             return;
         }
-        // if (!result.Canceled && result.Data is GoalDTO updated)
-        //     {
-        //         _goal = updated;
-        //         await OnUpdated.InvokeAsync(_goal);
-        //         StateHasChanged();
-        //     }
+
     }
 
     private async Task ConfirmDelete()
@@ -117,7 +127,7 @@
     private async Task SaveScenario(GoalScenarioDTO args)
     {
         var newScenario = await GoalScenarioApi.AddToGoalAsync(_goal.Id, args);
-      
+        args.Id = newScenario.Id;
     }
     private async Task DeleteScenario(GoalScenarioDTO args)
     {

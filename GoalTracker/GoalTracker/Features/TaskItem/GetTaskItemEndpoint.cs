@@ -28,6 +28,16 @@ namespace GoalTracker.Features.TaskItem
                 var result = await mediator.Send(new GetTaskItemQuery(userId, projectId));
                 return Results.Ok(result);
             }).RequireAuthorization();
+
+            app.MapDelete("/api/tasks/{taskId}", async (
+                int taskId,
+                IMediator mediator,
+                ClaimsPrincipal user) =>
+            {
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                var result = await mediator.Send(new DeleteTaskItemQuery(userId,taskId));
+                return Results.Ok(result);
+            }).RequireAuthorization();
         }
     }
 }

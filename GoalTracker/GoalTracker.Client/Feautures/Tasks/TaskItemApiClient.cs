@@ -24,7 +24,7 @@ namespace GoalTracker.Client.Feautures.Tasks
         }
         public async Task DeleteTaskAsync(int taskId)
         {
-            // Implementation for deleting a task by ID
+            var r = await http.DeleteAsync($"/api/tasks/{taskId}");
         }
     }
 }

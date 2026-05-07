@@ -30,9 +30,19 @@ namespace GoalTracker.Infrastructure.Repositories
             return entity;
         }
 
-        public Task DeleteAsync(int id)
+        public async Task DeleteAsync(int id)
         {
-            throw new NotImplementedException();
+            using var context = await contextFactory.CreateDbContextAsync();
+            var removeItem=await context
+                .TaskItems
+                .Include(X=>X.Projects)
+                .FirstOrDefaultAsync(x=>x.Id==id);
+
+            if (removeItem == null)
+                return;
+            removeItem.Projects.Clear();
+            context.TaskItems.Remove(removeItem);
+            await context.SaveChangesAsync();
         }
 
         public async Task<IEnumerable<TaskItem>> GetAllAsync(string userId)

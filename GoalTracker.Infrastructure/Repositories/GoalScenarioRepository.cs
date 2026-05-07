@@ -80,6 +80,7 @@ namespace GoalTracker.Infrastructure.Repositories
             var entity = await context.GoalScenarios.FindAsync(id);
             if (entity is not null)
             {
+                entity.Goals.Clear();
                 context.GoalScenarios.Remove(entity);
                 await context.SaveChangesAsync();
             }

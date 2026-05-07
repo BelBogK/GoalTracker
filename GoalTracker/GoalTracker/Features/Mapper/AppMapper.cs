@@ -10,6 +10,9 @@ namespace GoalTracker.Features.Mapper
         public partial GoalDTO ToDto(GoalTracker.Domain.Entities.Goal entity);
         public partial GoalTracker.Domain.Entities.Goal ToEntity(GoalDTO dto);
 
+        public partial LifeAreaDTO ToDto(GoalTracker.Domain.Entities.LifeArea entity);
+        public partial GoalTracker.Domain.Entities.LifeArea ToEntity(LifeAreaDTO dto);
+
         [MapperIgnoreSource(nameof(GoalTracker.Domain.Entities.Project.NextProjects))]
         public partial ProjectDTO ToDto(GoalTracker.Domain.Entities.Project entity);
         [MapperIgnoreSource(nameof(GoalTracker.Domain.Entities.Project.NextProjects))]

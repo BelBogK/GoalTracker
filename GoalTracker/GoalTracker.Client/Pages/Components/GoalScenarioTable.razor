@@ -133,9 +133,10 @@
     }
 
     private async Task SaveRow(GoalScenarioDTO scenario)
-    {
-        _editingRow = null;
+    { 
         await OnSave.InvokeAsync(scenario);
+        _editingRow.Id=scenario.Id;
+        _editingRow = null;
     }
 
     private void CancelRow()

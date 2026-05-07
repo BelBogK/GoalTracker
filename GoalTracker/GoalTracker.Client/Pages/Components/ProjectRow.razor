@@ -1,0 +1,69 @@
+﻿@using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
+@using MudBlazor
+@inject NavigationManager Navigation
+
+<div style="margin-bottom: 4px;">
+    <div style="display: flex; align-items: center; gap: 6px; padding: 4px 0;">
+        
+        @* Status icon *@
+        @if (Project.CurrentStatus == CurrentStatus.Cancel)
+        {
+            <MudIcon Icon="@Icons.Material.Filled.Cancel" 
+                Color="Color.Error" Size="Size.Small" />
+        }
+        else if (Project.CurrentStatus == CurrentStatus.Done || 
+                 Project.CurrentStatus == CurrentStatus.Achieved)
+        {
+            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" 
+                Color="Color.Success" Size="Size.Small" />
+        }
+        else
+        {
+            <MudIcon Icon="@Icons.Material.Filled.FolderOpen" 
+                Color="Color.Default" Size="Size.Small" />
+        }
+
+        @* Name *@
+       
+        <MudLink OnClick="() => NavigateToProject(Project.Id)"
+    Style="@ProjectNameStyle"
+    Underline="Underline.Hover">
+    @Project.Name
+</MudLink>
+
+        @* Expand tasks *@
+        @if (Project.CurrentStatus != CurrentStatus.Cancel)
+        {
+            <MudChip T="string" Size="Size.Small" 
+                Color="@GetStatusColor(Project.CurrentStatus)">
+                @Project.CurrentStatus
+            </MudChip>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public ProjectDTO Project { get; set; } = new();
+
+    private string ProjectNameStyle =>
+           Project.CurrentStatus == CurrentStatus.Cancel
+               ? "text-decoration: line-through; color: var(--mud-palette-text-disabled); cursor: pointer;"
+               : "cursor: pointer;";
+
+
+    private Color GetStatusColor(CurrentStatus s) => s switch
+    {
+        CurrentStatus.Active => Color.Success,
+        CurrentStatus.Achieved => Color.Success,
+        CurrentStatus.Done => Color.Success,
+        CurrentStatus.Cancel => Color.Error,
+        CurrentStatus.Planning => Color.Warning,
+        _ => Color.Default
+    };
+
+    private void NavigateToProject(int projectId)
+    {
+        Navigation.NavigateTo($"/Project/{projectId}");
+    }
+}

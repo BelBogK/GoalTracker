@@ -15,20 +15,64 @@
                 <MudSelectItem T="GoalTracker.Shared.Enums.CurrentStatus" Value="@status">@status</MudSelectItem>
             }
         </MudSelect>
-
         <MudSelect @bind-Value="Goal.Priority" Label="Priority" T="GoalTracker.Shared.Enums.Priority">
             @foreach (var priority in Enum.GetValues<GoalTracker.Shared.Enums.Priority>())
             {
                 <MudSelectItem T="GoalTracker.Shared.Enums.Priority" Value="@priority">@priority</MudSelectItem>
             }
         </MudSelect>
-
         <MudSelect @bind-Value="Goal.GoalType" Label="Type" T="GoalTracker.Shared.Enums.GoalType">
             @foreach (var type in Enum.GetValues<GoalTracker.Shared.Enums.GoalType>())
             {
                 <MudSelectItem T="GoalTracker.Shared.Enums.GoalType" Value="@type">@type</MudSelectItem>
             }
         </MudSelect>
+
+        @* Life Areas *@
+        <MudDivider Style="margin: 16px 0 8px;" />
+        <MudText Typo="Typo.subtitle2" Style="margin-bottom: 8px;">Life Areas</MudText>
+
+        @* Selected *@
+        @if (_selectedAreas.Any())
+        {
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
+                @foreach (var area in _selectedAreas)
+                {
+                    var a = area;
+                    <div style="display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px; background-color: var(--mud-palette-primary); color: var(--mud-palette-primary-text); font-size: 13px;">
+                        <span>@a.Name</span>
+                        <span style="cursor: pointer; margin-left: 4px; opacity: 0.8;"
+                              @onclick="() => RemoveArea(a)">✕</span>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Style="margin-bottom: 8px; display: block;">
+                No life areas selected.
+            </MudText>
+        }
+
+        @* Available to add *@
+        @{
+            var available = AllLifeAreas
+                .Where(a => !_selectedAreas.Any(s => s.Id == a.Id))
+                .ToList();
+        }
+        @if (available.Any())
+        {
+            <MudSelect T="LifeAreaDTO" Label="Add life area"
+                       Value="_selectingArea", 
+                       ValueChanged="AddArea"
+                       Margin="Margin.Dense">
+                @foreach (var area in available)
+                {
+                    <MudSelectItem T="LifeAreaDTO" Value="@area">@area.Name</MudSelectItem>
+                }
+            </MudSelect>
+        }
+
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
@@ -39,7 +83,29 @@
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public GoalDTO Goal { get; set; } = new();
+    [Parameter] public List<LifeAreaDTO> AllLifeAreas { get; set; } = [];
+    [Parameter] public List<LifeAreaDTO> SelectedLifeAreas { get; set; } = [];
 
-    private void Submit() => MudDialog.Close(DialogResult.Ok(Goal));
+    private List<LifeAreaDTO> _selectedAreas = [];
+    private LifeAreaDTO? _selectingArea;
+
+    protected override void OnInitialized()
+    {
+        _selectedAreas = SelectedLifeAreas.ToList();
+    }
+
+    private void AddArea(LifeAreaDTO area)
+    {
+        if (area is not null && !_selectedAreas.Any(a => a.Id == area.Id))
+            _selectedAreas.Add(area);
+        _selectingArea = null;
+    }
+
+    private void RemoveArea(LifeAreaDTO area)
+    {
+        _selectedAreas.RemoveAll(a => a.Id == area.Id);
+    }
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok((Goal, _selectedAreas)));
     private void Cancel() => MudDialog.Cancel();
 }

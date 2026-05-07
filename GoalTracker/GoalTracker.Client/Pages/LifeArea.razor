@@ -1,0 +1,93 @@
+﻿@page "/LifeArea/{id:int}"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@using GoalTracker.Client.Pages.Components
+@using GoalTracker.Shared
+@using MudBlazor
+@using GoalTracker.Client.Feautures.LifeAreas
+@inject LifeAreaApiClient LifeAreaApi
+@inject NavigationManager Navigation
+
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+@if (_lifeArea is null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" 
+            />
+        <MudText Typo="Typo.h5">@_lifeArea.Name</MudText>
+        @if (_lifeArea.IsDefault)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Info">Default</MudChip>
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(_lifeArea.Description))
+    {
+        <MudText Typo="Typo.body1" Style="margin-bottom: 8px;">
+            @_lifeArea.Description
+        </MudText>
+    }
+
+    @if (!string.IsNullOrEmpty(_lifeArea.IdealVision))
+    {
+        <MudAlert Severity="Severity.Info" Style="margin-bottom: 16px;">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Ideal vision</MudText>
+            <MudText Typo="Typo.body2">@_lifeArea.IdealVision</MudText>
+        </MudAlert>
+    }
+
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+        <MudText Typo="Typo.caption" Color="Color.Secondary">Progress</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            <span style="color: var(--mud-palette-success);">@_lifeArea.AchievePoints</span>
+            / @_lifeArea.GoalPoints
+        </MudText>
+    </div>
+    <MudProgressLinear Value="@GetProgress()"
+        Color="Color.Success" Rounded="true" Size="Size.Medium"
+        Style="margin-bottom: 24px;" />
+
+    @* Goals *@
+    <MudText Typo="Typo.h6" Style="margin-bottom: 12px;">Goals</MudText>
+
+    @if (_goals is null)
+    {
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+    }
+    else if (!_goals.Any())
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary">No goals linked.</MudText>
+    }
+    else
+    {
+        @foreach (var goal in _goals)
+        {
+            <GoalCard Goal="@goal" />
+        }
+    }
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+
+    private LifeAreaDTO? _lifeArea;
+    private List<GoalDTO>? _goals;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _lifeArea = await LifeAreaApi.GetByIdAsync(id);
+        _goals = await LifeAreaApi.GetGoalsAsync(id);
+    }
+
+    private double GetProgress()
+    {
+        if (_lifeArea is null || _lifeArea.GoalPoints == 0) return 0;
+        return (double)_lifeArea.AchievePoints / _lifeArea.GoalPoints * 100;
+    }
+}

@@ -4,6 +4,8 @@
 @using MudBlazor
 @using GoalTracker.Shared
 @using GoalTracker.Client.Feautures.Goals
+@using GoalTracker.Client.Feautures.LifeAreas
+@inject LifeAreaApiClient LifeAreaApi
 @inject GoalsApiClient _goalsApiClient
 @inject IDialogService DialogService 
 <MudDialogProvider />
@@ -24,7 +26,7 @@ else
                                ExpandedChanged="@(() => OnPanelExpanded( g.Id))">
         @if (_expandedGoals.Contains(g.Id))
         {
-            <GoalView Goal="@g" />
+            <GoalView Goal="@g" OnUpdated="UpdateGoal" />
         }
     </MudExpansionPanel>
 }
@@ -39,6 +41,7 @@ else
 @code {
     private List<GoalDTO> _goals { get; set; } = [];
     private List<int> _expandedGoals = [];
+    private List<LifeAreaDTO> _allLifeAreas { get; set; } = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -54,11 +57,16 @@ else
     private async Task OpenCreateDialog()
     {
         var newGoal = new GoalDTO();
-
+        if (!_allLifeAreas.Any())
+        {
+            _allLifeAreas = await LifeAreaApi.GetLifeAreasAsync();
+        }
         var parameters = new DialogParameters
     {
-        { nameof(GoalEditDialog.Goal), newGoal }
-    };
+        { nameof(GoalEditDialog.Goal), newGoal } ,
+    { nameof(GoalEditDialog.AllLifeAreas), _allLifeAreas },
+    { nameof(GoalEditDialog.SelectedLifeAreas), newGoal.LifeAreas ?? [] }
+        };
         var options = new DialogOptions
         {
             MaxWidth = MaxWidth.Medium,  // Small, Medium, Large, ExtraLarge, False
@@ -70,9 +78,13 @@ else
         var dialog = await DialogService.ShowAsync<GoalEditDialog>("Edit goal", parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled && result.Data is GoalDTO created)
+        if (!result.Canceled && result.Data is ValueTuple<GoalDTO, List<LifeAreaDTO>> data)
         {
+            var created = data.Item1;
+            var areas = data.Item2;
+            created.LifeAreas = areas;
             var saved = await _goalsApiClient.SaveGoal(created);
+
             if (saved is not null)
             {
                 _goals.Add(saved);
@@ -88,5 +100,9 @@ else
             _expandedGoals.Add(goalId);
             StateHasChanged();
         }
+    }
+    private void UpdateGoal(GoalDTO args)
+    {
+         
     }
 }

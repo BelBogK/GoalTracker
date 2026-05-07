@@ -17,5 +17,10 @@ namespace GoalTracker.Client.Feautures.LifeAreas
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<LifeAreaDTO>>() ?? [];
         }
+        public async Task<LifeAreaDTO?> GetByIdAsync(int id)
+    => await http.GetFromJsonAsync<LifeAreaDTO>($"/api/lifeareas/{id}");
+
+        public async Task<List<GoalDTO>> GetGoalsAsync(int lifeAreaId)
+            => await http.GetFromJsonAsync<List<GoalDTO>>($"/api/lifeareas/{lifeAreaId}/goals") ?? [];
     }
 }
