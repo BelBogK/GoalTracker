@@ -2,6 +2,7 @@
 @using GoalTracker.Shared.SuperClass
 @using MudBlazor
 
+<div style="display:flex; flex-wrap:wrap; gap:16px;">
 @foreach (var lifeArea in Hierarchy)
 {
     <MudCard Class="mb-4">
@@ -56,7 +57,7 @@
         </MudCardContent>
     </MudCard>
 }
-
+</div>
 @code {
     [Parameter] public List<TaskHierarchyLifeAreaDTO> Hierarchy { get; set; } = [];
     [Parameter] public EventCallback<TaskItemDTO> OnStatusChanged { get; set; }
