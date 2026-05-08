@@ -1,19 +1,55 @@
-﻿using GoalTracker.Domain.Entities;
+﻿using GoalTracker.Data;
+using GoalTracker.Domain.Entities;
 using GoalTracker.Domain.Interfaces.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using GoalTracker.Shared.SuperClass;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace GoalTracker.Infrastructure.Repositories
 {
-    public class TaskDailyTrackerRepository : ITaskDailyTrackerRepository
-    {
+    public class TaskDailyTrackerRepository(IDbContextFactory<ApplicationDbContext> contextFactory, ILifeAreaRepository lifeAreaRepository) : ITaskDailyTrackerRepository
+    { 
+
         public Task AddToList(TaskItem task, DateTime dateTimeToExecute)
         {
             throw new NotImplementedException();
         }
 
+        public async Task<IEnumerable<LifeArea>> AddToTracked(string userId, int taskId, DateTime dateTime)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+            var task = await context.TaskItems.FirstAsync(x=>x.Id==taskId);
+            var newItem = new TaskDailyTracker
+            {
+                UserId = userId,
+                Created = DateTime.UtcNow,
+                StatusInBegining = task.CurrentStatus,
+                Task = task,
+                TaskItemId = taskId,
+                TodayIs = dateTime
+            };
+            await context.DailyTrackers.AddAsync(newItem);
+            await context.SaveChangesAsync();
+
+            return await lifeAreaRepository.GetWithAllPathToTask(taskId, userId);
+        }
+
         public Task Delete(int taskId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<IEnumerable<LifeArea>> NonTrackedTask(string userId)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+            var trackedTaskIds = context.DailyTrackers.Where(x => x.UserId == userId).Select(t => t.Id);
+            var taskIds=await context.TaskItems.Where(x=>x.UserId==userId && !trackedTaskIds.Contains( x.Id))
+                .Select(t=>t.Id).ToListAsync();
+
+            return await lifeAreaRepository.GetLifeAreasByTaskIdsAsync(taskIds);
+        }
+
+        public Task RemoveTaskFromTrack(string userId, int taskId)
         {
             throw new NotImplementedException();
         }
@@ -23,9 +59,17 @@ namespace GoalTracker.Infrastructure.Repositories
             throw new NotImplementedException();
         }
 
+        public async Task<IEnumerable<LifeArea>> TrackedTask(string userId, DateTime from, DateTime to)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+            var trackedTaskIds = context.DailyTrackers.Where(x => x.UserId == userId).Select(t => t.Id);
+             
+            return await lifeAreaRepository.GetLifeAreasByTaskIdsAsync(trackedTaskIds);
+        }
+
         public Task UpdateStatusTask(int taskId, TaskStatus newStatus)
         {
             throw new NotImplementedException();
-        }
+        } 
     }
 }

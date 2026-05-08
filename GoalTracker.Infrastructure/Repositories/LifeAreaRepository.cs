@@ -48,6 +48,95 @@ namespace GoalTracker.Infrastructure.Repositories
             return await context.LifeAreas.Where(l => l.UserId == Guid.Empty.ToString()).ToListAsync();
         }
 
+        public async Task<IEnumerable<LifeArea>> GetWithAllPathToTask(int taskId, string userId)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+
+            // Находим проекты которые содержат эту задачу
+            var projectIds = await context.Projects
+                .Where(p => p.TaskItems.Any(t => t.Id == taskId))
+                .Select(p => p.Id)
+                .ToListAsync();
+
+            // Находим сценарии которые содержат эти проекты (вся иерархия вверх)
+            var scenarioIds = await context.GoalScenarios
+                .Where(s => s.Projects.Any(p => projectIds.Contains(p.Id)))
+                .Select(s => s.Id)
+                .ToListAsync();
+
+            // Находим цели через проекты или сценарии
+            var goalIds = await context.Goals
+                .Where(g =>
+                    g.Projects.Any(p => projectIds.Contains(p.Id)) ||
+                    g.Scenarios.Any(s => scenarioIds.Contains(s.Id)))
+                .Select(g => g.Id)
+                .ToListAsync();
+
+            // Загружаем LifeAreas с полной иерархией
+            return await context.LifeAreas
+     .Where(la => la.Goals.Any(g => goalIds.Contains(g.Id)))
+     .Include(la => la.Goals.Where(g => goalIds.Contains(g.Id)))
+         .ThenInclude(g => g.Scenarios)
+             .ThenInclude(s => s.ChildRelations)
+                 .ThenInclude(cr => cr.Child)
+                     .ThenInclude(c => c.Projects)
+     .Include(la => la.Goals.Where(g => goalIds.Contains(g.Id)))
+         .ThenInclude(g => g.Scenarios)
+             .ThenInclude(s => s.Projects)
+     .Include(la => la.Goals.Where(g => goalIds.Contains(g.Id)))
+         .ThenInclude(g => g.Projects)
+     .ToListAsync();
+        }
+
+        public async Task<IEnumerable<LifeArea>> GetLifeAreasByTaskIdsAsync(IEnumerable<int> taskItemIds)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+
+            var taskIds = taskItemIds.Distinct().ToList();
+
+            // Находим проекты которые содержат эти задачи
+            var projectIds = await context.Projects
+                .Where(p => p.TaskItems.Any(t => taskIds.Contains(t.Id)))
+                .Select(p => p.Id)
+                .Distinct()
+                .ToListAsync();
+
+            // Находим сценарии которые содержат эти проекты
+            var scenarioIds = await context.GoalScenarios
+                .Where(s => s.Projects.Any(p => projectIds.Contains(p.Id)))
+                .Select(s => s.Id)
+                .Distinct()
+                .ToListAsync();
+
+            // Находим цели через проекты или сценарии
+            var goalIds = await context.Goals
+                .Where(g =>
+                    g.Projects.Any(p => projectIds.Contains(p.Id)) ||
+                    g.Scenarios.Any(s => scenarioIds.Contains(s.Id)))
+                .Select(g => g.Id)
+                .Distinct()
+                .ToListAsync();
+
+            // Загружаем LifeAreas с полной иерархией без повторений
+            return await context.LifeAreas
+                .Where(la => la.Goals.Any(g => goalIds.Contains(g.Id)))
+                .Include(la => la.Goals.Where(g => goalIds.Contains(g.Id)))
+                    .ThenInclude(g => g.Scenarios)
+                        .ThenInclude(s => s.ChildRelations)
+                            .ThenInclude(cr => cr.Child)
+                                .ThenInclude(c => c.Projects
+                                    .Where(p => projectIds.Contains(p.Id)))
+                .Include(la => la.Goals.Where(g => goalIds.Contains(g.Id)))
+                    .ThenInclude(g => g.Scenarios)
+                        .ThenInclude(s => s.Projects
+                            .Where(p => projectIds.Contains(p.Id)))
+                .Include(la => la.Goals.Where(g => goalIds.Contains(g.Id)))
+                    .ThenInclude(g => g.Projects
+                        .Where(p => projectIds.Contains(p.Id)))
+                .AsSplitQuery()
+                .ToListAsync();
+        }
+
         public Task<LifeArea> UpdateAsync(LifeArea entity)
         {
             throw new NotImplementedException();

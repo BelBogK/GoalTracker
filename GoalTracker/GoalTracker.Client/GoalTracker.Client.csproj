@@ -22,8 +22,4 @@
     <ProjectReference Include="..\..\GoalTracker.Shared\GoalTracker.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Pages\Components\ModelComponents\" />
-  </ItemGroup>
-
 </Project>

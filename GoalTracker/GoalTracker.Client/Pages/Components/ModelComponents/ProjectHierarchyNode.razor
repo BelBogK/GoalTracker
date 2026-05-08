@@ -1,0 +1,36 @@
+﻿@using GoalTracker.Shared
+@using GoalTracker.Shared.SuperClass
+@using MudBlazor
+
+<div style="margin-bottom: 8px;">
+    <ProjectMiniCard Project="@ToProjectDTO(Project)" />
+
+    @* Tasks *@
+    @if (Project.Tasks?.Any() == true)
+    {
+        <div style="margin-left: 24px; margin-top: 6px;">
+            @foreach (var task in Project.Tasks)
+            {
+                <div style="margin-bottom: 6px;">
+                    <TaskItemMiniCard Task="@task" OnStatusChanged="OnStatusChanged" />
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public TaskHierarchyProjectDTO Project { get; set; } = new();
+    [Parameter] public EventCallback<TaskItemDTO> OnStatusChanged { get; set; }
+
+    private ProjectDTO ToProjectDTO(TaskHierarchyProjectDTO p) => new()
+    {
+        Id = p.Id,
+        Name = p.Name,
+        Description = p.Description ?? "",
+        CurrentStatus = p.CurrentStatus,
+        Priority = p.Priority,
+        Points = p.Points
+        // AchievePoints = p.AchievePoints
+    };
+}

@@ -6,5 +6,8 @@ namespace GoalTracker.Domain.Interfaces.Repositories
     {
         Task<IEnumerable<LifeArea>> GetDefaultLifeAreas();
         Task<IEnumerable<LifeArea>> CreateRangeAsync(IEnumerable<LifeArea> entities);
+        Task<IEnumerable<LifeArea>> GetWithAllPathToTask(int taskId, string userId);
+        Task<IEnumerable<LifeArea>> GetLifeAreasByTaskIdsAsync(IEnumerable<int> taskItemIds);
+
     }
 }

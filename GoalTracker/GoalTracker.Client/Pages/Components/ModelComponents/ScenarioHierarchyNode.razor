@@ -1,0 +1,44 @@
+﻿@using GoalTracker.Shared
+@using GoalTracker.Shared.SuperClass
+@using MudBlazor
+
+<div style="margin-bottom: 8px;">
+    <GoalScenarioMiniCard Scenario="@ToScenarioDTO(Scenario)" />
+
+    @* Projects в сценарии *@
+    @if (Scenario.Projects?.Any() == true)
+    {
+        <div style="margin-left: 24px; margin-top: 6px;">
+            @foreach (var project in Scenario.Projects)
+            {
+                <ProjectHierarchyNode Project="@project" OnStatusChanged="OnStatusChanged" />
+            }
+        </div>
+    }
+
+    @* Дети — рекурсия *@
+    @if (Scenario.Children?.Any() == true)
+    {
+        <div style="margin-left: 24px; margin-top: 6px; 
+            border-left: 2px solid var(--mud-palette-divider); padding-left: 8px;">
+            @foreach (var child in Scenario.Children)
+            {
+                <ScenarioHierarchyNode Scenario="@child" OnStatusChanged="OnStatusChanged" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public TaskHierarchyScenarioDTO Scenario { get; set; } = new();
+    [Parameter] public EventCallback<TaskItemDTO> OnStatusChanged { get; set; }
+
+    private GoalScenarioDTO ToScenarioDTO(TaskHierarchyScenarioDTO s) => new()
+    {
+        Id = s.Id,
+        Name = s.Name,
+        Description = s.Description,
+        IsActive = s.IsActive,
+        IsOprimisticScenarios = s.IsOprimisticScenarios
+    };
+}

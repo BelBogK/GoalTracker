@@ -1,4 +1,5 @@
 ﻿using GoalTracker.Shared;
+using GoalTracker.Shared.SuperClass;
 using System.Net.Http.Json;
 
 namespace GoalTracker.Client.Feautures.Tasks
@@ -26,5 +27,36 @@ namespace GoalTracker.Client.Feautures.Tasks
         {
             var r = await http.DeleteAsync($"/api/tasks/{taskId}");
         }
+
+        public async Task<List<TaskHierarchyLifeAreaDTO>> GetDailyTrackerAsync(
+        DateTime startTime, DateTime endTime)
+        {
+            var start = startTime.ToString("yyyy-MM-ddTHH:mm:ss");
+            var end = endTime.ToString("yyyy-MM-ddTHH:mm:ss");
+            return await http.GetFromJsonAsync<List<TaskHierarchyLifeAreaDTO>>(
+                $"/api/tasks/daily-tracker?startTime={start}&endTime={end}") ?? [];
+        }
+
+        public async Task<List<TaskHierarchyLifeAreaDTO>> GetNonTrackedAsync()
+        {
+            return await http.GetFromJsonAsync<List<TaskHierarchyLifeAreaDTO>>(
+                "/api/tasks/non-tracked") ?? [];
+        }
+
+        public async Task AddToTrackerAsync(int taskId, DateTime startTime, DateTime endTime)
+        {
+            var response = await http.PostAsJsonAsync($"/api/tasks/{taskId}/tracker", new
+            {
+                startTime,
+                endTime
+            });
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task RemoveFromTrackerAsync(int taskId)
+        {
+            await http.DeleteAsync($"/api/tasks/{taskId}/tracker");
+        }
+
     }
 }

@@ -1,0 +1,154 @@
+﻿@page "/TaskManager"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@using GoalTracker.Client.Pages.Components.ModelComponents
+@using GoalTracker.Shared
+@using MudBlazor
+@using GoalTracker.Client.Feautures.Tasks
+@using GoalTracker.Shared.SuperClass
+@inject TaskItemApiClient TaskApi
+
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+@* Date selector *@
+<MudCard Class="mb-4">
+    <MudCardContent>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small">
+                <MudButton Color='@(_mode == "today" ? Color.Primary : Color.Default)'
+                    OnClick='() => SetMode( "today") '>Today</MudButton>
+                <MudButton Color='@(_mode == "week" ? Color.Primary : Color.Default)'
+                    OnClick='() => SetMode("week")'>This week</MudButton>
+                <MudButton Color='@(_mode == "month" ? Color.Primary : Color.Default)'
+                    OnClick='() => SetMode("month")'>This month</MudButton>
+                <MudButton Color='@(_mode == "custom" ? Color.Primary : Color.Default)'
+                    OnClick='() => SetMode("custom")'>Custom</MudButton>
+            </MudButtonGroup>
+
+            @if (_mode == "custom")
+            {
+                <MudDatePicker @bind-Date="_startDate" Label="Start" Margin="Margin.Dense"
+                    Style="max-width: 160px;" />
+                <MudDatePicker @bind-Date="_endDate" Label="End" Margin="Margin.Dense"
+                    Style="max-width: 160px;" />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                    Size="Size.Small" OnClick="LoadTracked">Apply</MudButton>
+            }
+            else
+            {
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    @_startDate?.ToString("dd.MM.yyyy") — @_endDate?.ToString("dd.MM.yyyy")
+                </MudText>
+            }
+        </div>
+    </MudCardContent>
+</MudCard>
+
+@* Tracked tasks *@
+<MudText Typo="Typo.h6" Style="margin-bottom: 12px;">
+    <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" Style="margin-right: 6px;" />
+    Tracked tasks
+</MudText>
+
+@if (_trackedLoading)
+{
+    <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+}
+else
+{
+    <TaskHierarchyView Hierarchy="@_tracked" OnStatusChanged="HandleStatusChanged"
+        ShowRemoveButton="true" OnRemove="RemoveFromTracker" />
+}
+
+<MudDivider Style="margin: 24px 0;" />
+
+@* Non tracked tasks *@
+<MudText Typo="Typo.h6" Style="margin-bottom: 12px;">
+    <MudIcon Icon="@Icons.Material.Filled.PlaylistAdd" Size="Size.Small" Style="margin-right: 6px;" />
+    Non-tracked tasks
+</MudText>
+
+@if (_nonTrackedLoading)
+{
+    <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+}
+else
+{
+    <TaskHierarchyView Hierarchy="@_nonTracked" OnStatusChanged="HandleStatusChanged" />
+}
+
+@code {
+    private string _mode = "today";
+    private DateTime? _startDate;
+    private DateTime? _endDate;
+
+    private List<TaskHierarchyLifeAreaDTO> _tracked = [];
+    private List<TaskHierarchyLifeAreaDTO> _nonTracked = [];
+    private bool _trackedLoading = false;
+    private bool _nonTrackedLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SetMode("today");
+        await Task.WhenAll(LoadTracked(), LoadNonTracked());
+    }
+
+    private async Task SetMode(string mode)
+    {
+        _mode = mode;
+        var now = DateTime.Now;
+
+        switch (mode)
+        {
+            case "today":
+                _startDate = now.Date;
+                _endDate = now.Date.AddDays(1).AddSeconds(-1);
+                break;
+            case "week":
+                _startDate = now.Date.AddDays(-(int)now.DayOfWeek + 1);
+                _endDate = _startDate.Value.AddDays(7).AddSeconds(-1);
+                break;
+            case "month":
+                _startDate = new DateTime(now.Year, now.Month, 1);
+                _endDate = _startDate.Value.AddMonths(1).AddSeconds(-1);
+                break;
+            case "custom":
+                return;
+        }
+
+        await LoadTracked();
+    }
+
+    private async Task LoadTracked()
+    {
+        if (_startDate is null || _endDate is null) return;
+        _trackedLoading = true;
+        _tracked = await TaskApi.GetDailyTrackerAsync(_startDate.Value, _endDate.Value);
+        _trackedLoading = false;
+    }
+
+    private async Task LoadNonTracked()
+    {
+        _nonTrackedLoading = true;
+        _nonTracked = await TaskApi.GetNonTrackedAsync();
+        _nonTrackedLoading = false;
+    }
+
+    private async Task HandleStatusChanged(TaskItemDTO task)
+    {
+        await TaskApi.UpdateTaskAsync(task);
+    }
+
+    private async Task AddToTracker(TaskItemDTO task)
+    {
+        await TaskApi.AddToTrackerAsync(task.Id, _startDate!.Value, _endDate!.Value);
+        await Task.WhenAll(LoadTracked(), LoadNonTracked());
+    }
+
+    private async Task RemoveFromTracker(TaskItemDTO task)
+    {
+        await TaskApi.RemoveFromTrackerAsync(task.Id);
+        await Task.WhenAll(LoadTracked(), LoadNonTracked());
+    }
+}

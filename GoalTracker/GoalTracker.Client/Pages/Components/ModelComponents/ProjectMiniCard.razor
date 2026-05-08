@@ -1,0 +1,71 @@
+﻿@using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
+@using MudBlazor
+@inject NavigationManager Navigation
+
+<MudCard Style="cursor: pointer;" @onclick="() => OpenProject(Project.Id)">
+    <MudCardContent Style="padding: 12px 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div style="flex: 1;">
+                <MudText Typo="Typo.subtitle2"
+                    Style="@(Project.CurrentStatus == CurrentStatus.Cancel ? "text-decoration: line-through; opacity: 0.5;" : "")">
+                    @Project.Name
+                </MudText>
+                @if (!string.IsNullOrEmpty(Project.Description))
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Style="margin-top: 2px;">
+                        @Project.Description
+                    </MudText>
+                }
+                <div style="display: flex; gap: 6px; margin-top: 6px; align-items: center;">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Progress</MudText>
+                    <MudText Typo="Typo.caption">
+                        <span style="color: var(--mud-palette-success);">@Project.AchievePoints</span>
+                        / @Project.Points
+                    </MudText>
+                </div>
+                <MudProgressLinear Value="@GetProgress()"
+                    Color="Color.Success" Rounded="true" Size="Size.Small"
+                    Style="margin-top: 4px;" />
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; margin-left: 8px;">
+                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(Project.CurrentStatus)">
+                    @Project.CurrentStatus
+                </MudChip>
+                <MudChip T="string" Size="Size.Small" Color="@GetPriorityColor(Project.Priority)">
+                    @Project.Priority
+                </MudChip>
+            </div>
+        </div>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter] public ProjectDTO Project { get; set; } = new();
+
+    private double GetProgress() =>
+        Project.Points == 0 ? 0 : (double)Project.AchievePoints / Project.Points * 100;
+
+    private Color GetStatusColor(CurrentStatus s) => s switch
+    {
+        CurrentStatus.Active => Color.Success,
+        CurrentStatus.Achieved => Color.Success,
+        CurrentStatus.Done => Color.Success,
+        CurrentStatus.Cancel => Color.Error,
+        CurrentStatus.Planning => Color.Warning,
+        _ => Color.Default
+    };
+
+    private Color GetPriorityColor(Priority p) => p switch
+    {
+        Priority.High => Color.Error,
+        Priority.Medium => Color.Warning,
+        Priority.Low => Color.Default,
+        _ => Color.Default
+    };
+
+    private void OpenProject(int projectId)
+    {
+        Navigation.NavigateTo($"/Project/{projectId}");
+    }
+}

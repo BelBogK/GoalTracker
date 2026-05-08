@@ -1,0 +1,72 @@
+﻿@using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
+@using MudBlazor
+
+<MudCard>
+    <MudCardContent Style="padding: 12px 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div style="flex: 1;">
+                <MudText Typo="Typo.subtitle2"
+                    Style="@(Task.CurrentStatus == CurrentStatus.Cancel ? "text-decoration: line-through; opacity: 0.5;" : "")">
+                    @Task.Name
+                </MudText>
+                @if (!string.IsNullOrEmpty(Task.Description))
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Style="margin-top: 2px;">
+                        @Task.Description
+                    </MudText>
+                }
+                @if (!string.IsNullOrEmpty(Task.Effort))
+                {
+                    <div style="display: flex; align-items: center; gap: 4px; margin-top: 4px;">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Effort:</MudText>
+                        <MudText Typo="Typo.caption">@Task.Effort</MudText>
+                        <MudText Typo="Typo.caption"
+                                 Style="@(Task.Procents >= 0 ? "color: var(--mud-palette-success);" : "color: var(--mud-palette-error);")">
+                            @(Task.Procents >= 0 ? "+" : "")@Task.Procents%
+                        </MudText>
+                    </div>
+                }
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Style="margin-top: 4px;">
+                    Points: @Task.AchievePoints
+                </MudText>
+            </div>
+
+            @* Status toggle *@
+            <div style="display: flex; flex-direction: column; gap: 4px; margin-left: 8px;">
+                @foreach (var status in Enum.GetValues<CurrentStatus>())
+                {
+                    var s = status;
+                    <MudChip T="string" Size="Size.Small"
+                        Color="@(Task.CurrentStatus == s ? GetStatusColor(s) : Color.Default)"
+                        Style="cursor: pointer; min-width: 90px;"
+                        OnClick="() => ChangeStatus(s)">
+                        @s
+                    </MudChip>
+                }
+            </div>
+        </div>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter] public TaskItemDTO Task { get; set; } = new();
+    [Parameter] public EventCallback<TaskItemDTO> OnStatusChanged { get; set; }
+
+    private async Task ChangeStatus(CurrentStatus status)
+    {
+        Task.CurrentStatus = status;
+        await OnStatusChanged.InvokeAsync(Task);
+    }
+
+    private Color GetStatusColor(CurrentStatus s) => s switch
+    {
+        CurrentStatus.Active => Color.Success,
+        CurrentStatus.Achieved => Color.Success,
+        CurrentStatus.Done => Color.Success,
+        CurrentStatus.Cancel => Color.Error,
+        CurrentStatus.Planning => Color.Warning,
+        CurrentStatus.Analyzing => Color.Info,
+        _ => Color.Default
+    };
+}

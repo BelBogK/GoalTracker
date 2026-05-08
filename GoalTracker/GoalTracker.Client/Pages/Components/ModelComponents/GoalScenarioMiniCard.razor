@@ -1,0 +1,58 @@
+﻿@using GoalTracker.Shared
+@using MudBlazor
+@inject NavigationManager Navigation
+
+<MudCard Style="cursor: pointer;" @onclick="() =>OpenScen(Scenario.Id)">
+    <MudCardContent Style="padding: 12px 16px;">
+        <div style="display: flex; align-items: flex-start; gap: 8px;"> 
+            @if (Scenario.IsOprimisticScenarios)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.TrendingUp"
+                    Color="Color.Success" Size="Size.Small"
+                    Style="margin-top: 2px; flex-shrink: 0;" />
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.TrendingDown"
+                    Color="Color.Error" Size="Size.Small"
+                    Style="margin-top: 2px; flex-shrink: 0;" />
+            }
+            <div style="flex: 1;">
+                <MudText Typo="Typo.subtitle2">@Scenario.Name</MudText>
+                @if (!string.IsNullOrEmpty(Scenario.Description))
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Style="margin-top: 2px;">
+                        @Scenario.Description
+                    </MudText>
+                }
+                <div style="display: flex; gap: 8px; margin-top: 6px;">
+                    @if (Scenario.Projects?.Any() == true)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Info">
+                            @Scenario.Projects.Count projects
+                        </MudChip>
+                    }
+                    @if (Scenario.ChildRelations?.Any() == true)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Default">
+                            @Scenario.ChildRelations.Count children
+                        </MudChip>
+                    }
+                    <MudChip T="string" Size="Size.Small"
+                        Color="@(Scenario.IsActive ? Color.Success : Color.Default)">
+                        @(Scenario.IsActive ? "Active" : "Inactive")
+                    </MudChip>
+                </div>
+            </div>
+        </div>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter] public GoalScenarioDTO Scenario { get; set; } = new();
+
+    private void OpenScen(int scenId)
+    {
+        Navigation.NavigateTo($"/Scenario/{scenId}");
+    }
+}

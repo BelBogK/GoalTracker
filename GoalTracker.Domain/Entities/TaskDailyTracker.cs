@@ -1,4 +1,5 @@
 ﻿using GoalTracker.Domain.Entities.Base;
+using GoalTracker.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -15,6 +16,6 @@ namespace GoalTracker.Domain.Entities
         public DateTime TodayIs { get; set;  }
         public int TaskItemId { get; set; }
         public virtual TaskItem Task { get; set; }
-        public TaskStatus StatusInBegining { get; set; }
+        public CurrentStatus StatusInBegining { get; set; }
     }
 }
