@@ -8,7 +8,7 @@ using System.Text;
 
 namespace GoalTracker.Infrastructure.Repositories
 {
-    public class TaskItemRepository(IDbContextFactory<ApplicationDbContext> contextFactory) : ITaskItemRepository
+    public class TaskItemRepository(IDbContextFactory<ApplicationDbContext> contextFactory, ITaskDailyTrackerRepository taskDailyTrackerRepository) : ITaskItemRepository
     {
         public async Task<TaskItem> CreateAsync(TaskItem entity)
         {
@@ -64,9 +64,14 @@ namespace GoalTracker.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public Task<TaskItem> UpdateAsync(TaskItem entity)
+        public async Task<TaskItem> UpdateAsync(TaskItem entity)
         {
-            throw new NotImplementedException();
+            var needUpdateList=await taskDailyTrackerRepository.TaskInDaily(entity.Id);
+            if(needUpdateList)
+            {
+                throw new NotImplementedException();
+            }    
+            return entity;
         }
     }
 }

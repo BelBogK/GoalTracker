@@ -20,6 +20,7 @@ namespace GoalTracker.Shared
         public int Procents { get; set; }
         public DateTime Created { get; set; }
         public CurrentStatus CurrentStatus { get; set; }
+        public int AchievePoints { get; }
         public ICollection<ProjectDTO> Projects { get; set; } = new List<ProjectDTO>();
     }
 }

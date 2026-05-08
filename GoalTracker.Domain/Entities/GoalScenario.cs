@@ -10,6 +10,11 @@ namespace GoalTracker.Domain.Entities
         public int Id { get; set; }
         public string Name { get; set; }
         public string? Description { get; set; }
+        public string? ExpertFlow { get; set; }
+        public int? SuccessProbability { get; set; }
+        public string? Constraints {  get; set; }
+        public string? PotentialProblems { get; set; }
+        public bool IsOprimisticScenarios { get; set; } = true;
         public virtual ICollection<GoalScenarioRelation> ChildRelations { get; set; } = [];
         public virtual ICollection<GoalScenarioRelation> ParentRelations { get; set; } = [];
         public bool IsActive { get; set; }

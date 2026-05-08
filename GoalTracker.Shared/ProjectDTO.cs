@@ -21,6 +21,8 @@ namespace GoalTracker.Shared
         public DateTime EndTime { get; set; }
         public DateTime? CompletedTime { get; set; }
         public DateTime Created { get; set; }
-        public List<GoalDTO> Goals { get; set; } = new List<GoalDTO>(); 
+        public List<GoalDTO> Goals { get; set; } = new List<GoalDTO>();
+        public int Points { get; set; }
+        public int AchievePoints { get; }
     }
 }
