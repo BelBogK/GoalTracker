@@ -42,8 +42,9 @@ namespace GoalTracker.Features.TaskItem
     {
         public async Task<IEnumerable<TaskHierarchyLifeAreaDTO>> Handle(GetNonTrackedQuery request, CancellationToken cancellationToken)
         {
-            var result= await repository.NonTrackedTask(request.UserId);
-            return result.Select(x => x.ToTaskHierarchyDto());
+            var resultItems= await repository.NonTrackedTask(request.UserId);
+            var result= resultItems.Select(x => x.ToTaskHierarchyDto());
+            return result;
         }
     }
 
@@ -52,7 +53,7 @@ namespace GoalTracker.Features.TaskItem
     {
         public async Task<TaskHierarchyLifeAreaDTO> Handle(AddTrackedQuery request, CancellationToken cancellationToken)
         {
-            var result= await repositoryr.AddToTracked(request.UserId, request.taskId, request.when);
+            var result= await repositoryr.AddToTracked(request.UserId, request.taskId, request.StartTime);
             return result.First().ToTaskHierarchyDto(); 
         }
     }

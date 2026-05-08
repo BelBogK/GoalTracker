@@ -94,21 +94,21 @@ namespace GoalTracker.Infrastructure.Repositories
 
             var taskIds = taskItemIds.Distinct().ToList();
 
-            // Projects containing tasks
+            // All projects containing these tasks
             var projectIds = await context.Projects
                 .Where(p => p.TaskItems.Any(t => taskIds.Contains(t.Id)))
                 .Select(p => p.Id)
                 .Distinct()
                 .ToListAsync();
 
-            // Scenarios containing projects
+            // Scenarios containing these projects
             var scenarioIds = await context.GoalScenarios
                 .Where(s => s.Projects.Any(p => projectIds.Contains(p.Id)))
                 .Select(s => s.Id)
                 .Distinct()
                 .ToListAsync();
 
-            // Goals connected through projects or scenarios
+            // Goals connected through direct projects OR scenarios
             var goalIds = await context.Goals
                 .Where(g =>
                     g.Projects.Any(p => projectIds.Contains(p.Id)) ||
@@ -129,31 +129,35 @@ namespace GoalTracker.Infrastructure.Repositories
 
                 // Goals -> Scenarios
                 .Include(la => la.Goals.Where(g => goalIds.Contains(g.Id)))
-                    .ThenInclude(g => g.Scenarios)
+                    .ThenInclude(g => g.Scenarios
+                        .Where(s => scenarioIds.Contains(s.Id)))
 
                 // Goals -> Scenarios -> Projects -> Tasks
                 .Include(la => la.Goals.Where(g => goalIds.Contains(g.Id)))
-                    .ThenInclude(g => g.Scenarios)
-                        .ThenInclude(s => s.Projects
-                            .Where(p => projectIds.Contains(p.Id)))
-                                .ThenInclude(p => p.TaskItems
-                                    .Where(t => taskIds.Contains(t.Id)))
+                    .ThenInclude(g => g.Scenarios
+                        .Where(s => scenarioIds.Contains(s.Id)))
+                            .ThenInclude(s => s.Projects
+                                .Where(p => projectIds.Contains(p.Id)))
+                                    .ThenInclude(p => p.TaskItems
+                                        .Where(t => taskIds.Contains(t.Id)))
 
                 // Goals -> Scenarios -> ChildRelations -> Child
                 .Include(la => la.Goals.Where(g => goalIds.Contains(g.Id)))
-                    .ThenInclude(g => g.Scenarios)
-                        .ThenInclude(s => s.ChildRelations)
-                            .ThenInclude(cr => cr.Child)
+                    .ThenInclude(g => g.Scenarios
+                        .Where(s => scenarioIds.Contains(s.Id)))
+                            .ThenInclude(s => s.ChildRelations)
+                                .ThenInclude(cr => cr.Child)
 
                 // Goals -> Scenarios -> ChildRelations -> Child -> Projects -> Tasks
                 .Include(la => la.Goals.Where(g => goalIds.Contains(g.Id)))
-                    .ThenInclude(g => g.Scenarios)
-                        .ThenInclude(s => s.ChildRelations)
-                            .ThenInclude(cr => cr.Child)
-                                .ThenInclude(c => c.Projects
-                                    .Where(p => projectIds.Contains(p.Id)))
-                                        .ThenInclude(p => p.TaskItems
-                                            .Where(t => taskIds.Contains(t.Id)))
+                    .ThenInclude(g => g.Scenarios
+                        .Where(s => scenarioIds.Contains(s.Id)))
+                            .ThenInclude(s => s.ChildRelations)
+                                .ThenInclude(cr => cr.Child)
+                                    .ThenInclude(c => c.Projects
+                                        .Where(p => projectIds.Contains(p.Id)))
+                                            .ThenInclude(p => p.TaskItems
+                                                .Where(t => taskIds.Contains(t.Id)))
 
                 .AsSplitQuery()
                 .ToListAsync();

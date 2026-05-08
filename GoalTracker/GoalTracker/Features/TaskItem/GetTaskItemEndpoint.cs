@@ -42,15 +42,14 @@ DateTime startTime,
                 var result = await mediator.Send(new GetNonTrackedQuery(userId));
                 return Results.Ok(result);
             }).RequireAuthorization();
-
-            app.MapPost("/api/tasks/{taskId}/tracker/{start}", async (
-                int taskId,
-                DateTime start,
-               IMediator mediator,
-               ClaimsPrincipal user) =>
+        app.MapPost("/api/tasks/{taskId}/tracker", async(
+     int taskId,
+     AddToTrackerRequest request,
+     IMediator mediator,
+     ClaimsPrincipal user) =>
             {
                 var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
-                var result = await mediator.Send(new AddTrackedQuery(userId, taskId, start));
+                var result = await mediator.Send(new AddTrackedQuery(userId, taskId, request.StartTime,request.EndTime));
                 return Results.Ok(result);
             }).RequireAuthorization();
 

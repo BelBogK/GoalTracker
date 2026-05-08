@@ -42,7 +42,7 @@ namespace GoalTracker.Infrastructure.Repositories
         public async Task<IEnumerable<LifeArea>> NonTrackedTask(string userId)
         {
             await using var context = await contextFactory.CreateDbContextAsync();
-            var trackedTaskIds = context.DailyTrackers.Where(x => x.UserId == userId).Select(t => t.Id);
+            var trackedTaskIds = context.DailyTrackers.Where(x => x.UserId == userId).Select(t => t.TaskItemId);
             var taskIds=await context.TaskItems.Where(x=>x.UserId==userId && !trackedTaskIds.Contains( x.Id))
                 .Select(t=>t.Id).ToListAsync();
 
@@ -62,7 +62,7 @@ namespace GoalTracker.Infrastructure.Repositories
         public async Task<IEnumerable<LifeArea>> TrackedTask(string userId, DateTime from, DateTime to)
         {
             await using var context = await contextFactory.CreateDbContextAsync();
-            var trackedTaskIds = context.DailyTrackers.Where(x => x.UserId == userId).Select(t => t.Id);
+            var trackedTaskIds = context.DailyTrackers.Where(x => x.UserId == userId).Select(t => t.TaskItemId);
              
             return await lifeAreaRepository.GetLifeAreasByTaskIdsAsync(trackedTaskIds);
         }
