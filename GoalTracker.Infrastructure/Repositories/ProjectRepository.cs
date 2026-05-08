@@ -83,8 +83,8 @@ namespace GoalTracker.Infrastructure.Repositories
 
         public async Task<Project> UpdateAsync(Project entity)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
-            context.Projects.Update(entity);
+            using var context = await contextFactory.CreateDbContextAsync(); 
+            context.Entry(entity).State = EntityState.Modified;
             await context.SaveChangesAsync();
             return entity;
 
