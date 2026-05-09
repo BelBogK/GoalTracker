@@ -20,6 +20,7 @@ namespace GoalTracker.Shared.SuperClass
         public CurrentStatus CurrentStatus { get; set; }
         public GoalType GoalType { get; set; }
         public Priority Priority { get; set; }
+        public bool IsActive { get; set; }
         public List<TaskHierarchyScenarioDTO> Scenarios { get; set; } = [];
         public List<TaskHierarchyProjectDTO> Projects { get; set; } = [];
     }

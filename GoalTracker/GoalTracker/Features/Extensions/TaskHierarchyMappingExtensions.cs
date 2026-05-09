@@ -88,5 +88,18 @@ namespace GoalTracker.Features.Extensions
                 CurrentStatus = task.CurrentStatus
             };
         }
+
+        public static GoalTracker.Domain.Entities.TaskItem ToEntity(this TaskItemDTO task)
+        {
+            return new GoalTracker.Domain.Entities.TaskItem
+            {
+                Id = task.Id,
+                Name = task.Name,
+                Description = task.Description,
+                Effort = task.Effort,
+                Procents = task.Procents,
+                CurrentStatus = task.CurrentStatus
+            };
+        }
     }
 }

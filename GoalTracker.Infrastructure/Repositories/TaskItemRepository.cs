@@ -51,9 +51,10 @@ namespace GoalTracker.Infrastructure.Repositories
             return await context.TaskItems.Where(t => t.UserId == userId).ToListAsync();
         }
 
-        public Task<TaskItem?> GetByIdAsync(int id)
+        public async Task<TaskItem?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            using var context = contextFactory.CreateDbContext();
+            return await context.TaskItems.FirstOrDefaultAsync(x => x.Id == id);
         }
 
         public async Task<List<TaskItem>> GetTasksForProject(int projectId, string userId)
@@ -67,9 +68,12 @@ namespace GoalTracker.Infrastructure.Repositories
         public async Task<TaskItem> UpdateAsync(TaskItem entity)
         {
             var needUpdateList=await taskDailyTrackerRepository.TaskInDaily(entity.Id);
-            if(needUpdateList)
+            using var context = await contextFactory.CreateDbContextAsync();
+            context.Entry(entity).State = EntityState.Modified;
+            await context.SaveChangesAsync();
+            if (needUpdateList)
             {
-                throw new NotImplementedException();
+                //await taskDailyTrackerRepository.UpdateStatusTask(entity.Id, entity.CurrentStatus);
             }    
             return entity;
         }

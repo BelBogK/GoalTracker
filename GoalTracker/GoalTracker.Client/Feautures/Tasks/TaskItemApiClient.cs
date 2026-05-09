@@ -17,11 +17,17 @@ namespace GoalTracker.Client.Feautures.Tasks
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<TaskItemDTO>();
         }
-
+        public async Task<TaskItemDTO> GetTaskByIdAsync(int id)
+        {
+            var response = await http.GetAsync($"/api/tasks/{id}");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<TaskItemDTO>();
+        }
         public async Task<TaskItemDTO> UpdateTaskAsync(TaskItemDTO taskItem)
         {
-            // Implementation for updating an existing task
-            return new TaskItemDTO();
+            var response = await http.PutAsJsonAsync($"/api/tasks/{taskItem.Id}", taskItem);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<TaskItemDTO>();
         }
         public async Task DeleteTaskAsync(int taskId)
         {

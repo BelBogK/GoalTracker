@@ -1,4 +1,5 @@
 ﻿using GoalTracker.Domain.Entities;
+using GoalTracker.Shared.Enums;
 using GoalTracker.Shared.SuperClass;
 using System;
 using System.Collections.Generic;
@@ -26,7 +27,7 @@ namespace GoalTracker.Domain.Interfaces.Repositories
         Task<IEnumerable<LifeArea>> AddToTracked(string userId, int taskId, DateTime dateTime);
         Task RemoveTaskFromTrack(string userId, int taskId);
 
-        Task UpdateStatusTask(int taskId, TaskStatus newStatus);
+        Task UpdateStatusTask(int taskId, CurrentStatus newStatus);
         Task AddToList(TaskItem task, DateTime dateTimeToExecute);
         Task Delete(int taskId);
     }

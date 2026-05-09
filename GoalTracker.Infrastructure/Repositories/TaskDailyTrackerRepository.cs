@@ -1,6 +1,7 @@
 ﻿using GoalTracker.Data;
 using GoalTracker.Domain.Entities;
 using GoalTracker.Domain.Interfaces.Repositories;
+using GoalTracker.Shared.Enums;
 using GoalTracker.Shared.SuperClass;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
@@ -54,9 +55,11 @@ namespace GoalTracker.Infrastructure.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<bool> TaskInDaily(int taskId)
+        public async Task<bool> TaskInDaily(int taskId)
         {
-            throw new NotImplementedException();
+            await using var context = await contextFactory.CreateDbContextAsync();
+            var result=await context.DailyTrackers.AnyAsync(x=>x.TaskItemId==taskId);
+            return result;
         }
 
         public async Task<IEnumerable<LifeArea>> TrackedTask(string userId, DateTime from, DateTime to)
@@ -67,9 +70,9 @@ namespace GoalTracker.Infrastructure.Repositories
             return await lifeAreaRepository.GetLifeAreasByTaskIdsAsync(trackedTaskIds);
         }
 
-        public Task UpdateStatusTask(int taskId, TaskStatus newStatus)
+        public Task UpdateStatusTask(int taskId, CurrentStatus newStatus)
         {
-            throw new NotImplementedException();
+            return null;
         } 
     }
 }

@@ -1,0 +1,95 @@
+﻿@using GoalTracker.Shared.SuperClass
+@using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
+@using MudBlazor
+@inject NavigationManager Navigation
+<MudTreeViewItem Value="@Scenario.Name" Expanded="true">
+    <Content>
+        <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+            @if (Scenario.IsOprimisticScenarios)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.TrendingUp"
+                         Color="Color.Success" Size="Size.Small" />
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.TrendingDown"
+                         Color="Color.Error" Size="Size.Small" />
+            }
+            <MudLink OnClick="() => NavigateToScen(Scenario.Id)"
+                     Underline="Underline.Hover" Style="cursor: pointer;">
+                <MudText Typo="Typo.body2">@Scenario.Name</MudText>
+            </MudLink>
+            @if (Scenario.IsActive)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                         Color="Color.Success" Size="Size.Small" />
+            }
+            @if (GetAggregateStatus() is { } s)
+            {
+                <MudIcon Icon="@GetStatusIcon(s)" Color="@GetStatusColor(s)" Size="Size.Small" />
+            }
+        </div>
+    </Content>
+    <ChildContent>
+        @foreach (var project in Scenario.Projects)
+        {
+            <ProjectTreeNode Project="@project"
+                             ShowAdd="ShowAdd" ShowRemove="ShowRemove"
+                             OnAdd="OnAdd" OnRemove="OnRemove"
+                             OnStatusChanged="OnStatusChanged" />
+        }
+        @foreach (var child in Scenario.Children)
+        {
+            <ScenarioTreeNode Scenario="@child"
+                              ShowAdd="ShowAdd" ShowRemove="ShowRemove"
+                              OnAdd="OnAdd" OnRemove="OnRemove"
+                              OnStatusChanged="OnStatusChanged" />
+        }
+    </ChildContent>
+</MudTreeViewItem>
+@code {
+    [Parameter] public TaskHierarchyScenarioDTO Scenario { get; set; } = new();
+    [Parameter] public bool ShowAdd { get; set; }
+    [Parameter] public bool ShowRemove { get; set; }
+    [Parameter] public EventCallback<TaskItemDTO> OnStatusChanged { get; set; }
+    [Parameter] public EventCallback<TaskItemDTO> OnAdd { get; set; }
+    [Parameter] public EventCallback<TaskItemDTO> OnRemove { get; set; }
+
+    private CurrentStatus? GetAggregateStatus()
+    {
+        var allTasks = Scenario.Projects.SelectMany(p => p.Tasks)
+            .Concat(Scenario.Children.SelectMany(GetChildTasks))
+            .ToList();
+        if (!allTasks.Any()) return null;
+        if (allTasks.All(t => t.CurrentStatus == CurrentStatus.Done)) return CurrentStatus.Done;
+        if (allTasks.All(t => t.CurrentStatus == CurrentStatus.Cancel)) return CurrentStatus.Cancel;
+        if (allTasks.Any(t => t.CurrentStatus == CurrentStatus.Active)) return CurrentStatus.Active;
+        return null;
+    }
+
+    private IEnumerable<TaskItemDTO> GetChildTasks(TaskHierarchyScenarioDTO s)
+        => s.Projects.SelectMany(p => p.Tasks)
+            .Concat(s.Children.SelectMany(GetChildTasks));
+
+    private Color GetStatusColor(CurrentStatus s) => s switch
+    {
+        CurrentStatus.Active => Color.Success,
+        CurrentStatus.Done => Color.Success,
+        CurrentStatus.Cancel => Color.Error,
+        _ => Color.Default
+    };
+
+    private string GetStatusIcon(CurrentStatus s) => s switch
+    {
+        CurrentStatus.Active => Icons.Material.Filled.PlayArrow,
+        CurrentStatus.Done => Icons.Material.Filled.CheckCircle,
+        CurrentStatus.Cancel => Icons.Material.Filled.Cancel,
+        _ => ""
+    };
+
+    private void NavigateToScen(int scenId)
+    {
+        Navigation.NavigateTo($"/Scenario/{scenId}");
+    }
+}

@@ -1,4 +1,5 @@
 ﻿using GoalTracker.Features.LifeArea;
+using GoalTracker.Shared;
 using MediatR;
 using System.Security.Claims;
 using System.Text.Json;
@@ -18,6 +19,28 @@ namespace GoalTracker.Features.TaskItem
                 return Results.Ok(result);
             }).RequireAuthorization();
 
+            app.MapGet("/api/tasks/{taskId}", async (
+                int taskId,
+              IMediator mediator,
+              ClaimsPrincipal user) =>
+            {
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                var result = await mediator.Send(new GetTaskByIdQuery(userId,taskId));
+                return Results.Ok(result);
+            }).RequireAuthorization();
+
+            app.MapPut("/api/tasks/{taskId}", async (
+                int taskId,
+                HttpContext httpContext,
+              IMediator mediator,
+              ClaimsPrincipal user) =>
+            {
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                var item = await httpContext.Request.ReadFromJsonAsync<TaskItemDTO>(
+                   new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var result = await mediator.Send(new UpdateTaskQuery(userId, taskId, item));
+                return Results.Ok(result);
+            }).RequireAuthorization();
 
             app.MapGet("/api/tasks/daily-tracker", async (
 DateTime startTime,
@@ -42,6 +65,9 @@ DateTime startTime,
                 var result = await mediator.Send(new GetNonTrackedQuery(userId));
                 return Results.Ok(result);
             }).RequireAuthorization();
+
+
+
         app.MapPost("/api/tasks/{taskId}/tracker", async(
      int taskId,
      AddToTrackerRequest request,

@@ -1,0 +1,110 @@
+﻿@using GoalTracker.Shared.SuperClass
+@using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
+@using MudBlazor
+@inject NavigationManager Navigation
+
+<div style="display:flex; flex-wrap:wrap; gap:16px;">
+@foreach (var lifeArea in Hierarchy)
+{
+    <MudTreeView T="string" Dense="true" Hover="true" Class="mb-2">
+        <MudTreeViewItem Value="@lifeArea.Name" Expanded="true">
+            <Content>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <MudIcon Icon="@Icons.Material.Filled.Landscape"
+                        Color="Color.Primary" Size="Size.Small" />
+                    <MudText Typo="Typo.subtitle2">@lifeArea.Name</MudText>
+                </div>
+            </Content>
+            <ChildContent>
+                @foreach (var goal in lifeArea.Goals)
+                {
+                    <MudTreeViewItem Value="@goal.Name" Expanded="true">
+                        <Content>
+                            <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                                <MudIcon Icon="@Icons.Material.Filled.Flag"
+                                    Color="@GetStatusColor(goal.CurrentStatus)" Size="Size.Small" />
+                                <MudLink OnClick="() =>NavigateToGoal(goal.Id)"
+                                    Underline="Underline.Hover" Style="cursor: pointer;">
+                                    <MudText Typo="Typo.body2">@goal.Name</MudText>
+                                </MudLink>
+                                @if (GetAggregateStatus(goal) is {} s)
+                                {
+                                    <MudIcon Icon="@GetStatusIcon(s)"
+                                        Color="@GetStatusColor(s)" Size="Size.Small" />
+                                }
+                            </div>
+                        </Content>
+                        <ChildContent>
+                            @foreach (var project in goal.Projects)
+                            {
+                                <ProjectTreeNode Project="@project"
+                                    ShowAdd="ShowAddButton" ShowRemove="ShowRemoveButton"
+                                    OnAdd="OnAdd" OnRemove="OnRemove"
+                                    OnStatusChanged="OnStatusChanged" />
+                            }
+                            @foreach (var scenario in goal.Scenarios)
+                            {
+                                <ScenarioTreeNode Scenario="@scenario"
+                                    ShowAdd="ShowAddButton" ShowRemove="ShowRemoveButton"
+                                    OnAdd="OnAdd" OnRemove="OnRemove"
+                                    OnStatusChanged="OnStatusChanged" />
+                            }
+                        </ChildContent>
+                    </MudTreeViewItem>
+                }
+            </ChildContent>
+        </MudTreeViewItem>
+    </MudTreeView>
+}
+</div>>
+
+@code {
+    [Parameter] public List<TaskHierarchyLifeAreaDTO> Hierarchy { get; set; } = [];
+    [Parameter] public bool ShowAddButton { get; set; }
+    [Parameter] public bool ShowRemoveButton { get; set; }
+    [Parameter] public EventCallback<TaskItemDTO> OnStatusChanged { get; set; }
+    [Parameter] public EventCallback<TaskItemDTO> OnAdd { get; set; }
+    [Parameter] public EventCallback<TaskItemDTO> OnRemove { get; set; }
+
+    private CurrentStatus? GetAggregateStatus(TaskHierarchyGoalDTO goal)
+    {
+        var allTasks = goal.Projects.SelectMany(p => p.Tasks)
+            .Concat(goal.Scenarios.SelectMany(s => GetAllTasks(s)))
+            .ToList();
+        if (!allTasks.Any()) return null;
+        if (allTasks.All(t => t.CurrentStatus == CurrentStatus.Done)) return CurrentStatus.Done;
+        if (allTasks.All(t => t.CurrentStatus == CurrentStatus.Cancel)) return CurrentStatus.Cancel;
+        if (allTasks.Any(t => t.CurrentStatus == CurrentStatus.Active)) return CurrentStatus.Active;
+        return null;
+    }
+
+    private IEnumerable<TaskItemDTO> GetAllTasks(TaskHierarchyScenarioDTO scenario)
+    {
+        var tasks = scenario.Projects.SelectMany(p => p.Tasks);
+        return tasks.Concat(scenario.Children.SelectMany(GetAllTasks));
+    }
+
+    private Color GetStatusColor(CurrentStatus s) => s switch
+    {
+        CurrentStatus.Active => Color.Success,
+        CurrentStatus.Done => Color.Success,
+        CurrentStatus.Achieved => Color.Success,
+        CurrentStatus.Cancel => Color.Error,
+        CurrentStatus.Planning => Color.Warning,
+        _ => Color.Default
+    };
+
+    private string GetStatusIcon(CurrentStatus s) => s switch
+    {
+        CurrentStatus.Active => Icons.Material.Filled.PlayArrow,
+        CurrentStatus.Done => Icons.Material.Filled.CheckCircle,
+        CurrentStatus.Cancel => Icons.Material.Filled.Cancel,
+        _ => ""
+    };
+
+    private void NavigateToGoal(int goalId)
+    {
+        Navigation.NavigateTo($"/Goal/{goalId}");
+    }
+}

@@ -26,6 +26,27 @@ namespace GoalTracker.Features.TaskItem
             return projects.Select(mapper.ToDto);
         }
     }
+    public class GetTaskItemByIdHandler(ITaskItemRepository repository, AppMapper mapper)
+       : IRequestHandler<GetTaskByIdQuery, TaskItemDTO>
+    { 
+        public async Task<TaskItemDTO> Handle(GetTaskByIdQuery request, CancellationToken cancellationToken)
+        {
+            var result =await repository.GetByIdAsync(request.taskId);
+            return result.ToDto();
+        }
+    }
+
+    public class UpdateTaskHandler(ITaskItemRepository repository, AppMapper mapper)
+      : IRequestHandler<UpdateTaskQuery, TaskItemDTO>
+    {
+        public async Task<TaskItemDTO> Handle(UpdateTaskQuery request, CancellationToken cancellationToken)
+        {
+            var entity = request.task.ToEntity();
+            entity.UserId = request.userId;
+            var result = await repository.UpdateAsync(entity);
+            return result.ToDto();
+        }
+    }
 
     public class GetTaskHierarchyLifeAreaHandler(ITaskDailyTrackerRepository repository, AppMapper mapper)
       : IRequestHandler<GetDailyTrackerQuery, IEnumerable<TaskHierarchyLifeAreaDTO>>

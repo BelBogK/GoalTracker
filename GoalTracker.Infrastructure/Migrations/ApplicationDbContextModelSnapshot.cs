@@ -34,7 +34,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     b.HasIndex("ScenariosId");
 
-                    b.ToTable("GoalGoalScenario");
+                    b.ToTable("GoalGoalScenario", (string)null);
                 });
 
             modelBuilder.Entity("GoalLifeArea", b =>
@@ -64,7 +64,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     b.HasIndex("ProjectsId");
 
-                    b.ToTable("GoalProject");
+                    b.ToTable("GoalProject", (string)null);
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.AlternativeScenarioProject", b =>
@@ -101,7 +101,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("AlternativeScenarioProjects");
+                    b.ToTable("AlternativeScenarioProjects", (string)null);
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.Base.GoalTrackerUser", b =>
@@ -193,7 +193,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     b.HasIndex("GoalScenarioId");
 
-                    b.ToTable("Events");
+                    b.ToTable("Events", (string)null);
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.Goal", b =>
@@ -244,7 +244,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Goals");
+                    b.ToTable("Goals", (string)null);
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.GoalScenario", b =>
@@ -291,7 +291,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("GoalScenario");
+                    b.ToTable("GoalScenario", (string)null);
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.GoalScenarioRelation", b =>
@@ -314,7 +314,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     b.HasIndex("ParentId");
 
-                    b.ToTable("GoalScenarioRelations");
+                    b.ToTable("GoalScenarioRelations", (string)null);
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.LifeArea", b =>
@@ -347,7 +347,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("LifeAreas");
+                    b.ToTable("LifeAreas", (string)null);
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.Plan", b =>
@@ -372,7 +372,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Plans");
+                    b.ToTable("Plans", (string)null);
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.PlanItem", b =>
@@ -409,7 +409,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("PlanItems");
+                    b.ToTable("PlanItems", (string)null);
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.Project", b =>
@@ -477,7 +477,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Projects");
+                    b.ToTable("Projects", (string)null);
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.ProjectScenario", b =>
@@ -503,7 +503,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     b.HasIndex("GoalId");
 
-                    b.ToTable("ProjectScenarios");
+                    b.ToTable("ProjectScenarios", (string)null);
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.Reaction", b =>
@@ -535,7 +535,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     b.HasIndex("EventId");
 
-                    b.ToTable("Reactions");
+                    b.ToTable("Reactions", (string)null);
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.TaskDailyTracker", b =>
@@ -568,7 +568,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("DailyTrackers");
+                    b.ToTable("DailyTrackers", (string)null);
                 });
 
             modelBuilder.Entity("GoalTracker.Domain.Entities.TaskItem", b =>
@@ -606,7 +606,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TaskItems");
+                    b.ToTable("TaskItems", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -775,7 +775,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     b.HasIndex("TaskItemsId");
 
-                    b.ToTable("ProjectTaskItem");
+                    b.ToTable("ProjectTaskItem", (string)null);
                 });
 
             modelBuilder.Entity("GoalGoalScenario", b =>
@@ -1049,7 +1049,7 @@ namespace GoalTracker.Infrastructure.Migrations
 
                             b1.HasKey("IdentityUserPasskeyCredentialId");
 
-                            b1.ToTable("AspNetUserPasskeys");
+                            b1.ToTable("AspNetUserPasskeys", (string)null);
 
                             b1
                                 .ToJson("Data")

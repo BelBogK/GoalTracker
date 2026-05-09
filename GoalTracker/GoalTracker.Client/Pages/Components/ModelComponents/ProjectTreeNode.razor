@@ -1,0 +1,121 @@
+﻿@using GoalTracker.Shared.SuperClass
+@using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
+@using MudBlazor
+@inject NavigationManager Navigation
+
+<MudTreeViewItem Value="@Project.Name" Expanded="true">
+    <Content>
+        <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+            <MudIcon Icon="@Icons.Material.Filled.FolderOpen"
+                     Color="@GetStatusColor(Project.CurrentStatus)" Size="Size.Small" />
+            <MudLink OnClick="() => NavigateToProject(Project.Id)"
+                     Underline="Underline.Hover" Style="cursor: pointer;">
+                <MudText Typo="Typo.body2"
+                         Style="@(Project.CurrentStatus == CurrentStatus.Cancel ? "text-decoration: line-through; opacity: 0.5;" : "")">
+                    @Project.Name
+                </MudText>
+            </MudLink>
+            @if (GetAggregateStatus() is { } s)
+            {
+                <MudIcon Icon="@GetStatusIcon(s)" Color="@GetStatusColor(s)" Size="Size.Small" />
+            }
+        </div>
+    </Content>
+    <ChildContent>
+        @foreach (var task in Project.Tasks)
+        {
+            var t = task;
+            <MudTreeViewItem Value="@t.Name">
+                <Content>
+                    <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                        @if (t.CurrentStatus == CurrentStatus.Active)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.PlayArrow"
+                                     Color="Color.Success" Size="Size.Small" />
+                        }
+                        else if (t.CurrentStatus == CurrentStatus.Done)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                                     Color="Color.Success" Size="Size.Small" />
+                        }
+                        else if (t.CurrentStatus == CurrentStatus.Cancel)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.Cancel"
+                                     Color="Color.Error" Size="Size.Small" />
+                        }
+                        else
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.TaskAlt"
+                                     Color="Color.Default" Size="Size.Small" />
+                        }
+                        <MudLink OnClick="() => NavigateToTask(t.Id)"
+                                 Underline="Underline.Hover" Style="cursor: pointer; flex: 1;">
+                            <MudText Typo="Typo.body2"
+                                     Style="@(t.CurrentStatus == CurrentStatus.Cancel ? "text-decoration: line-through; opacity: 0.5;" : "")">
+                                @t.Name
+                            </MudText>
+                        </MudLink>
+                        @if (ShowAdd)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.AddCircle"
+                                           Color="Color.Primary" Size="Size.Small" Style="padding: 2px;"
+                                           OnClick="() => OnAdd.InvokeAsync(t)" />
+                        }
+                        @if (ShowRemove)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.RemoveCircle"
+                                           Color="Color.Error" Size="Size.Small" Style="padding: 2px;"
+                                           OnClick="() => OnRemove.InvokeAsync(t)" />
+                        }
+                    </div>
+                </Content>
+            </MudTreeViewItem>
+        }
+    </ChildContent>
+</MudTreeViewItem>
+
+@code {
+        [Parameter] public TaskHierarchyProjectDTO Project { get; set; } = new();
+        [Parameter] public bool ShowAdd { get; set; }
+        [Parameter] public bool ShowRemove { get; set; }
+        [Parameter] public EventCallback<TaskItemDTO> OnStatusChanged { get; set; }
+        [Parameter] public EventCallback<TaskItemDTO> OnAdd { get; set; }
+        [Parameter] public EventCallback<TaskItemDTO> OnRemove { get; set; }
+
+    private CurrentStatus? GetAggregateStatus()
+    {
+        if (!Project.Tasks.Any()) return null;
+        if (Project.Tasks.All(t => t.CurrentStatus == CurrentStatus.Done)) return CurrentStatus.Done;
+        if (Project.Tasks.All(t => t.CurrentStatus == CurrentStatus.Cancel)) return CurrentStatus.Cancel;
+        if (Project.Tasks.Any(t => t.CurrentStatus == CurrentStatus.Active)) return CurrentStatus.Active;
+        return null;
+    }
+
+    private Color GetStatusColor(CurrentStatus s) => s switch
+    {
+        CurrentStatus.Active => Color.Success,
+        CurrentStatus.Done => Color.Success,
+        CurrentStatus.Achieved => Color.Success,
+        CurrentStatus.Cancel => Color.Error,
+        CurrentStatus.Planning => Color.Warning,
+        _ => Color.Default
+    };
+
+    private string GetStatusIcon(CurrentStatus s) => s switch
+    {
+        CurrentStatus.Active => Icons.Material.Filled.PlayArrow,
+        CurrentStatus.Done => Icons.Material.Filled.CheckCircle,
+        CurrentStatus.Cancel => Icons.Material.Filled.Cancel,
+        _ => ""
+    };
+
+    private void NavigateToProject(int projectId)
+    {
+        Navigation.NavigateTo($"/Project/{projectId}");
+    }
+    private void NavigateToTask(int taskId)
+    {
+        Navigation.NavigateTo($"/Task/{taskId}");
+    }
+}

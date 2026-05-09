@@ -1,0 +1,201 @@
+﻿@page "/Task/{id:int}"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
+@using MudBlazor
+@using GoalTracker.Client.Feautures.Tasks
+@inject TaskItemApiClient TaskApi
+@inject NavigationManager Navigation
+
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+@if (_task is null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"  />
+        @if (_editing)
+        {
+            <MudTextField @bind-Value="_task.Name" Typo="Typo.h5"
+                Style="flex: 1;" Margin="Margin.Dense" />
+        }
+        else
+        {
+            <MudText Typo="Typo.h5" Style="flex: 1;">@_task.Name</MudText>
+        }
+        @if (!_editing)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                OnClick="() => _editing = true" />
+        }
+        else
+        {
+            <MudButton Color="Color.Success" Size="Size.Small" OnClick="Save">Save</MudButton>
+            <MudButton Size="Size.Small" OnClick="CancelEdit">Cancel</MudButton>
+        }
+    </div>
+
+    @* Status *@
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+        @foreach (var status in Enum.GetValues<CurrentStatus>())
+        {
+            var s = status;
+            <MudChip T="string" Size="Size.Small"
+                Color="@(_task.CurrentStatus == s ? GetStatusColor(s) : Color.Default)"
+                Style="cursor: pointer;"
+                OnClick="() => ChangeStatus(s)">
+                @s
+            </MudChip>
+        }
+    </div>
+
+    @* Description *@
+    <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Style="margin-bottom: 4px;">
+        Description
+    </MudText>
+    @if (_editing)
+    {
+        <MudTextField @bind-Value="_task.Description" Lines="4"
+            Variant="Variant.Outlined" FullWidth="true" Style="margin-bottom: 16px;" />
+    }
+    else
+    {
+        <div style="min-height: 60px; padding: 12px; border: 0.5px solid var(--mud-palette-divider);
+            border-radius: 8px; margin-bottom: 16px; cursor: pointer;"
+            @onclick="() => _editing = true">
+            @if (string.IsNullOrEmpty(_task.Description))
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Click to add description...
+                </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">
+                    @_task.Description
+                </MudText>
+            }
+        </div>
+    }
+
+    @* Effort *@
+    <MudGrid>
+        <MudItem xs="12" md="8">
+            <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Style="margin-bottom: 4px;">
+                Effort
+            </MudText>
+            @if (_editing)
+            {
+                <MudTextField @bind-Value="_task.Effort" Variant="Variant.Outlined"
+                    FullWidth="true" Margin="Margin.Dense" />
+            }
+            else
+            {
+                <MudText Typo="Typo.body2">
+                    @(_task.Effort ?? "—")
+                </MudText>
+            }
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Style="margin-bottom: 4px;">
+                Impact %
+            </MudText>
+            @if (_editing)
+            {
+                <MudNumericField @bind-Value="_task.Procents"
+                    Min="-100" Max="100" Variant="Variant.Outlined"
+                    Adornment="Adornment.End" AdornmentText="%" Margin="Margin.Dense" />
+            }
+            else
+            {
+                <MudText Typo="Typo.body2"
+                    Style="@(_task.Procents >= 0 ? "color: var(--mud-palette-success);" : "color: var(--mud-palette-error);")">
+                    @(_task.Procents >= 0 ? "+" : "")@_task.Procents%
+                </MudText>
+            }
+        </MudItem>
+    </MudGrid>
+
+    @* Projects *@
+    @if (_task.Projects?.Any() == true)
+    {
+        <MudDivider Style="margin: 16px 0 8px;" />
+        <MudText Typo="Typo.subtitle1" Style="margin-bottom: 8px;">Projects</MudText>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            @foreach (var project in _task.Projects)
+            {
+                <div style="display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px;
+                    border-radius: 99px; background-color: var(--mud-palette-primary);
+                    color: var(--mud-palette-primary-text); font-size: 13px; cursor: pointer;"
+                    @* @onclick="() => Navigation.NavigateTo($"/Project/{project.Id}")" *@
+                    >
+                    @project.Name
+                </div>
+            }
+        </div>
+    }
+
+    @* Meta *@
+    <MudDivider Style="margin: 16px 0 8px;" />
+    <div style="display: flex; gap: 24px;">
+        <div>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Created</MudText>
+            <MudText Typo="Typo.body2">@_task.Created.ToString("dd.MM.yyyy")</MudText>
+        </div>
+        <div>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Points</MudText>
+            <MudText Typo="Typo.body2">@_task.AchievePoints</MudText>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+
+    private TaskItemDTO? _task;
+    private TaskItemDTO? _backup;
+    private bool _editing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _task = await TaskApi.GetTaskByIdAsync(id);
+    }
+
+    private void CancelEdit()
+    {
+        if (_backup is not null)
+            _task = _backup;
+        _editing = false;
+    }
+
+    private async Task Save()
+    {
+        if (_task is null) return;
+        _task = await TaskApi.UpdateTaskAsync(_task);
+        _editing = false;
+    }
+
+    private async Task ChangeStatus(CurrentStatus status)
+    {
+        if (_task is null) return;
+        _task.CurrentStatus = status;
+        await TaskApi.UpdateTaskAsync(_task);
+        StateHasChanged();
+    }
+
+    private Color GetStatusColor(CurrentStatus s) => s switch
+    {
+        CurrentStatus.Active => Color.Success,
+        CurrentStatus.Done => Color.Success,
+        CurrentStatus.Achieved => Color.Success,
+        CurrentStatus.Cancel => Color.Error,
+        CurrentStatus.Planning => Color.Warning,
+        CurrentStatus.Analyzing => Color.Info,
+        _ => Color.Default
+    };
+}
