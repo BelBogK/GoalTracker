@@ -95,5 +95,14 @@ namespace GoalTracker.Infrastructure.Repositories
             await context.SaveChangesAsync();
             return sc.Entity;
         }
+
+        public async Task<GoalScenario> RevertIsActiveScen(int scenId, string userId)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+            var scen=await context.GoalScenarios.FirstOrDefaultAsync(x=>x.Id==scenId&&x.UserId==userId);
+            scen.IsActive=!scen.IsActive;
+            await context.SaveChangesAsync();
+            return scen;
+        }
     }
 }

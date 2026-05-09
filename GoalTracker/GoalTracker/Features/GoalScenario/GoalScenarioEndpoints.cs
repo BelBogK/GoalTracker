@@ -72,6 +72,17 @@ namespace GoalTracker.Features.GoalScenario
                 return Results.Ok(result);
             }).RequireAuthorization();
 
+            app.MapPatch("/api/scenarios/{scenId}/{nameof(GoalScenarioDTO.IsActive)}", async (
+              int scenId,
+              HttpContext httpContext,
+              IMediator mediator,
+              ClaimsPrincipal user) =>
+            { 
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                var result = await mediator.Send(new UpdateIsActiveGoalScenarioCommand( userId, scenId));
+                return Results.Ok(result);
+            }).RequireAuthorization();
+
             // Delete scenario
             app.MapDelete("/api/scenarios/{id}", async (
                 int id,

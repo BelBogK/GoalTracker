@@ -32,7 +32,12 @@ namespace GoalTracker.Client.Feautures.GoalsScenario
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<GoalScenarioDTO>();
         }
-
+        public async Task<GoalScenarioDTO> ReversActive(int scenId)
+        {
+            var result = await http.PatchAsJsonAsync($"/api/scenarios/{scenId}/{nameof(GoalScenarioDTO.IsActive)}", new { });
+            result.EnsureSuccessStatusCode();
+            return await result.Content.ReadFromJsonAsync<GoalScenarioDTO>();
+        }
         public async Task DeleteAsync(int id)
             => await http.DeleteAsync($"/api/scenarios/{id}");
     }

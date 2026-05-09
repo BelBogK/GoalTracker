@@ -91,7 +91,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         await SetMode("today");
-        await Task.WhenAll(LoadTracked(), LoadNonTracked());
+        await LoadNonTracked();
     }
 
     private async Task SetMode(string mode)

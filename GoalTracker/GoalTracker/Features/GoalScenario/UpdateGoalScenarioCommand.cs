@@ -26,4 +26,20 @@ namespace GoalTracker.Features.GoalScenario
             return mapper.ToDto(updated);
         }
     }
+
+    public record UpdateIsActiveGoalScenarioCommand(
+    string UserId,
+    int scenId) : IRequest<GoalScenarioDTO>;
+
+    public class UpdateIsActiveGoalScenarioHandler(IGoalScenarioRepository repository, AppMapper mapper)
+       : IRequestHandler<UpdateIsActiveGoalScenarioCommand, GoalScenarioDTO>
+    {
+        public async Task<GoalScenarioDTO> Handle(
+            UpdateIsActiveGoalScenarioCommand request, CancellationToken ct)
+        {
+
+            var updated = await repository.RevertIsActiveScen(request.scenId, request.UserId);
+            return mapper.ToDto(updated);
+        }
+    }
 }

@@ -10,5 +10,7 @@ namespace GoalTracker.Domain.Interfaces.Repositories
         Task<GoalScenario> CreateAsync(GoalScenario scenario, int goalId);
         Task<IEnumerable<GoalScenario>> GetByGoalIdAsync(int goalId);
         Task<GoalScenario?> GetByIdWithChildrenAsync(int id);
+        Task<GoalScenario> RevertIsActiveScen(int scenId, string userId);
     }
+
 }

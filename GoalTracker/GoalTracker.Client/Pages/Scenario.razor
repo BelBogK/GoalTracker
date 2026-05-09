@@ -22,9 +22,11 @@ else
             />
         <MudText Typo="Typo.h5">@_scenario.Name</MudText>
         <MudChip T="string" Size="Size.Small" 
-            Color="@(_scenario.IsActive ? Color.Success : Color.Default)">
+            Color="@(_scenario.IsActive ? Color.Success : Color.Default)"
+                 OnClick="()=>RevertActive()">
             @(_scenario.IsActive ? "Active" : "Inactive")
         </MudChip>
+
     </div>
 
     @if (!string.IsNullOrEmpty(_scenario.Description))
@@ -145,5 +147,11 @@ else
     private void OpenScenario(int scenId)
     {
         Navigation.NavigateTo($"/Scenario/{scenId}");
+    }
+
+    private async Task RevertActive()
+    {
+        var activeStatus =await ScenarioApi.ReversActive(_scenario.Id);
+        _scenario.IsActive = activeStatus.IsActive;
     }
 }

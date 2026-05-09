@@ -103,7 +103,7 @@ namespace GoalTracker.Infrastructure.Repositories
 
             // Scenarios containing these projects
             var scenarioIds = await context.GoalScenarios
-                .Where(s => s.Projects.Any(p => projectIds.Contains(p.Id)))
+                .Where(s =>s.IsActive && s.Projects.Any(p => projectIds.Contains(p.Id)))
                 .Select(s => s.Id)
                 .Distinct()
                 .ToListAsync();
