@@ -1,11 +1,10 @@
-@page "/tasks"
-@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
-@using GoalTracker.Shared.Enums
-@using MudBlazor
+@using GoalTracker.Client.Feautures.Tasks
 @using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
 @using GoalTracker.Shared.SuperClass
-@inject NavigationManager Nav
-
+@using MudBlazor
+@inject NavigationManager Nav 
+@inject TaskItemApiClient TaskApi
 <MudPaper Class="pa-4" Elevation="0">
 
     <!-- ───────────────── TOOLBAR ───────────────── -->
@@ -85,6 +84,14 @@
                         @foreach (var (id, name, status) in context.Item.Tasks)
                         {
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                @if (IsTracked)
+                                {
+                                    <MudIconButton Icon="@Icons.Material.Filled.Remove" aria-label="delete"  />
+                                }
+                                else
+                                {
+                                    <MudIconButton Icon="@Icons.Material.Filled.Add" aria-label="delete" OnClick="() => AddToTrack(id)" />
+                                }
                                 <MudTooltip Text="@status.ToString()">
                                     <MudIcon Icon="@GetStatusIcon(status)"
                                              Color="@GetStatusColor(status)"
@@ -95,7 +102,7 @@
                                          Color="Color.Default"
                                          Class="task-link">
                                     @name
-                                </MudLink>
+                                </MudLink> 
                             </MudStack>
                         }
                     </MudStack>
@@ -253,6 +260,9 @@
     [Parameter]
     public EventCallback<(int TaskId, CurrentStatus NewStatus)> OnTaskStatusChanged { get; set; }
 
+    [Parameter]
+    public bool IsTracked{ get; set; }
+
     // ── Filter state ─────────────────────────────────────────────────────────
 
     private string _searchText = "";
@@ -395,4 +405,9 @@
         CurrentStatus.Cancelled => Color.Error,
         _ => Color.Default
     };
+
+    private async Task AddToTrack(int taskId)
+    {
+        await TaskApi.AddToTrackerAsync(taskId, DateTime.Today, DateTime.Today.AddDays(1));
+    }
 }

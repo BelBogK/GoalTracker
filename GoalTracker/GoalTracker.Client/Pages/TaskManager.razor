@@ -58,7 +58,7 @@
 }
 else
 {
-    <TaskHierarchyTable LifeAreas="@_tracked"  /> 
+    <TaskHierarchyTable LifeAreas="@_tracked" IsTracked="true" /> 
 }
 
 <MudDivider Style="margin: 24px 0;" />
@@ -75,7 +75,7 @@ else
 }
 else
 {
-    <TaskHierarchyTable LifeAreas="@_nonTracked" />
+    <TaskHierarchyTable LifeAreas="@_nonTracked" IsTracked="false"/>
     @* <TaskHierarchyView Hierarchy="@_nonTracked" OnStatusChanged="HandleStatusChanged" /> *@
 }
 
