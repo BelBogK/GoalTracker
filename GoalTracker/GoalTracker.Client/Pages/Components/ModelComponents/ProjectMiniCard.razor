@@ -8,7 +8,7 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div style="flex: 1;">
                 <MudText Typo="Typo.subtitle2"
-                    Style="@(Project.CurrentStatus == CurrentStatus.Cancel ? "text-decoration: line-through; opacity: 0.5;" : "")">
+                    Style="@(Project.CurrentStatus == CurrentStatus.Cancelled ? "text-decoration: line-through; opacity: 0.5;" : "")">
                     @Project.Name
                 </MudText>
                 @if (!string.IsNullOrEmpty(Project.Description))
@@ -48,11 +48,11 @@
 
     private Color GetStatusColor(CurrentStatus s) => s switch
     {
-        CurrentStatus.Active => Color.Success,
+        CurrentStatus.InProgress => Color.Success,
         CurrentStatus.Achieved => Color.Success,
-        CurrentStatus.Done => Color.Success,
-        CurrentStatus.Cancel => Color.Error,
-        CurrentStatus.Planning => Color.Warning,
+        CurrentStatus.Completed => Color.Success,
+        CurrentStatus.Cancelled => Color.Error,
+        CurrentStatus.Analyzing=> Color.Warning,
         _ => Color.Default
     };
 

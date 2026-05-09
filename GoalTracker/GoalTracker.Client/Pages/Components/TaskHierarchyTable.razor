@@ -1,0 +1,398 @@
+@page "/tasks"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@using GoalTracker.Shared.Enums
+@using MudBlazor
+@using GoalTracker.Shared
+@using GoalTracker.Shared.SuperClass
+@inject NavigationManager Nav
+
+<MudPaper Class="pa-4" Elevation="0">
+
+    <!-- ───────────────── TOOLBAR ───────────────── -->
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4" Wrap="Wrap.Wrap" Spacing="2">
+
+        <MudText Typo="Typo.h5" Class="mud-text-secondary">
+            <MudIcon Icon="@Icons.Material.Filled.TaskAlt" Class="mr-2 mb-n1" />
+            Tasks
+        </MudText>
+
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
+
+            <!-- Quick search -->
+            <MudTextField @bind-Value="_searchText"
+                          Placeholder="Quick search…"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          DebounceInterval="200"
+                          Clearable="true"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Style="min-width:220px" />
+
+            <!-- Status filter -->
+            <MudSelect T="CurrentStatus?" @bind-Value="_filterStatus"
+                       Placeholder="All statuses"
+                       Clearable="true"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Style="min-width:180px">
+                @foreach (CurrentStatus s in Enum.GetValues<CurrentStatus>())
+                {
+                    <MudSelectItem T="CurrentStatus?" Value="s">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudIcon Icon="@GetStatusIcon(s)" Color="@GetStatusColor(s)" Size="Size.Small" />
+                            <MudText>@s.ToString()</MudText>
+                        </MudStack>
+                    </MudSelectItem>
+                }
+            </MudSelect>
+
+            <!-- LifeArea filter -->
+            <MudSelect T="int?" @bind-Value="_filterLifeAreaId"
+                       Placeholder="All life areas"
+                       Clearable="true"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Style="min-width:180px">
+                @foreach (var la in LifeAreas)
+                {
+                    <MudSelectItem T="int?" Value="la.Id">@la.Name</MudSelectItem>
+                }
+            </MudSelect>
+
+        </MudStack>
+    </MudStack>
+
+    <!-- ───────────────── TABLE ───────────────── -->
+    <MudDataGrid T="FlatTaskRow"
+                 Items="@FilteredRows"
+                 Filterable="false"
+                 SortMode="SortMode.Multiple"
+                 Hover="true"
+                 Dense="true"
+                 Striped="false"
+                 Bordered="false"
+                 Breakpoint="Breakpoint.Sm"
+                 RowStyleFunc="@RowStyle">
+
+        <Columns>
+
+            <!-- ── Col 1: Task name ── -->
+            <TemplateColumn Title="Tasks" Sortable="false">
+                <CellTemplate>
+                    <MudStack Spacing="1">
+                        @foreach (var (id, name, status) in context.Item.Tasks)
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudTooltip Text="@status.ToString()">
+                                    <MudIcon Icon="@GetStatusIcon(status)"
+                                             Color="@GetStatusColor(status)"
+                                             Size="Size.Small" />
+                                </MudTooltip>
+                                <MudLink Href="@($"/task/{id}")"
+                                         Typo="Typo.body2"
+                                         Color="Color.Default"
+                                         Class="task-link">
+                                    @name
+                                </MudLink>
+                            </MudStack>
+                        }
+                    </MudStack>
+                </CellTemplate>
+            </TemplateColumn>
+
+            <!-- ── Col 2: Status dropdown ── -->
+            <TemplateColumn Title="Status" Sortable="false" CellStyle="width:160px">
+                <CellTemplate>
+                    <MudStack Spacing="1">
+                        @foreach (var task in context.Item.Tasks)
+                        {
+                            <MudSelect T="CurrentStatus"
+                                       Value="task.CurrentStatus"
+                                       ValueChanged="@(s => OnStatusChanged(task, s))"
+                                       Variant="Variant.Text"
+                                       Margin="Margin.Dense"
+                                       DisableUnderLine="true"
+                                       Class="status-select">
+                                @foreach (CurrentStatus s in Enum.GetValues<CurrentStatus>())
+                                {
+                                    <MudSelectItem T="CurrentStatus" Value="s">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                            <MudIcon Icon="@GetStatusIcon(s)" Color="@GetStatusColor(s)" Size="Size.Small" />
+                                            <MudText Typo="Typo.body2">@s</MudText>
+                                        </MudStack>
+                                    </MudSelectItem>
+                                }
+                            </MudSelect>
+                        }
+                    </MudStack>
+                </CellTemplate>
+            </TemplateColumn>
+
+            <!-- ── Col 3: Scenario chain ── -->
+            <TemplateColumn Title="Scenario chain" Sortable="false">
+                <CellTemplate>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0" Wrap="Wrap.Wrap">
+                        @{
+                            var chain = context.Item.ScenarioChain;
+                            for (int i = 0; i < chain.Count; i++)
+                            {
+                                var node = chain[i];
+
+                                @if (node.IsProject)
+                                {
+                                    <MudChip T="string"
+                                             Icon="@Icons.Material.Filled.FolderOpen"
+                                             Color="Color.Primary"
+                                             Size="Size.Small"
+                                             Variant="Variant.Outlined"
+                                             OnClick="@(() => Nav.NavigateTo($"/project/{node.Id}"))"
+                                             Class="chain-chip chain-chip--project cursor-pointer">
+                                        @node.Label
+                                    </MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string"
+                                             Icon="@Icons.Material.Outlined.AccountTree"
+                                             Color="Color.Default"
+                                             Size="Size.Small"
+                                             Variant="Variant.Text"
+                                             OnClick="@(() => Nav.NavigateTo($"/scenario/{node.Id}"))"
+                                             Class="chain-chip cursor-pointer">
+                                        @node.Label
+                                    </MudChip>
+
+                                    <MudIcon Icon="@Icons.Material.Filled.ChevronRight"
+                                             Size="Size.Small"
+                                             Class="chain-arrow mud-text-disabled" />
+                                }
+                            }
+                        }
+                    </MudStack>
+                </CellTemplate>
+            </TemplateColumn>
+
+            <!-- ── Col 4: Goal ── -->
+            <TemplateColumn Title="Goal" SortBy="x => x.GoalName" Sortable="true" CellStyle="width:160px">
+                <CellTemplate>
+                    <MudLink Href="@($"/goals/{context.Item.GoalId}")"
+                             Typo="Typo.body2"
+                             Color="Color.Tertiary">
+                        @context.Item.GoalName
+                    </MudLink>
+                </CellTemplate>
+            </TemplateColumn>
+
+            <!-- ── Col 5: LifeArea ── -->
+            <TemplateColumn Title="Life Area" SortBy="x => x.LifeAreaName" Sortable="true" CellStyle="width:140px">
+                <CellTemplate>
+                    <MudLink Href="@($"/life-areas/{context.Item.LifeAreaId}")"
+                             Typo="Typo.body2"
+                             Color="Color.Secondary">
+                        @context.Item.LifeAreaName
+                    </MudLink>
+                </CellTemplate>
+            </TemplateColumn>
+
+        </Columns>
+
+        <NoRecordsContent>
+            <MudStack AlignItems="AlignItems.Center" Class="py-8" Spacing="2">
+                <MudIcon Icon="@Icons.Material.Outlined.SearchOff" Size="Size.Large" Class="mud-text-disabled" />
+                <MudText Typo="Typo.body2" Class="mud-text-disabled">No tasks match your filters</MudText>
+            </MudStack>
+        </NoRecordsContent>
+
+    </MudDataGrid>
+
+</MudPaper>
+
+<!-- ───────────────── SCOPED STYLES ───────────────── -->
+<style>
+    .task-link {
+        font-weight: 500;
+        text-decoration: none !important;
+        transition: color .15s;
+    }
+
+        .task-link:hover {
+            text-decoration: underline !important;
+        }
+
+    .chain-chip {
+        margin: 1px 0;
+        transition: opacity .15s;
+    }
+
+        .chain-chip:hover {
+            opacity: .75;
+        }
+
+    .chain-chip--project {
+        font-weight: 600;
+    }
+
+    .chain-arrow {
+        margin: 0 -2px;
+        flex-shrink: 0;
+    }
+
+    .status-select .mud-input-root {
+        padding: 0 !important;
+    }
+</style>
+
+@code {
+    // ── Parameters ──────────────────────────────────────────────────────────
+
+    [Parameter, EditorRequired]
+    public List<TaskHierarchyLifeAreaDTO> LifeAreas { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<(int TaskId, CurrentStatus NewStatus)> OnTaskStatusChanged { get; set; }
+
+    // ── Filter state ─────────────────────────────────────────────────────────
+
+    private string _searchText = "";
+    private CurrentStatus? _filterStatus;
+    private int? _filterLifeAreaId;
+
+    // ── Flat projection ──────────────────────────────────────────────────────
+
+    private record TaskEntry(int Id, string Name, CurrentStatus CurrentStatus)
+    {
+        public CurrentStatus CurrentStatus { get; set; } = CurrentStatus;
+    }
+
+    private record FlatTaskRow(
+        List<TaskEntry> Tasks,
+        int GoalId,
+        string GoalName,
+        int LifeAreaId,
+        string LifeAreaName,
+        List<ChainNode> ScenarioChain
+    );
+
+    private record ChainNode(int Id, string Label, bool IsProject);
+
+    // ── Computed rows ─────────────────────────────────────────────────────────
+
+    private IEnumerable<FlatTaskRow> AllRows => BuildFlatRows();
+
+    private IEnumerable<FlatTaskRow> FilteredRows
+    {
+        get
+        {
+            var rows = AllRows;
+
+            if (_filterStatus.HasValue)
+                rows = rows.Where(r => r.Tasks.Any(t => t.CurrentStatus == _filterStatus.Value));
+
+            if (_filterLifeAreaId.HasValue)
+                rows = rows.Where(r => r.LifeAreaId == _filterLifeAreaId.Value);
+
+            if (!string.IsNullOrWhiteSpace(_searchText))
+            {
+                var q = _searchText.Trim();
+                rows = rows.Where(r =>
+                    r.Tasks.Any(t => t.Name.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                    r.GoalName.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                    r.LifeAreaName.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                    r.ScenarioChain.Any(n => n.Label.Contains(q, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return rows;
+        }
+    }
+
+    // ── Row flattening ────────────────────────────────────────────────────────
+
+    private List<FlatTaskRow> BuildFlatRows()
+    {
+        var groups = new Dictionary<string, (List<TaskEntry> Tasks,
+            TaskHierarchyGoalDTO Goal, TaskHierarchyLifeAreaDTO LifeArea, List<ChainNode> Chain)>();
+
+        void AddTask(TaskItemDTO task, TaskHierarchyGoalDTO goal,
+                     TaskHierarchyLifeAreaDTO lifeArea, List<ChainNode> chain)
+        {
+            var key = $"{lifeArea.Id}|{goal.Id}|{string.Join(",", chain.Select(n => $"{n.IsProject}:{n.Id}"))}";
+            if (!groups.TryGetValue(key, out var g))
+            {
+                g = (new List<TaskEntry>(), goal, lifeArea, chain);
+                groups[key] = g;
+            }
+            g.Tasks.Add(new TaskEntry(task.Id, task.Name, task.CurrentStatus));
+        }
+
+        foreach (var lifeArea in LifeAreas)
+            foreach (var goal in lifeArea.Goals)
+            {
+                foreach (var project in goal.Projects)
+                    foreach (var task in project.Tasks)
+                        AddTask(task, goal, lifeArea, new List<ChainNode> { new(project.Id, project.Name, true) });
+
+                foreach (var scenario in goal.Scenarios)
+                    FlattenScenario(scenario, goal, lifeArea, new List<ChainNode>(), AddTask);
+            }
+
+        return groups.Values
+            .Select(g => new FlatTaskRow(g.Tasks, g.Goal.Id, g.Goal.Name, g.LifeArea.Id, g.LifeArea.Name, g.Chain))
+            .ToList();
+    }
+
+    private void FlattenScenario(
+        TaskHierarchyScenarioDTO scenario,
+        TaskHierarchyGoalDTO goal,
+        TaskHierarchyLifeAreaDTO lifeArea,
+        List<ChainNode> ancestorChain,
+        Action<TaskItemDTO, TaskHierarchyGoalDTO, TaskHierarchyLifeAreaDTO, List<ChainNode>> addTask)
+    {
+        List<ChainNode> currentChain = [.. ancestorChain, new ChainNode(scenario.Id, scenario.Name, false)];
+
+        foreach (var project in scenario.Projects)
+            foreach (var task in project.Tasks)
+                addTask(task, goal, lifeArea, [.. currentChain, new ChainNode(project.Id, project.Name, true)]);
+
+        foreach (var child in scenario.Children)
+            FlattenScenario(child, goal, lifeArea, currentChain, addTask);
+    }
+
+    // ── Inline status change ──────────────────────────────────────────────────
+
+    private async Task OnStatusChanged(TaskEntry task, CurrentStatus newStatus)
+    {
+        task.CurrentStatus = newStatus; // Optimistic UI update.
+        await OnTaskStatusChanged.InvokeAsync((task.Id, newStatus));
+    }
+
+    // ── Row style ─────────────────────────────────────────────────────────────
+
+    private static string RowStyle(FlatTaskRow row, int _) =>
+        row.Tasks.All(t => t.CurrentStatus is CurrentStatus.Completed or CurrentStatus.Cancelled)
+            ? "opacity:.55;"
+            : "";
+
+    // ── Status helpers ────────────────────────────────────────────────────────
+
+    private static string GetStatusIcon(CurrentStatus s) => s switch
+    {
+        CurrentStatus.NotStarted => Icons.Material.Outlined.RadioButtonUnchecked,
+        CurrentStatus.InProgress => Icons.Material.Filled.PlayCircleOutline,
+        CurrentStatus.OnHold => Icons.Material.Filled.PauseCircleOutline,
+        CurrentStatus.Completed => Icons.Material.Filled.CheckCircleOutline,
+        CurrentStatus.Cancelled => Icons.Material.Filled.Cancel,
+        _ => Icons.Material.Filled.Help
+    };
+
+    private static Color GetStatusColor(CurrentStatus s) => s switch
+    {
+        CurrentStatus.NotStarted => Color.Default,
+        CurrentStatus.InProgress => Color.Info,
+        CurrentStatus.OnHold => Color.Warning,
+        CurrentStatus.Completed => Color.Success,
+        CurrentStatus.Cancelled => Color.Error,
+        _ => Color.Default
+    };
+}

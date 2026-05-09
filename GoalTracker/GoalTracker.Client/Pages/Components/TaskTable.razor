@@ -52,7 +52,7 @@
             <MudTd><MudTextField @bind-Value="context.Effort" Margin="Margin.Dense" /></MudTd>
             <MudTd>
                 <MudNumericField @bind-Value="context.Procents" Margin="Margin.Dense"
-                    Min="-100" Max="100" Adornment="Adornment.End" AdornmentText="%" />
+                Min="-100" Max="100" Adornment="Adornment.End" AdornmentText="%" />
             </MudTd>
             <MudTd>
                 <MudSelect @bind-Value="context.CurrentStatus" T="CurrentStatus" Margin="Margin.Dense">
@@ -71,7 +71,11 @@
         }
         else
         {
-            <MudTd>@context.Name</MudTd>
+            <MudTd>
+                <MudLink OnClick="() => OpenTask(context.Id)" Underline="Underline.Hover" Style="cursor: pointer;">
+                    @context.Name
+                </MudLink>
+            </MudTd>
             <MudTd>@context.Description</MudTd>
             <MudTd>@context.Effort</MudTd>
             <MudTd>
@@ -80,7 +84,9 @@
                 </MudText>
             </MudTd>
             <MudTd>
-                @{ var (color, icon) = GetStatusStyle(context.CurrentStatus); }
+                @{
+                    var (color, icon) = GetStatusStyle(context.CurrentStatus);
+                }
                 <MudChip T="string" Size="Size.Small" Color="@color" Icon="@icon">@context.CurrentStatus</MudChip>
             </MudTd>
             <MudTd>@context.Created.ToString("dd.MM.yyyy")</MudTd>
@@ -90,7 +96,7 @@
                     @if (project.CurrentStatus == CurrentStatus.Achieved)
                     {
                         <MudChip T="string" Size="Size.Small" Color="Color.Warning"
-                            Icon="@Icons.Material.Filled.EmojiEvents">@project.Name</MudChip>
+                        Icon="@Icons.Material.Filled.EmojiEvents">@project.Name</MudChip>
                     }
                     else
                     {
@@ -194,11 +200,16 @@
     private (Color color, string icon) GetStatusStyle(CurrentStatus status) => status switch
     {
         CurrentStatus.Achieved   => (Color.Success,   Icons.Material.Filled.CheckCircle),
-        CurrentStatus.Active     => (Color.Info,      Icons.Material.Filled.PlayArrow),
-        CurrentStatus.Cancel     => (Color.Error,     Icons.Material.Filled.Cancel),
-        CurrentStatus.Planning   => (Color.Warning,   Icons.Material.Filled.Schedule),
+        CurrentStatus.InProgress     => (Color.Info,      Icons.Material.Filled.PlayArrow),
+        CurrentStatus.Cancelled => (Color.Error, Icons.Material.Filled.Cancel),
+        CurrentStatus.NotStarted   => (Color.Warning,   Icons.Material.Filled.Schedule),
         CurrentStatus.Analyzing  => (Color.Default,   Icons.Material.Filled.Search),
         CurrentStatus.MaybeInOneDay => (Color.Secondary, Icons.Material.Filled.WatchLater),
         _ => (Color.Default, "")
     };
+
+    private void OpenTask(int taskId)
+    {
+        Navigation.NavigateTo($"/task/{taskId}");
+    }
 }

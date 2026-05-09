@@ -63,10 +63,10 @@
 
     private Color GetStatusColor(CurrentStatus s) => s switch
     {
-        CurrentStatus.Active => Color.Success,
+        CurrentStatus.InProgress => Color.Success,
         CurrentStatus.Achieved => Color.Success,
-        CurrentStatus.Cancel => Color.Error,
-        CurrentStatus.Planning => Color.Warning,
+        CurrentStatus.Cancelled => Color.Error,
+        CurrentStatus.Analyzing=> Color.Warning,
         _ => Color.Default
     };
 }

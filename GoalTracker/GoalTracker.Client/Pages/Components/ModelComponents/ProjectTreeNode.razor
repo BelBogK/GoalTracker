@@ -12,7 +12,7 @@
             <MudLink OnClick="() => NavigateToProject(Project.Id)"
                      Underline="Underline.Hover" Style="cursor: pointer;">
                 <MudText Typo="Typo.body2"
-                         Style="@(Project.CurrentStatus == CurrentStatus.Cancel ? "text-decoration: line-through; opacity: 0.5;" : "")">
+                         Style="@(Project.CurrentStatus == CurrentStatus.Cancelled ? "text-decoration: line-through; opacity: 0.5;" : "")">
                     @Project.Name
                 </MudText>
             </MudLink>
@@ -29,17 +29,17 @@
             <MudTreeViewItem Value="@t.Name">
                 <Content>
                     <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
-                        @if (t.CurrentStatus == CurrentStatus.Active)
+                        @if (t.CurrentStatus == CurrentStatus.InProgress)
                         {
                             <MudIcon Icon="@Icons.Material.Filled.PlayArrow"
                                      Color="Color.Success" Size="Size.Small" />
                         }
-                        else if (t.CurrentStatus == CurrentStatus.Done)
+                        else if (t.CurrentStatus == CurrentStatus.Completed)
                         {
                             <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
                                      Color="Color.Success" Size="Size.Small" />
                         }
-                        else if (t.CurrentStatus == CurrentStatus.Cancel)
+                        else if (t.CurrentStatus == CurrentStatus.Cancelled)
                         {
                             <MudIcon Icon="@Icons.Material.Filled.Cancel"
                                      Color="Color.Error" Size="Size.Small" />
@@ -52,7 +52,7 @@
                         <MudLink OnClick="() => NavigateToTask(t.Id)"
                                  Underline="Underline.Hover" Style="cursor: pointer; flex: 1;">
                             <MudText Typo="Typo.body2"
-                                     Style="@(t.CurrentStatus == CurrentStatus.Cancel ? "text-decoration: line-through; opacity: 0.5;" : "")">
+                                     Style="@(t.CurrentStatus == CurrentStatus.Cancelled ? "text-decoration: line-through; opacity: 0.5;" : "")">
                                 @t.Name
                             </MudText>
                         </MudLink>
@@ -86,27 +86,27 @@
     private CurrentStatus? GetAggregateStatus()
     {
         if (!Project.Tasks.Any()) return null;
-        if (Project.Tasks.All(t => t.CurrentStatus == CurrentStatus.Done)) return CurrentStatus.Done;
-        if (Project.Tasks.All(t => t.CurrentStatus == CurrentStatus.Cancel)) return CurrentStatus.Cancel;
-        if (Project.Tasks.Any(t => t.CurrentStatus == CurrentStatus.Active)) return CurrentStatus.Active;
+        if (Project.Tasks.All(t => t.CurrentStatus == CurrentStatus.Completed)) return CurrentStatus.Completed;
+        if (Project.Tasks.All(t => t.CurrentStatus == CurrentStatus.Cancelled)) return CurrentStatus.Cancelled;
+        if (Project.Tasks.Any(t => t.CurrentStatus == CurrentStatus.InProgress)) return CurrentStatus.InProgress;
         return null;
     }
 
     private Color GetStatusColor(CurrentStatus s) => s switch
     {
-        CurrentStatus.Active => Color.Success,
-        CurrentStatus.Done => Color.Success,
+        CurrentStatus.InProgress => Color.Success,
+        CurrentStatus.Completed => Color.Success,
         CurrentStatus.Achieved => Color.Success,
-        CurrentStatus.Cancel => Color.Error,
-        CurrentStatus.Planning => Color.Warning,
+        CurrentStatus.Cancelled => Color.Error,
+        CurrentStatus.Analyzing=> Color.Warning,
         _ => Color.Default
     };
 
     private string GetStatusIcon(CurrentStatus s) => s switch
     {
-        CurrentStatus.Active => Icons.Material.Filled.PlayArrow,
-        CurrentStatus.Done => Icons.Material.Filled.CheckCircle,
-        CurrentStatus.Cancel => Icons.Material.Filled.Cancel,
+        CurrentStatus.InProgress => Icons.Material.Filled.PlayArrow,
+        CurrentStatus.Completed => Icons.Material.Filled.CheckCircle,
+        CurrentStatus.Cancelled => Icons.Material.Filled.Cancel,
         _ => ""
     };
 

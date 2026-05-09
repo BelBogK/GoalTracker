@@ -7,12 +7,12 @@
     <div style="display: flex; align-items: center; gap: 6px; padding: 4px 0;">
         
         @* Status icon *@
-        @if (Project.CurrentStatus == CurrentStatus.Cancel)
+        @if (Project.CurrentStatus == CurrentStatus.Cancelled)
         {
             <MudIcon Icon="@Icons.Material.Filled.Cancel" 
                 Color="Color.Error" Size="Size.Small" />
         }
-        else if (Project.CurrentStatus == CurrentStatus.Done || 
+        else if (Project.CurrentStatus == CurrentStatus.Completed || 
                  Project.CurrentStatus == CurrentStatus.Achieved)
         {
             <MudIcon Icon="@Icons.Material.Filled.CheckCircle" 
@@ -33,7 +33,7 @@
 </MudLink>
 
         @* Expand tasks *@
-        @if (Project.CurrentStatus != CurrentStatus.Cancel)
+        @if (Project.CurrentStatus != CurrentStatus.Cancelled)
         {
             <MudChip T="string" Size="Size.Small" 
                 Color="@GetStatusColor(Project.CurrentStatus)">
@@ -47,18 +47,18 @@
     [Parameter] public ProjectDTO Project { get; set; } = new();
 
     private string ProjectNameStyle =>
-           Project.CurrentStatus == CurrentStatus.Cancel
+           Project.CurrentStatus == CurrentStatus.Cancelled
                ? "text-decoration: line-through; color: var(--mud-palette-text-disabled); cursor: pointer;"
                : "cursor: pointer;";
 
 
     private Color GetStatusColor(CurrentStatus s) => s switch
     {
-        CurrentStatus.Active => Color.Success,
+        CurrentStatus.InProgress => Color.Success,
         CurrentStatus.Achieved => Color.Success,
-        CurrentStatus.Done => Color.Success,
-        CurrentStatus.Cancel => Color.Error,
-        CurrentStatus.Planning => Color.Warning,
+        CurrentStatus.Completed => Color.Success,
+        CurrentStatus.Cancelled => Color.Error,
+        CurrentStatus.Analyzing=> Color.Warning,
         _ => Color.Default
     };
 
