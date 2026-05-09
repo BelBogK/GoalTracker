@@ -50,117 +50,54 @@ namespace GoalTracker.Infrastructure.Repositories
 
         public async Task<IEnumerable<LifeArea>> GetWithAllPathToTask(int taskId, string userId)
         {
-            await using var context = await contextFactory.CreateDbContextAsync();
-
-            // Находим проекты которые содержат эту задачу
-            var projectIds = await context.Projects
-                .Where(p => p.TaskItems.Any(t => t.Id == taskId))
-                .Select(p => p.Id)
-                .ToListAsync();
-
-            // Находим сценарии которые содержат эти проекты (вся иерархия вверх)
-            var scenarioIds = await context.GoalScenarios
-                .Where(s => s.Projects.Any(p => projectIds.Contains(p.Id)))
-                .Select(s => s.Id)
-                .ToListAsync();
-
-            // Находим цели через проекты или сценарии
-            var goalIds = await context.Goals
-                .Where(g =>
-                    g.Projects.Any(p => projectIds.Contains(p.Id)) ||
-                    g.Scenarios.Any(s => scenarioIds.Contains(s.Id)))
-                .Select(g => g.Id)
-                .ToListAsync();
-
-            // Загружаем LifeAreas с полной иерархией
-            return await context.LifeAreas
-     .Where(la => la.Goals.Any(g => goalIds.Contains(g.Id)))
-     .Include(la => la.Goals.Where(g => goalIds.Contains(g.Id)))
-         .ThenInclude(g => g.Scenarios)
-             .ThenInclude(s => s.ChildRelations)
-                 .ThenInclude(cr => cr.Child)
-                     .ThenInclude(c => c.Projects)
-     .Include(la => la.Goals.Where(g => goalIds.Contains(g.Id)))
-         .ThenInclude(g => g.Scenarios)
-             .ThenInclude(s => s.Projects)
-     .Include(la => la.Goals.Where(g => goalIds.Contains(g.Id)))
-         .ThenInclude(g => g.Projects)
-     .ToListAsync();
+            var result= await GetLifeAreasByTaskIdsAsync([taskId]);
+            return result;
         }
 
         public async Task<IEnumerable<LifeArea>> GetLifeAreasByTaskIdsAsync(IEnumerable<int> taskItemIds)
         {
             await using var context = await contextFactory.CreateDbContextAsync();
-
             var taskIds = taskItemIds.Distinct().ToList();
 
-            // All projects containing these tasks
-            var projectIds = await context.Projects
+            // 1. Находим все проекты, содержащие эти задачи
+            var projects = await context.Projects
+                .Include(p => p.TaskItems.Where(t => taskIds.Contains(t.Id)))
                 .Where(p => p.TaskItems.Any(t => taskIds.Contains(t.Id)))
-                .Select(p => p.Id)
-                .Distinct()
                 .ToListAsync();
 
-            // Scenarios containing these projects
-            var scenarioIds = await context.GoalScenarios
-                .Where(s =>s.IsActive && s.Projects.Any(p => projectIds.Contains(p.Id)))
-                .Select(s => s.Id)
-                .Distinct()
+            var projectIds = projects.Select(p => p.Id).ToList();
+
+            // 2. Загружаем ВСЕ активные сценарии и их связи (ChildRelations)
+            // Благодаря Fix-up, EF сам построит дерево любой глубины в памяти
+            var allScenarios = await context.GoalScenarios
+                .Include(s => s.ChildRelations)
+                .Include(s => s.Projects) // Чтобы связать сценарии с проектами
+                .Where(s => s.IsActive)
                 .ToListAsync();
 
-            // Goals connected through direct projects OR scenarios
-            var goalIds = await context.Goals
-                .Where(g =>
-                    g.Projects.Any(p => projectIds.Contains(p.Id)) ||
-                    g.Scenarios.Any(s => scenarioIds.Contains(s.Id)))
-                .Select(g => g.Id)
-                .Distinct()
+            // 3. Загружаем цели, привязанные к этим проектам или сценариям
+            var scenarioIds = allScenarios.Select(s => s.Id).ToList();
+            var goals = await context.Goals
+                .Include(g => g.Projects)
+                .Include(g => g.Scenarios)
+                .Where(g => g.Projects.Any(p => projectIds.Contains(p.Id)) ||
+                            g.Scenarios.Any(s => scenarioIds.Contains(s.Id)))
                 .ToListAsync();
 
-            return await context.LifeAreas
+            var goalIds = goals.Select(g => g.Id).ToList();
+
+            // 4. Загружаем LifeAreas для этих целей
+            var lifeAreas = await context.LifeAreas
+                .Include(la => la.Goals)
                 .Where(la => la.Goals.Any(g => goalIds.Contains(g.Id)))
-
-                // Goals -> Direct Projects -> Tasks
-                .Include(la => la.Goals.Where(g => goalIds.Contains(g.Id)))
-                    .ThenInclude(g => g.Projects
-                        .Where(p => projectIds.Contains(p.Id)))
-                            .ThenInclude(p => p.TaskItems
-                                .Where(t => taskIds.Contains(t.Id)))
-
-                // Goals -> Scenarios
-                .Include(la => la.Goals.Where(g => goalIds.Contains(g.Id)))
-                    .ThenInclude(g => g.Scenarios
-                        .Where(s => scenarioIds.Contains(s.Id)))
-
-                // Goals -> Scenarios -> Projects -> Tasks
-                .Include(la => la.Goals.Where(g => goalIds.Contains(g.Id)))
-                    .ThenInclude(g => g.Scenarios
-                        .Where(s => scenarioIds.Contains(s.Id)))
-                            .ThenInclude(s => s.Projects
-                                .Where(p => projectIds.Contains(p.Id)))
-                                    .ThenInclude(p => p.TaskItems
-                                        .Where(t => taskIds.Contains(t.Id)))
-
-                // Goals -> Scenarios -> ChildRelations -> Child
-                .Include(la => la.Goals.Where(g => goalIds.Contains(g.Id)))
-                    .ThenInclude(g => g.Scenarios
-                        .Where(s => scenarioIds.Contains(s.Id)))
-                            .ThenInclude(s => s.ChildRelations)
-                                .ThenInclude(cr => cr.Child)
-
-                // Goals -> Scenarios -> ChildRelations -> Child -> Projects -> Tasks
-                .Include(la => la.Goals.Where(g => goalIds.Contains(g.Id)))
-                    .ThenInclude(g => g.Scenarios
-                        .Where(s => scenarioIds.Contains(s.Id)))
-                            .ThenInclude(s => s.ChildRelations)
-                                .ThenInclude(cr => cr.Child)
-                                    .ThenInclude(c => c.Projects
-                                        .Where(p => projectIds.Contains(p.Id)))
-                                            .ThenInclude(p => p.TaskItems
-                                                .Where(t => taskIds.Contains(t.Id)))
-
-                .AsSplitQuery()
                 .ToListAsync();
+
+            // На этом этапе EF Core уже связал объекты: 
+            // LifeArea.Goals -> Goal.Scenarios -> Scenario.ChildRelations -> ...
+
+            // 5. Возвращаем только те LifeAreas, которые действительно ведут к искомым задачам
+            // (Фильтрация "сверху вниз", чтобы отсечь лишние ветки, если это необходимо)
+            return lifeAreas;
         }
 
         public Task<LifeArea> UpdateAsync(LifeArea entity)
