@@ -18,6 +18,11 @@ namespace GoalTracker.Domain.Entities
         public GoalType GoalType { get; set; }
         public Priority Priority { get; set; }
         public string? IdealVision { get; set; }
+        /// <summary>
+        /// Дополнителькые бонусы к проектам которые выполнились и задачам. ТАк же не выполненные проекты и таски сумировать надо которые были в активных сценариях
+        /// </summary>
+        public int PointsForCompletedGoal { get; set; }
+        public DateTime? FinishedAt { get; set; }
         public virtual ICollection<GoalScenario> Scenarios { get; set; } = new List<GoalScenario>();
         public virtual ICollection<Project> Projects { get; set; }
         public virtual ICollection<LifeArea> LifeAreas { get; set; }= new List<LifeArea>();

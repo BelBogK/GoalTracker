@@ -3,11 +3,30 @@ using GoalTracker.Features.Extensions;
 using GoalTracker.Features.Mapper;
 using GoalTracker.Shared;
 using MediatR;
+using static GoalTracker.Features.LifeArea.GetLifeAreaByIdHandler;
 using static MudBlazor.CategoryTypes;
 
 namespace GoalTracker.Features.LifeArea
 {
     public record GetLifeAreasQuery(string UserId) : IRequest<IEnumerable<LifeAreaDTO>>;
+    public record GetLifeAreasWithPointsQuery(string UserId, DateTime start, DateTime end) : IRequest<Dictionary<string,int>>;
+    public class GetLifeAreasWithPointsHandler(ILifeAreaRepository repository, AppMapper mapper)
+    : IRequestHandler<GetLifeAreasWithPointsQuery, Dictionary<string, int>?>
+    {
+        public async Task<Dictionary<string, int>?> Handle(GetLifeAreasWithPointsQuery request, CancellationToken cancellationToken)
+        {
+            return await repository.GetLifeAreasWithPoints(request.UserId, request.start, request.end);
+        }
+    }
+    public record GetLifeAreasWithPotentialPointsQuery(string UserId, DateTime start, DateTime end) : IRequest<Dictionary<string,int>>;
+    public class GetLifeAreasWithPotentialPointsHandler(ILifeAreaRepository repository, AppMapper mapper)
+    : IRequestHandler<GetLifeAreasWithPotentialPointsQuery, Dictionary<string, int>?>
+    {
+        public async Task<Dictionary<string, int>?> Handle(GetLifeAreasWithPotentialPointsQuery request, CancellationToken cancellationToken)
+        {
+            return await repository.GetLifeAreasWithPotentialPoints(request.UserId, request.start, request.end);
+        }
+    }
     public record GetLifeAreaByIdQuery(string UserId, int lifeAreaId) : IRequest<LifeAreaDTO>;
     public class GetLifeAreaByIdHandler(ILifeAreaRepository repository, AppMapper mapper)
     : IRequestHandler<GetLifeAreaByIdQuery, LifeAreaDTO?>

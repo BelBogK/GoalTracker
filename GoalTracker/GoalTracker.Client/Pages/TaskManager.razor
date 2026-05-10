@@ -91,8 +91,10 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await SetMode("today");
-        await LoadNonTracked();
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+
+        await Task.WhenAll(SetMode("today"), LoadNonTracked());
+        Console.WriteLine($"LoadNonTracked: {sw.ElapsedMilliseconds}ms");
     }
 
     private async Task SetMode(string mode)

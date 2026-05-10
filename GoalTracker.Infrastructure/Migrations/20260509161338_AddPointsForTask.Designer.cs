@@ -4,6 +4,7 @@ using GoalTracker.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GoalTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260509161338_AddPointsForTask")]
+    partial class AddPointsForTask
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -214,9 +217,6 @@ namespace GoalTracker.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("FinishedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("GoalType")
                         .HasColumnType("int");
 
@@ -226,9 +226,6 @@ namespace GoalTracker.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("PointsForCompletedGoal")
-                        .HasColumnType("int");
 
                     b.Property<int>("Priority")
                         .HasColumnType("int");
@@ -426,6 +423,9 @@ namespace GoalTracker.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("CompletedTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("Created")
                         .HasColumnType("datetime2");
 
@@ -436,9 +436,6 @@ namespace GoalTracker.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("EndTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("FinishedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int?>("GoalScenarioId")
@@ -452,9 +449,6 @@ namespace GoalTracker.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("ParentProjectId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PointsForCompletedProject")
                         .HasColumnType("int");
 
                     b.Property<int>("Priority")
@@ -600,7 +594,7 @@ namespace GoalTracker.Infrastructure.Migrations
                     b.Property<string>("Effort")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("FinishedAt")
+                    b.Property<DateTime>("FinishedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("MaxPointForTask")

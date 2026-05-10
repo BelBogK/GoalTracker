@@ -59,45 +59,136 @@ namespace GoalTracker.Infrastructure.Repositories
             await using var context = await contextFactory.CreateDbContextAsync();
             var taskIds = taskItemIds.Distinct().ToList();
 
-            // 1. Находим все проекты, содержащие эти задачи
-            var projects = await context.Projects
-                .Include(p => p.TaskItems.Where(t => taskIds.Contains(t.Id)))
-                .Where(p => p.TaskItems.Any(t => taskIds.Contains(t.Id)))
-                .ToListAsync();
-
-            var projectIds = projects.Select(p => p.Id).ToList();
-
-            // 2. Загружаем ВСЕ активные сценарии и их связи (ChildRelations)
-            // Благодаря Fix-up, EF сам построит дерево любой глубины в памяти
+            // 1. All active scenarios with relations and projects — build tree in memory
             var allScenarios = await context.GoalScenarios
-                .Include(s => s.ChildRelations)
-                .Include(s => s.Projects) // Чтобы связать сценарии с проектами
                 .Where(s => s.IsActive)
+                .Include(s => s.ChildRelations).ThenInclude(r => r.Child)
+                .Include(s => s.Projects).ThenInclude(p => p.TaskItems.Where(t => taskIds.Contains(t.Id)))
+                .AsSplitQuery()
                 .ToListAsync();
 
-            // 3. Загружаем цели, привязанные к этим проектам или сценариям
-            var scenarioIds = allScenarios.Select(s => s.Id).ToList();
-            var goals = await context.Goals
-                .Include(g => g.Projects)
-                .Include(g => g.Scenarios)
-                .Where(g => g.Projects.Any(p => projectIds.Contains(p.Id)) ||
-                            g.Scenarios.Any(s => scenarioIds.Contains(s.Id)))
-                .ToListAsync();
-
-            var goalIds = goals.Select(g => g.Id).ToList();
-
-            // 4. Загружаем LifeAreas для этих целей
+            // 2. LifeAreas with goals, direct projects and scenario links
             var lifeAreas = await context.LifeAreas
                 .Include(la => la.Goals)
-                .Where(la => la.Goals.Any(g => goalIds.Contains(g.Id)))
+                    .ThenInclude(g => g.Projects)
+                        .ThenInclude(p => p.TaskItems.Where(t => taskIds.Contains(t.Id)))
+                .Include(la => la.Goals)
+                    .ThenInclude(g => g.Scenarios)  // just the link Goal→Scenario (no deep include)
+                .AsSplitQuery()
                 .ToListAsync();
 
-            // На этом этапе EF Core уже связал объекты: 
-            // LifeArea.Goals -> Goal.Scenarios -> Scenario.ChildRelations -> ...
+            // 3. EF fix-up wires GoalScenario.Projects and ChildRelations automatically
+            // because allScenarios are tracked in the same context instance
 
-            // 5. Возвращаем только те LifeAreas, которые действительно ведут к искомым задачам
-            // (Фильтрация "сверху вниз", чтобы отсечь лишние ветки, если это необходимо)
             return lifeAreas;
+        }
+
+        public async Task<Dictionary<string, int>> GetLifeAreasWithPoints(
+     string userId, DateTime startTime, DateTime endTime)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+
+            //var lifeAreas = await context.LifeAreas
+            //    .Where(la => la.UserId == userId)
+            //    .Select(la => new
+            //    {
+            //        la.Name,
+            //        GoalPoints = la.Goals
+            //            .Where(g => g.FinishedAt.HasValue &&
+            //                        g.FinishedAt >= startTime &&
+            //                        g.FinishedAt <= endTime)
+            //            .Sum(g => g.PointsForCompletedGoal),
+
+            //        ProjectPoints = la.Goals
+            //            .SelectMany(g => g.Projects)
+            //            .Where(p => p.FinishedAt.HasValue &&
+            //                        p.FinishedAt >= startTime &&
+            //                        p.FinishedAt <= endTime)
+            //            .Sum(p => p.PointsForCompletedProject),
+
+            //        TaskPoints = la.Goals
+            //            .SelectMany(g => g.Projects)
+            //            .SelectMany(p => p.TaskItems)
+            //            .Where(t => t.FinishedAt.HasValue &&
+            //                        t.FinishedAt >= startTime &&
+            //                        t.FinishedAt <= endTime)
+            //            .Sum(t => t.RealPointForTask)
+            //    })
+            //    .ToListAsync();
+            var lifeArea = await context.LifeAreas
+                   .Where(la => la.UserId == userId)
+                   .Select(x => new
+                   {
+                       Name = x.Name,
+                       TaskCount = x.Goals
+                       .SelectMany(x => x.Projects)
+                       .SelectMany(x => x.TaskItems)
+                       .Where(x => x.CurrentStatus == Shared.Enums.CurrentStatus.Completed)
+                       .Count()
+                   }).ToListAsync();
+
+            return lifeArea.ToDictionary(
+                la => la.Name,
+                la => la.TaskCount);
+
+            //return lifeAreas.ToDictionary(
+            //    la => la.Name,
+            //    la => la.GoalPoints + la.ProjectPoints + la.TaskPoints);
+        }
+
+        public async Task<Dictionary<string, int>> GetLifeAreasWithPotentialPoints(
+     string userId, DateTime startTime, DateTime endTime)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+            try
+            {
+                //var lifeAreas = await context.LifeAreas
+                //    .Where(la => la.UserId == userId)
+                //    .Select(la => new
+                //    {
+                //        la.Name,
+                //        GoalPoints = la.Goals
+                //            .Where(g => g.FinishedAt.HasValue &&
+                //                        g.FinishedAt >= startTime &&
+                //                        g.FinishedAt <= endTime)
+                //            .Sum(g => g.PointsForCompletedGoal),
+
+                //        ProjectPoints = la.Goals
+                //            .SelectMany(g => g.Projects)
+                //            .Where(p => p.FinishedAt.HasValue &&
+                //                        p.FinishedAt >= startTime &&
+                //                        p.FinishedAt <= endTime)
+                //            .Sum(p => p.PointsForCompletedProject),
+
+                //        TaskPoints = la.Goals
+                //            .SelectMany(g => g.Projects)
+                //            .SelectMany(p => p.TaskItems)
+                //            .Where(t => t.FinishedAt.HasValue &&
+                //                        t.FinishedAt >= startTime &&
+                //                        t.FinishedAt <= endTime)
+                //            .Sum(t => t.RealPointForTask)
+                //    })
+                //    .ToListAsync();
+                var lifeArea = await context.LifeAreas
+                    .Where(la => la.UserId == userId)
+                    .Select(x => new
+                    {
+                        Name = x.Name,
+                        TaskCount = x.Goals
+                        .SelectMany(x => x.Projects)
+                        .SelectMany(x => x.TaskItems)
+                        .Where(x => x.CurrentStatus == Shared.Enums.CurrentStatus.InProgress)
+                        .Count()
+                    }).ToListAsync();
+
+                return lifeArea.ToDictionary(
+                    la => la.Name,
+                    la => la.TaskCount);
+            }
+            catch (Exception ex) {
+                int a = 0;
+            }
+            return null;
         }
 
         public Task<LifeArea> UpdateAsync(LifeArea entity)

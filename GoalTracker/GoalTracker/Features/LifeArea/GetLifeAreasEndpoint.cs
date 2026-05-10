@@ -15,6 +15,31 @@ namespace GoalTracker.Features.LifeArea
                 var result = await mediator.Send(new GetLifeAreasQuery(userId));
                 return Results.Ok(result);
             }).RequireAuthorization();
+
+
+            app.MapGet("api/lifeareas/AreaWithPoints", async (
+DateTime startTime,
+    DateTime endTime,
+     IMediator mediator,
+     ClaimsPrincipal user) => 
+            {
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                var result = await mediator.Send(new GetLifeAreasWithPointsQuery(userId, startTime, endTime));
+                return Results.Ok(result);
+            }).RequireAuthorization();
+
+            app.MapGet("/api/lifeareas/AreaWithPotentialPoints", async (
+DateTime startTime,
+   DateTime endTime,
+    IMediator mediator,
+    ClaimsPrincipal user) =>
+            {
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                var result = await mediator.Send(new GetLifeAreasWithPotentialPointsQuery(userId, startTime, endTime));
+                return Results.Ok(result);
+            }).RequireAuthorization();
+
+
             app.MapGet("/api/lifeareas/{id}", async (
     int id,
     IMediator mediator,

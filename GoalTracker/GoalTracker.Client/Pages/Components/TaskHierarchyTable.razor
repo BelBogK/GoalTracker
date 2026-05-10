@@ -3,8 +3,9 @@
 @using GoalTracker.Shared.Enums
 @using GoalTracker.Shared.SuperClass
 @using MudBlazor
-@inject NavigationManager Nav 
+@inject NavigationManager Nav
 @inject TaskItemApiClient TaskApi
+
 <MudPaper Class="pa-4" Elevation="0">
 
     <!-- ───────────────── TOOLBAR ───────────────── -->
@@ -17,8 +18,8 @@
 
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
 
-            <!-- Quick search -->
-            <MudTextField @bind-Value="_searchText"
+            <MudTextField Value="@SearchText"
+                          ValueChanged="@((string v) => SearchText = v)"
                           Placeholder="Quick search…"
                           Adornment="Adornment.Start"
                           AdornmentIcon="@Icons.Material.Filled.Search"
@@ -29,8 +30,9 @@
                           Margin="Margin.Dense"
                           Style="min-width:220px" />
 
-            <!-- Status filter -->
-            <MudSelect T="CurrentStatus?" @bind-Value="_filterStatus"
+            <MudSelect T="CurrentStatus?"
+                       Value="@FilterStatus"
+                       ValueChanged="@((CurrentStatus? v) => FilterStatus = v)"
                        Placeholder="All statuses"
                        Clearable="true"
                        Variant="Variant.Outlined"
@@ -47,8 +49,9 @@
                 }
             </MudSelect>
 
-            <!-- LifeArea filter -->
-            <MudSelect T="int?" @bind-Value="_filterLifeAreaId"
+            <MudSelect T="int?"
+                       Value="@FilterLifeAreaId"
+                       ValueChanged="@((int? v) => FilterLifeAreaId = v)"
                        Placeholder="All life areas"
                        Clearable="true"
                        Variant="Variant.Outlined"
@@ -64,146 +67,113 @@
     </MudStack>
 
     <!-- ───────────────── TABLE ───────────────── -->
-    <MudDataGrid T="FlatTaskRow"
-                 Items="@FilteredRows"
-                 Filterable="false"
-                 SortMode="SortMode.Multiple"
-                 Hover="true"
-                 Dense="true"
-                 Striped="false"
-                 Bordered="false"
-                 Breakpoint="Breakpoint.Sm"
-                 RowStyleFunc="@RowStyle">
+    <MudTable T="FlatTaskRow"
+              Items="@_filteredRows"
+              Hover="true"
+              Dense="true"
+              Breakpoint="Breakpoint.Sm"
+              RowStyleFunc="@RowStyle">
+        <HeaderContent>
+            <MudTh>Tasks</MudTh>
+            <MudTh Style="width:170px">Status</MudTh>
+            <MudTh>Scenario chain</MudTh>
+            <MudTh Style="width:160px">Goal</MudTh>
+            <MudTh Style="width:140px">Life Area</MudTh>
+        </HeaderContent>
+        <RowTemplate>
 
-        <Columns>
+            <!-- ── Col 1: Tasks ── -->
+            <MudTd>
+                <div class="task-cell">
+                    @foreach (var task in context.Tasks)
+                    {
+                        <div class="task-row">
+                            @if (IsTracked)
+                            {
+                                <button class="icon-btn icon-btn--remove" title="Remove from tracker">
+                                    @((MarkupString)RemoveIconSvg)
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="icon-btn icon-btn--add" title="Add to tracker"
+                                        @onclick="() => AddToTrack(task.Id)">
+                                    @((MarkupString)AddIconSvg)
+                                </button>
+                            }
+                            <span class="status-dot" title="@task.CurrentStatus.ToString()"
+                                  style="color:var(@GetStatusCssVar(task.CurrentStatus))">
+                                @((MarkupString)GetStatusSvg(task.CurrentStatus))
+                            </span>
+                            <a href="/task/@task.Id" class="task-link">@task.Name</a>
+                        </div>
+                    }
+                </div>
+            </MudTd>
 
-            <!-- ── Col 1: Task name ── -->
-            <TemplateColumn Title="Tasks" Sortable="false">
-                <CellTemplate>
-                    <MudStack Spacing="1">
-                        @foreach (var (id, name, status) in context.Item.Tasks)
-                        {
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                @if (IsTracked)
-                                {
-                                    <MudIconButton Icon="@Icons.Material.Filled.Remove" aria-label="delete"  />
-                                }
-                                else
-                                {
-                                    <MudIconButton Icon="@Icons.Material.Filled.Add" aria-label="delete" OnClick="() => AddToTrack(id)" />
-                                }
-                                <MudTooltip Text="@status.ToString()">
-                                    <MudIcon Icon="@GetStatusIcon(status)"
-                                             Color="@GetStatusColor(status)"
-                                             Size="Size.Small" />
-                                </MudTooltip>
-                                <MudLink Href="@($"/task/{id}")"
-                                         Typo="Typo.body2"
-                                         Color="Color.Default"
-                                         Class="task-link">
-                                    @name
-                                </MudLink> 
-                            </MudStack>
-                        }
-                    </MudStack>
-                </CellTemplate>
-            </TemplateColumn>
-
-            <!-- ── Col 2: Status dropdown ── -->
-            <TemplateColumn Title="Status" Sortable="false" CellStyle="width:160px">
-                <CellTemplate>
-                    <MudStack Spacing="1">
-                        @foreach (var task in context.Item.Tasks)
-                        {
-                            <MudSelect T="CurrentStatus"
-                                       Value="task.CurrentStatus"
-                                       ValueChanged="@(s => OnStatusChanged(task, s))"
-                                       Variant="Variant.Text"
-                                       Margin="Margin.Dense"
-                                       DisableUnderLine="true"
-                                       Class="status-select">
+            <!-- ── Col 2: Status — native <details> dropdown ── -->
+            <MudTd Style="width:170px">
+                <div class="task-cell">
+                    @foreach (var task in context.Tasks)
+                    {
+                        <details class="status-details">
+                            <summary class="status-trigger">
+                                <span class="status-dot" style="color:var(@GetStatusCssVar(task.CurrentStatus))">
+                                    @((MarkupString)GetStatusSvg(task.CurrentStatus))
+                                </span>
+                                <span class="status-label">@task.CurrentStatus</span>
+                                <span class="status-caret">▾</span>
+                            </summary>
+                            <div class="status-dropdown">
                                 @foreach (CurrentStatus s in Enum.GetValues<CurrentStatus>())
                                 {
-                                    <MudSelectItem T="CurrentStatus" Value="s">
-                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                            <MudIcon Icon="@GetStatusIcon(s)" Color="@GetStatusColor(s)" Size="Size.Small" />
-                                            <MudText Typo="Typo.body2">@s</MudText>
-                                        </MudStack>
-                                    </MudSelectItem>
+                                    var captured = s;
+                                    var capturedTask = task;
+                                    <button class="status-option" @onclick="() => OnStatusChanged(capturedTask, captured)">
+                                        <span class="status-dot" style="color:var(@GetStatusCssVar(captured))">
+                                            @((MarkupString)GetStatusSvg(captured))
+                                        </span>
+                                        <span>@captured</span>
+                                    </button>
                                 }
-                            </MudSelect>
-                        }
-                    </MudStack>
-                </CellTemplate>
-            </TemplateColumn>
+                            </div>
+                        </details>
+                    }
+                </div>
+            </MudTd>
 
             <!-- ── Col 3: Scenario chain ── -->
-            <TemplateColumn Title="Scenario chain" Sortable="false">
-                <CellTemplate>
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0" Wrap="Wrap.Wrap">
-                        @{
-                            var chain = context.Item.ScenarioChain;
-                            for (int i = 0; i < chain.Count; i++)
-                            {
-                                var node = chain[i];
-
-                                @if (node.IsProject)
-                                {
-                                    <MudChip T="string"
-                                             Icon="@Icons.Material.Filled.FolderOpen"
-                                             Color="Color.Primary"
-                                             Size="Size.Small"
-                                             Variant="Variant.Outlined"
-                                             OnClick="@(() => Nav.NavigateTo($"/project/{node.Id}"))"
-                                             Class="chain-chip chain-chip--project cursor-pointer">
-                                        @node.Label
-                                    </MudChip>
-                                }
-                                else
-                                {
-                                    <MudChip T="string"
-                                             Icon="@Icons.Material.Outlined.AccountTree"
-                                             Color="Color.Default"
-                                             Size="Size.Small"
-                                             Variant="Variant.Text"
-                                             OnClick="@(() => Nav.NavigateTo($"/scenario/{node.Id}"))"
-                                             Class="chain-chip cursor-pointer">
-                                        @node.Label
-                                    </MudChip>
-
-                                    <MudIcon Icon="@Icons.Material.Filled.ChevronRight"
-                                             Size="Size.Small"
-                                             Class="chain-arrow mud-text-disabled" />
-                                }
-                            }
+            <MudTd>
+                <div class="chain-wrap">
+                    @foreach (var node in context.ScenarioChain)
+                    {
+                        if (node.IsProject)
+                        {
+                            <a href="/project/@node.Id" class="chain-node chain-node--project">
+                                <svg class="chain-icon" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" /></svg>
+                                @node.Label
+                            </a>
                         }
-                    </MudStack>
-                </CellTemplate>
-            </TemplateColumn>
+                        else
+                        {
+                            <a href="/scenario/@node.Id" class="chain-node chain-node--scenario">@node.Label</a>
+                            <span class="chain-sep">›</span>
+                        }
+                    }
+                </div>
+            </MudTd>
 
             <!-- ── Col 4: Goal ── -->
-            <TemplateColumn Title="Goal" SortBy="x => x.GoalName" Sortable="true" CellStyle="width:160px">
-                <CellTemplate>
-                    <MudLink Href="@($"/goals/{context.Item.GoalId}")"
-                             Typo="Typo.body2"
-                             Color="Color.Tertiary">
-                        @context.Item.GoalName
-                    </MudLink>
-                </CellTemplate>
-            </TemplateColumn>
+            <MudTd Style="width:160px">
+                <a href="/goals/@context.GoalId" class="nav-link nav-link--goal">@context.GoalName</a>
+            </MudTd>
 
             <!-- ── Col 5: LifeArea ── -->
-            <TemplateColumn Title="Life Area" SortBy="x => x.LifeAreaName" Sortable="true" CellStyle="width:140px">
-                <CellTemplate>
-                    <MudLink Href="@($"/life-areas/{context.Item.LifeAreaId}")"
-                             Typo="Typo.body2"
-                             Color="Color.Secondary">
-                        @context.Item.LifeAreaName
-                    </MudLink>
-                </CellTemplate>
-            </TemplateColumn>
+            <MudTd Style="width:140px">
+                <a href="/life-areas/@context.LifeAreaId" class="nav-link nav-link--lifearea">@context.LifeAreaName</a>
+            </MudTd>
 
-        </Columns>
+        </RowTemplate>
 
         <NoRecordsContent>
             <MudStack AlignItems="AlignItems.Center" Class="py-8" Spacing="2">
@@ -212,48 +182,212 @@
             </MudStack>
         </NoRecordsContent>
 
-    </MudDataGrid>
+    </MudTable>
 
 </MudPaper>
 
-<!-- ───────────────── SCOPED STYLES ───────────────── -->
 <style>
+    .task-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .task-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
     .task-link {
+        font-size: .875rem;
         font-weight: 500;
-        text-decoration: none !important;
-        transition: color .15s;
+        color: inherit;
+        text-decoration: none;
     }
 
         .task-link:hover {
-            text-decoration: underline !important;
+            text-decoration: underline;
         }
 
-    .chain-chip {
-        margin: 1px 0;
-        transition: opacity .15s;
+    .nav-link {
+        font-size: .875rem;
+        text-decoration: none;
     }
 
-        .chain-chip:hover {
-            opacity: .75;
-        }
-
-    .chain-chip--project {
-        font-weight: 600;
+    .nav-link--goal {
+        color: var(--mud-palette-tertiary);
     }
 
-    .chain-arrow {
-        margin: 0 -2px;
+    .nav-link--lifearea {
+        color: var(--mud-palette-secondary);
+    }
+
+    .nav-link:hover {
+        text-decoration: underline;
+        opacity: .8;
+    }
+
+    .icon-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        background: transparent;
+        transition: background .15s;
         flex-shrink: 0;
     }
 
-    .status-select .mud-input-root {
-        padding: 0 !important;
+    .icon-btn--add:hover {
+        background: var(--mud-palette-success-hover);
+        color: var(--mud-palette-success);
     }
+
+    .icon-btn--remove:hover {
+        background: var(--mud-palette-error-hover);
+        color: var(--mud-palette-error);
+    }
+
+    .status-details {
+        position: relative;
+        display: inline-block;
+    }
+
+        .status-details[open] .status-trigger {
+            background: var(--mud-palette-action-hover);
+        }
+
+    .status-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        padding: 2px 6px;
+        border-radius: 4px;
+        list-style: none;
+        font-size: .875rem;
+        transition: background .15s;
+        user-select: none;
+    }
+
+        .status-trigger:hover {
+            background: var(--mud-palette-action-hover);
+        }
+
+        .status-trigger::-webkit-details-marker {
+            display: none;
+        }
+
+    .status-caret {
+        font-size: .7rem;
+        color: var(--mud-palette-text-disabled);
+        margin-left: 2px;
+    }
+
+    .status-label {
+        white-space: nowrap;
+    }
+
+    .status-dropdown {
+        position: absolute;
+        z-index: 1000;
+        left: 0;
+        top: 100%;
+        background: var(--mud-palette-surface);
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 6px;
+        box-shadow: 0 4px 16px rgba(0,0,0,.12);
+        min-width: 160px;
+        padding: 4px 0;
+        margin-top: 2px;
+    }
+
+    .status-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 6px 12px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        font-size: .875rem;
+        color: var(--mud-palette-text-primary);
+        text-align: left;
+        transition: background .1s;
+    }
+
+        .status-option:hover {
+            background: var(--mud-palette-action-hover);
+        }
+
+    .chain-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 2px;
+    }
+
+    .chain-node {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        font-size: .8rem;
+        text-decoration: none;
+        padding: 2px 6px;
+        border-radius: 10px;
+        transition: opacity .15s;
+        white-space: nowrap;
+    }
+
+        .chain-node:hover {
+            opacity: .7;
+        }
+
+    .chain-node--scenario {
+        color: var(--mud-palette-text-secondary);
+        background: var(--mud-palette-action-default-hover);
+    }
+
+    .chain-node--project {
+        color: var(--mud-palette-primary);
+        background: var(--mud-palette-primary-hover);
+        font-weight: 600;
+        border: 1px solid var(--mud-palette-primary);
+    }
+
+    .chain-icon {
+        width: 12px;
+        height: 12px;
+        fill: currentColor;
+        flex-shrink: 0;
+    }
+
+    .chain-sep {
+        color: var(--mud-palette-text-disabled);
+        font-size: .85rem;
+        padding: 0 1px;
+    }
+
+    .status-dot {
+        display: inline-flex;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+        .status-dot svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
 </style>
 
 @code {
-    // ── Parameters ──────────────────────────────────────────────────────────
-
     [Parameter, EditorRequired]
     public List<TaskHierarchyLifeAreaDTO> LifeAreas { get; set; } = [];
 
@@ -261,15 +395,46 @@
     public EventCallback<(int TaskId, CurrentStatus NewStatus)> OnTaskStatusChanged { get; set; }
 
     [Parameter]
-    public bool IsTracked{ get; set; }
+    public bool IsTracked { get; set; }
 
-    // ── Filter state ─────────────────────────────────────────────────────────
+    // ── Filter state with auto-rebuild ───────────────────────────────────────
 
     private string _searchText = "";
-    private CurrentStatus? _filterStatus;
-    private int? _filterLifeAreaId;
+    private string SearchText
+    {
+        get => _searchText;
+        set { _searchText = value; RebuildFiltered(); }
+    }
 
-    // ── Flat projection ──────────────────────────────────────────────────────
+    private CurrentStatus? _filterStatus;
+    private CurrentStatus? FilterStatus
+    {
+        get => _filterStatus;
+        set { _filterStatus = value; RebuildFiltered(); }
+    }
+
+    private int? _filterLifeAreaId;
+    private int? FilterLifeAreaId
+    {
+        get => _filterLifeAreaId;
+        set { _filterLifeAreaId = value; RebuildFiltered(); }
+    }
+
+    // ── Row cache ────────────────────────────────────────────────────────────
+
+    private List<TaskHierarchyLifeAreaDTO>? _prevLifeAreas;
+    private List<FlatTaskRow> _allRows = [];
+    private List<FlatTaskRow> _filteredRows = [];
+
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(_prevLifeAreas, LifeAreas)) return;
+        _prevLifeAreas = LifeAreas;
+        _allRows = BuildFlatRows();
+        RebuildFiltered();
+    }
+
+    // ── Projection types ─────────────────────────────────────────────────────
 
     private record TaskEntry(int Id, string Name, CurrentStatus CurrentStatus)
     {
@@ -278,43 +443,35 @@
 
     private record FlatTaskRow(
         List<TaskEntry> Tasks,
-        int GoalId,
-        string GoalName,
-        int LifeAreaId,
-        string LifeAreaName,
-        List<ChainNode> ScenarioChain
-    );
+        int GoalId, string GoalName,
+        int LifeAreaId, string LifeAreaName,
+        List<ChainNode> ScenarioChain);
 
     private record ChainNode(int Id, string Label, bool IsProject);
 
-    // ── Computed rows ─────────────────────────────────────────────────────────
+    // ── Filtering ────────────────────────────────────────────────────────────
 
-    private IEnumerable<FlatTaskRow> AllRows => BuildFlatRows();
-
-    private IEnumerable<FlatTaskRow> FilteredRows
+    private void RebuildFiltered()
     {
-        get
+        IEnumerable<FlatTaskRow> rows = _allRows;
+
+        if (_filterStatus.HasValue)
+            rows = rows.Where(r => r.Tasks.Any(t => t.CurrentStatus == _filterStatus.Value));
+
+        if (_filterLifeAreaId.HasValue)
+            rows = rows.Where(r => r.LifeAreaId == _filterLifeAreaId.Value);
+
+        if (!string.IsNullOrWhiteSpace(_searchText))
         {
-            var rows = AllRows;
-
-            if (_filterStatus.HasValue)
-                rows = rows.Where(r => r.Tasks.Any(t => t.CurrentStatus == _filterStatus.Value));
-
-            if (_filterLifeAreaId.HasValue)
-                rows = rows.Where(r => r.LifeAreaId == _filterLifeAreaId.Value);
-
-            if (!string.IsNullOrWhiteSpace(_searchText))
-            {
-                var q = _searchText.Trim();
-                rows = rows.Where(r =>
-                    r.Tasks.Any(t => t.Name.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
-                    r.GoalName.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-                    r.LifeAreaName.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-                    r.ScenarioChain.Any(n => n.Label.Contains(q, StringComparison.OrdinalIgnoreCase)));
-            }
-
-            return rows;
+            var q = _searchText.Trim();
+            rows = rows.Where(r =>
+                r.Tasks.Any(t => t.Name.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                r.GoalName.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                r.LifeAreaName.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                r.ScenarioChain.Any(n => n.Label.Contains(q, StringComparison.OrdinalIgnoreCase)));
         }
+
+        _filteredRows = rows.ToList();
     }
 
     // ── Row flattening ────────────────────────────────────────────────────────
@@ -369,22 +526,43 @@
             FlattenScenario(child, goal, lifeArea, currentChain, addTask);
     }
 
-    // ── Inline status change ──────────────────────────────────────────────────
+    // ── Handlers ─────────────────────────────────────────────────────────────
 
     private async Task OnStatusChanged(TaskEntry task, CurrentStatus newStatus)
     {
-        task.CurrentStatus = newStatus; // Optimistic UI update.
+        task.CurrentStatus = newStatus;
         await OnTaskStatusChanged.InvokeAsync((task.Id, newStatus));
     }
 
-    // ── Row style ─────────────────────────────────────────────────────────────
-
     private static string RowStyle(FlatTaskRow row, int _) =>
         row.Tasks.All(t => t.CurrentStatus is CurrentStatus.Completed or CurrentStatus.Cancelled)
-            ? "opacity:.55;"
-            : "";
+            ? "opacity:.55;" : "";
 
-    // ── Status helpers ────────────────────────────────────────────────────────
+    private async Task AddToTrack(int taskId)
+    {
+        await TaskApi.AddToTrackerAsync(taskId, DateTime.Today, DateTime.Today.AddDays(1));
+    }
+
+    // ── SVG helpers ───────────────────────────────────────────────────────────
+
+    private static string GetStatusSvg(CurrentStatus s) => s switch
+    {
+        CurrentStatus.NotStarted => "<svg viewBox='0 0 24 24'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z'/></svg>",
+        CurrentStatus.InProgress => "<svg viewBox='0 0 24 24'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z'/></svg>",
+        CurrentStatus.OnHold => "<svg viewBox='0 0 24 24'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z'/></svg>",
+        CurrentStatus.Completed => "<svg viewBox='0 0 24 24'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.59L5.41 12l1.42-1.42L10 13.17l7.17-7.17 1.42 1.42L10 16.59z'/></svg>",
+        CurrentStatus.Cancelled => "<svg viewBox='0 0 24 24'><path d='M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z'/></svg>",
+        _ => "<svg viewBox='0 0 24 24'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z'/></svg>"
+    };
+
+    private static string GetStatusCssVar(CurrentStatus s) => s switch
+    {
+        CurrentStatus.InProgress => "--mud-palette-info",
+        CurrentStatus.OnHold => "--mud-palette-warning",
+        CurrentStatus.Completed => "--mud-palette-success",
+        CurrentStatus.Cancelled => "--mud-palette-error",
+        _ => "--mud-palette-text-secondary"
+    };
 
     private static string GetStatusIcon(CurrentStatus s) => s switch
     {
@@ -406,8 +584,6 @@
         _ => Color.Default
     };
 
-    private async Task AddToTrack(int taskId)
-    {
-        await TaskApi.AddToTrackerAsync(taskId, DateTime.Today, DateTime.Today.AddDays(1));
-    }
+    private const string AddIconSvg = "<svg viewBox='0 0 24 24' width='18' height='18' fill='currentColor'><path d='M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z'/></svg>";
+    private const string RemoveIconSvg = "<svg viewBox='0 0 24 24' width='18' height='18' fill='currentColor'><path d='M19 13H5v-2h14v2z'/></svg>";
 }

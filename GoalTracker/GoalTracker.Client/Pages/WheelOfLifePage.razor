@@ -1,0 +1,24 @@
+﻿@page "/WheelOfLifePage"
+@using GoalTracker.Client.Pages.Components
+@using GoalTracker.Client.Feautures.Projects
+@using GoalTracker.Client.Feautures.Goals
+@using GoalTracker.Client.Pages.Components.ModelComponents
+@using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
+@using MudBlazor
+@using GoalTracker.Client.Feautures.LifeAreas
+@inject LifeAreaApiClient LifeAreaApi
+@inject NavigationManager Navigation
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@* <WheelOfLifeComponent></WheelOfLifeComponent>  *@
+<WheelOfLifeComponent Potentioal="@Potential" Current="@Currently"></WheelOfLifeComponent>
+@code {
+    public Dictionary<string, int> Potential{ get; set; }
+    public Dictionary<string, int> Currently{ get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Potential = await LifeAreaApi.GetLifeAreasWithPotentialPoints(DateTime.Now.AddDays(-5), DateTime.Now.AddDays(3));
+        Currently = await LifeAreaApi.GetLifeAreaWithPoints(DateTime.Now.AddDays(-5), DateTime.Now.AddDays(3));
+    }
+}
