@@ -49,17 +49,17 @@
                 }
             </MudSelect>
 
-            <MudSelect T="int?"
-                       Value="@FilterLifeAreaId"
-                       ValueChanged="@((int? v) => FilterLifeAreaId = v)"
+            <MudSelect T="string"
+                       Value="@FilterLifeAreaName"
+                       ValueChanged="@((string v) => FilterLifeAreaName = v)"
                        Placeholder="All life areas"
                        Clearable="true"
                        Variant="Variant.Outlined"
                        Margin="Margin.Dense"
                        Style="min-width:180px">
-                @foreach (var la in LifeAreas)
+                @foreach (var la in LifeAreas.Select(x=>x.Name).Distinct())
                 {
-                    <MudSelectItem T="int?" Value="la.Id">@la.Name</MudSelectItem>
+                    <MudSelectItem T="string" Value="la">@la</MudSelectItem>
                 }
             </MudSelect>
 
@@ -90,7 +90,8 @@
                         <div class="task-row">
                             @if (IsTracked)
                             {
-                                <button class="icon-btn icon-btn--remove" title="Remove from tracker">
+                                <button class="icon-btn icon-btn--remove" title="Remove from tracker"
+                                @onclick="()=> RemoveFromTrack(task.Id)">
                                     @((MarkupString)RemoveIconSvg)
                                 </button>
                             }
@@ -413,11 +414,11 @@
         set { _filterStatus = value; RebuildFiltered(); }
     }
 
-    private int? _filterLifeAreaId;
-    private int? FilterLifeAreaId
+    private string? _filterLifeAreaName;
+    private string? FilterLifeAreaName
     {
-        get => _filterLifeAreaId;
-        set { _filterLifeAreaId = value; RebuildFiltered(); }
+        get => _filterLifeAreaName;
+        set { _filterLifeAreaName = value; RebuildFiltered(); }
     }
 
     // ── Row cache ────────────────────────────────────────────────────────────
@@ -458,8 +459,8 @@
         if (_filterStatus.HasValue)
             rows = rows.Where(r => r.Tasks.Any(t => t.CurrentStatus == _filterStatus.Value));
 
-        if (_filterLifeAreaId.HasValue)
-            rows = rows.Where(r => r.LifeAreaId == _filterLifeAreaId.Value);
+        if (!string.IsNullOrWhiteSpace(_filterLifeAreaName))
+            rows = rows.Where(r => r.LifeAreaName == _filterLifeAreaName);
 
         if (!string.IsNullOrWhiteSpace(_searchText))
         {
@@ -541,6 +542,10 @@
     private async Task AddToTrack(int taskId)
     {
         await TaskApi.AddToTrackerAsync(taskId, DateTime.Today, DateTime.Today.AddDays(1));
+    }
+    private async Task RemoveFromTrack(int taskId)
+    {
+        await TaskApi.RemoveFromTrackerAsync(taskId);
     }
 
     // ── SVG helpers ───────────────────────────────────────────────────────────

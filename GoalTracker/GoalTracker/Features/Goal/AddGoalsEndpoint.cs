@@ -21,6 +21,19 @@ namespace GoalTracker.Features.Goal
                 var result = await mediator.Send(new AddGoalCommand(userId, items!));
                 return Results.Ok(result);
             }).RequireAuthorization();
+
+            app.MapPut("/api/goals", async (
+     HttpContext httpContext,
+     IMediator mediator,
+     ClaimsPrincipal user) =>
+            {
+                var items = await httpContext.Request.ReadFromJsonAsync<GoalDTO>(
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                var result = await mediator.Send(new UpdateGoalCommand(userId, items!));
+                return Results.Ok(result);
+            }).RequireAuthorization();
         }
     }
 }

@@ -15,13 +15,13 @@ namespace GoalTracker.Infrastructure.Repositories
         public async Task<Goal> CreateAsync(Goal entity)
         {
             using var context = contextFactory.CreateDbContext();
-            var lifeAreas = entity.LifeAreas.Select(x=>x.Id).ToList();
+            var lifeAreas = entity.LifeAreas.Select(x => x.Id).ToList();
             entity.LifeAreas.Clear();
-            foreach(var item in context.LifeAreas.Where(x => lifeAreas.Contains(x.Id)))
+            foreach (var item in context.LifeAreas.Where(x => lifeAreas.Contains(x.Id)))
             {
                 entity.LifeAreas.Add(item);
             }
-            
+
             context.Goals.Add(entity);
             await context.SaveChangesAsync();
             return entity;
@@ -38,8 +38,8 @@ namespace GoalTracker.Infrastructure.Repositories
             return await context.Goals.Where(g => g.UserId == userId)
                 .Include(x => x.Scenarios)
                 .ThenInclude(x => x.ChildRelations)
-                .ThenInclude(c=>c.Child)
-                .Include(x=>x.LifeAreas)
+                .ThenInclude(c => c.Child)
+                .Include(x => x.LifeAreas)
                 .ToListAsync();
         }
 
@@ -61,9 +61,27 @@ namespace GoalTracker.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public Task<Goal> UpdateAsync(Goal entity)
+        public async Task<Goal> UpdateAsync(Goal entity)
         {
-            throw new NotImplementedException();
+            await using var context = await contextFactory.CreateDbContextAsync();
+
+            var existing = await context.Goals
+                .Include(g => g.LifeAreas)
+                .FirstAsync(g => g.Id == entity.Id);
+
+            context.Entry(existing).CurrentValues.SetValues(entity);
+
+            // Sync many-to-many collection
+            existing.LifeAreas.Clear();
+            foreach (var lifeArea in entity.LifeAreas)
+            {
+                var tracked = await context.LifeAreas.FindAsync(lifeArea.Id);
+                if (tracked != null)
+                    existing.LifeAreas.Add(tracked);
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
         }
     }
 }

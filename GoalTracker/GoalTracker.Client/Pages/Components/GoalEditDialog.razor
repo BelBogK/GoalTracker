@@ -98,6 +98,7 @@
     {
         if (area is not null && !_selectedAreas.Any(a => a.Id == area.Id))
             _selectedAreas.Add(area);
+        Goal.LifeAreas.Add(area);
         _selectingArea = null;
     }
 
@@ -106,6 +107,6 @@
         _selectedAreas.RemoveAll(a => a.Id == area.Id);
     }
 
-    private void Submit() => MudDialog.Close(DialogResult.Ok((Goal, _selectedAreas)));
+    private void Submit() => MudDialog.Close(DialogResult.Ok((Goal)));
     private void Cancel() => MudDialog.Cancel();
 }

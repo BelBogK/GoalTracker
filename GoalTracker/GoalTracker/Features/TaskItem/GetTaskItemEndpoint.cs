@@ -85,8 +85,8 @@ DateTime startTime,
                ClaimsPrincipal user) =>
             {
                 var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
-                var result = await mediator.Send(new DeleteTaskItemQuery(userId,taskId));
-                return Results.Ok(result);
+                await mediator.Send(new RemoveFromTrackerQuery(userId,taskId));
+                return Results.Ok();
             }).RequireAuthorization();
 
             // Проекты по GoalId

@@ -80,9 +80,9 @@ namespace GoalTracker.Features.TaskItem
     }
 
     public class RemoveFromTrackerAsyncHandler(ITaskDailyTrackerRepository repository)
-     : IRequestHandler<RemoveFromTrackerAsync>
+     : IRequestHandler<RemoveFromTrackerQuery>
     {
-        public async Task Handle(RemoveFromTrackerAsync request, CancellationToken cancellationToken)
+        public async Task Handle(RemoveFromTrackerQuery request, CancellationToken cancellationToken)
         {
             await repository.RemoveTaskFromTrack(request.UserId, request.taskID);
         }

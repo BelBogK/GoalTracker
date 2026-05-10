@@ -11,6 +11,6 @@ namespace GoalTracker.Features.TaskItem
     public record GetNonTrackedQuery(string UserId) : IRequest<IEnumerable<TaskHierarchyLifeAreaDTO>>;
     public record AddTrackedQuery(string UserId, int taskId, DateTime StartTime, DateTime EndTime) : IRequest<TaskHierarchyLifeAreaDTO>;
     public record DeleteTaskItemQuery(string UserId, int taskID) : IRequest<TaskItemDTO>;
-    public record RemoveFromTrackerAsync(string UserId, int taskID) : IRequest;
+    public record RemoveFromTrackerQuery(string UserId, int taskID) : IRequest;
     public record AddToTrackerRequest(DateTime StartTime, DateTime EndTime);
 }

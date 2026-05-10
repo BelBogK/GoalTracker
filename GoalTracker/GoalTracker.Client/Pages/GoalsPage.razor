@@ -78,11 +78,9 @@ else
         var dialog = await DialogService.ShowAsync<GoalEditDialog>("Edit goal", parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled && result.Data is ValueTuple<GoalDTO, List<LifeAreaDTO>> data)
+        if (!result.Canceled && result.Data is GoalDTO data)
         {
-            var created = data.Item1;
-            var areas = data.Item2;
-            created.LifeAreas = areas;
+            var created = data; 
             var saved = await _goalsApiClient.SaveGoal(created);
 
             if (saved is not null)
@@ -101,8 +99,8 @@ else
             StateHasChanged();
         }
     }
-    private void UpdateGoal(GoalDTO args)
+    private async Task UpdateGoal(GoalDTO args)
     {
-         
+        await _goalsApiClient.UpdateGoal(args);    
     }
 }

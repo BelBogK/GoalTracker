@@ -17,5 +17,12 @@ namespace GoalTracker.Client.Feautures.Goals
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<GoalDTO>();
         }
+
+        public async Task<GoalDTO> UpdateGoal(GoalDTO goal)
+        {
+            var response = await http.PutAsJsonAsync("/api/goals", goal);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<GoalDTO>();
+        }
     }
 }

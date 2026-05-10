@@ -50,9 +50,13 @@ namespace GoalTracker.Infrastructure.Repositories
             return await lifeAreaRepository.GetLifeAreasByTaskIdsAsync(taskIds);
         }
 
-        public Task RemoveTaskFromTrack(string userId, int taskId)
+        public async Task RemoveTaskFromTrack(string userId, int taskId)
         {
-            throw new NotImplementedException();
+            await using var context = await contextFactory.CreateDbContextAsync();
+            var taskRemove=context.DailyTrackers.First(x=>x.TaskItemId==taskId);
+            context.Remove(taskRemove);
+            await context.SaveChangesAsync();
+
         }
 
         public async Task<bool> TaskInDaily(int taskId)

@@ -21,4 +21,20 @@ namespace GoalTracker.Features.Goal
             return mapper.ToDto(result);
         }
     }
+
+    public class UpdateGoalHandler(IGoalRepository repository, AppMapper mapper)
+    : IRequestHandler<UpdateGoalCommand, GoalDTO>
+    {
+        public async Task<GoalDTO> Handle(UpdateGoalCommand request, CancellationToken cancellationToken)
+        {
+            var item = mapper.ToEntity(request.Goal);
+            if (item == null)
+            {
+                return null;
+            }
+            item.UserId = request.UserId;
+            var result = await repository.UpdateAsync(item);
+            return mapper.ToDto(result);
+        }
+    }
 }

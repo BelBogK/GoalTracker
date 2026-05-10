@@ -7,4 +7,7 @@ namespace GoalTracker.Features.Goal
     public record AddGoalCommand(
       string UserId,
       GoalDTO Goal) : IRequest<GoalDTO>;
+    public record UpdateGoalCommand(
+      string UserId,
+      GoalDTO Goal) : IRequest<GoalDTO>;
 }
