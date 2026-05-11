@@ -26,45 +26,19 @@
         DataPointRadius = 5,
         AngleOffset = 30,
         TooltipTitleFormat = "{{SERIES_NAME}}: {{X_VALUE}}",
-    };
-
-    protected override Task OnInitializedAsync()
-    {
-        if (Current == null)
-            return base.OnInitializedAsync(); ;
-        _chartLabels = Current.Keys.Select(x => x).ToArray();
-        // var currentList = new List<int>();
-        // var potential = new List<int>();
-        // var random = new Random();
-
-        // for (int i = 0; i < Current.Count(); i++)
-        // {
-        //     currentList.Add(random.Next(1, 15));
-        //     potential.Add(random.Next(1, 15));
-        // }
-        // _series = new List<ChartSeries<int>>()
-        // {
-        //     new() {Name="Current", Data=currentList.ToArray()},
-        //     new(){ Name="Potential", Data=potential.ToArray()}
-        // };
-        _series = new List<ChartSeries<int>>()
-        {
-            new() {Name="Current", Data=Current.Select(x=>x.Value).ToArray()},
-            new(){ Name="Potential", Data=Potentioal.Select(x=>x.Value).ToArray()}
-        };
-
-        return base.OnInitializedAsync();
-    }
-
+    }; 
+    
     protected override Task OnParametersSetAsync()
     {
         if (Current == null)
             return base.OnParametersSetAsync(); ;
         _chartLabels = Current.Keys.Select(x => x).ToArray();
+        var sumCurrent = Current.Values.Sum();
+        var sumPotential = Potentioal.Values.Sum();
         _series = new List<ChartSeries<int>>()
         {
-            new() {Name="Current", Data=Current.Select(x=>x.Value).ToArray()},
-            new(){ Name="Potential", Data=Potentioal.Select(x=>x.Value).ToArray()}
+          new() {Name="Current "+sumCurrent , Data=Current.Select(x=>x.Value).ToArray()},
+            new(){ Name="Potential"+sumPotential, Data=Potentioal.Select(x=>x.Value).ToArray()}
         };
 
         return base.OnParametersSetAsync();

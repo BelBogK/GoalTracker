@@ -57,7 +57,7 @@
                        Variant="Variant.Outlined"
                        Margin="Margin.Dense"
                        Style="min-width:180px">
-                @foreach (var la in LifeAreas.Select(x=>x.Name).Distinct())
+                @foreach (var la in LifeAreas.Select(x => x.Name).Distinct())
                 {
                     <MudSelectItem T="string" Value="la">@la</MudSelectItem>
                 }
@@ -73,13 +73,15 @@
               Dense="true"
               Breakpoint="Breakpoint.Sm"
               RowStyleFunc="@RowStyle">
+
         <HeaderContent>
             <MudTh>Tasks</MudTh>
             <MudTh Style="width:170px">Status</MudTh>
             <MudTh>Scenario chain</MudTh>
             <MudTh Style="width:160px">Goal</MudTh>
-            <MudTh Style="width:140px">Life Area</MudTh>
+            <MudTh Style="width:180px">Life Areas</MudTh>
         </HeaderContent>
+
         <RowTemplate>
 
             <!-- ── Col 1: Tasks ── -->
@@ -88,99 +90,179 @@
                     @foreach (var task in context.Tasks)
                     {
                         <div class="task-row">
+
                             @if (IsTracked)
                             {
-                                <button class="icon-btn icon-btn--remove" title="Remove from tracker"
-                                @onclick="()=> RemoveFromTrack(task.Id)">
+                                <button class="icon-btn icon-btn--remove"
+                                        title="Remove from tracker"
+                                        @onclick="() => RemoveFromTrack(task.Id)">
                                     @((MarkupString)RemoveIconSvg)
                                 </button>
                             }
                             else
                             {
-                                <button class="icon-btn icon-btn--add" title="Add to tracker"
+                                <button class="icon-btn icon-btn--add"
+                                        title="Add to tracker"
                                         @onclick="() => AddToTrack(task.Id)">
                                     @((MarkupString)AddIconSvg)
                                 </button>
                             }
-                            <span class="status-dot" title="@task.CurrentStatus.ToString()"
+
+                            <span class="status-dot"
+                                  title="@task.CurrentStatus.ToString()"
                                   style="color:var(@GetStatusCssVar(task.CurrentStatus))">
                                 @((MarkupString)GetStatusSvg(task.CurrentStatus))
                             </span>
-                            <a href="/task/@task.Id" class="task-link">@task.Name</a>
+
+                            <a href="/task/@task.Id" class="task-link">
+                                @task.Name
+                            </a>
+
                         </div>
                     }
                 </div>
             </MudTd>
 
-            <!-- ── Col 2: Status — native <details> dropdown ── -->
+            <!-- ── Col 2: Status ── -->
             <MudTd Style="width:170px">
                 <div class="task-cell">
+
                     @foreach (var task in context.Tasks)
                     {
                         <details class="status-details">
+
                             <summary class="status-trigger">
-                                <span class="status-dot" style="color:var(@GetStatusCssVar(task.CurrentStatus))">
+
+                                <span class="status-dot"
+                                      style="color:var(@GetStatusCssVar(task.CurrentStatus))">
                                     @((MarkupString)GetStatusSvg(task.CurrentStatus))
                                 </span>
-                                <span class="status-label">@task.CurrentStatus</span>
+
+                                <span class="status-label">
+                                    @task.CurrentStatus
+                                </span>
+
                                 <span class="status-caret">▾</span>
+
                             </summary>
+
                             <div class="status-dropdown">
+
                                 @foreach (CurrentStatus s in Enum.GetValues<CurrentStatus>())
                                 {
                                     var captured = s;
                                     var capturedTask = task;
-                                    <button class="status-option" @onclick="() => OnStatusChanged(capturedTask, captured)">
-                                        <span class="status-dot" style="color:var(@GetStatusCssVar(captured))">
+
+                                    <button class="status-option"
+                                            @onclick="() => OnStatusChanged(capturedTask, captured)">
+
+                                        <span class="status-dot"
+                                              style="color:var(@GetStatusCssVar(captured))">
                                             @((MarkupString)GetStatusSvg(captured))
                                         </span>
+
                                         <span>@captured</span>
+
                                     </button>
                                 }
+
                             </div>
+
                         </details>
                     }
+
                 </div>
             </MudTd>
 
             <!-- ── Col 3: Scenario chain ── -->
             <MudTd>
+
                 <div class="chain-wrap">
+
                     @foreach (var node in context.ScenarioChain)
                     {
                         if (node.IsProject)
                         {
-                            <a href="/project/@node.Id" class="chain-node chain-node--project">
-                                <svg class="chain-icon" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" /></svg>
+                            <a href="/project/@node.Id"
+                               class="chain-node chain-node--project">
+
+                                <svg class="chain-icon" viewBox="0 0 24 24">
+                                    <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
+                                </svg>
+
                                 @node.Label
+
                             </a>
                         }
                         else
                         {
-                            <a href="/scenario/@node.Id" class="chain-node chain-node--scenario">@node.Label</a>
+                            <a href="/scenario/@node.Id"
+                               class="chain-node chain-node--scenario">
+
+                                @node.Label
+
+                            </a>
+
                             <span class="chain-sep">›</span>
                         }
                     }
+
                 </div>
+
             </MudTd>
 
             <!-- ── Col 4: Goal ── -->
             <MudTd Style="width:160px">
-                <a href="/goals/@context.GoalId" class="nav-link nav-link--goal">@context.GoalName</a>
+
+                <a href="/goals/@context.GoalId"
+                   class="nav-link nav-link--goal">
+
+                    @context.GoalName
+
+                </a>
+
             </MudTd>
 
-            <!-- ── Col 5: LifeArea ── -->
-            <MudTd Style="width:140px">
-                <a href="/life-areas/@context.LifeAreaId" class="nav-link nav-link--lifearea">@context.LifeAreaName</a>
+            <!-- ── Col 5: Life Areas ── -->
+            <MudTd Style="width:180px">
+
+                <div class="task-cell">
+
+                    @foreach (var lifeArea in context.LifeAreas)
+                    {
+                        <a href="/life-areas/@lifeArea.Id"
+                           class="nav-link nav-link--lifearea">
+
+                            @lifeArea.Name
+
+                        </a>
+                    }
+
+                </div>
+
             </MudTd>
 
         </RowTemplate>
 
         <NoRecordsContent>
-            <MudStack AlignItems="AlignItems.Center" Class="py-8" Spacing="2">
-                <MudIcon Icon="@Icons.Material.Outlined.SearchOff" Size="Size.Large" Class="mud-text-disabled" />
-                <MudText Typo="Typo.body2" Class="mud-text-disabled">No tasks match your filters</MudText>
+
+            <MudStack AlignItems="AlignItems.Center"
+                      Class="py-8"
+                      Spacing="2">
+
+                <MudIcon Icon="@Icons.Material.Outlined.SearchOff"
+                         Size="Size.Large"
+                         Class="mud-text-disabled" />
+
+                <MudText Typo="Typo.body2"
+                         Class="mud-text-disabled">
+
+                    No tasks match your filters
+
+                </MudText>
+
             </MudStack>
+
         </NoRecordsContent>
 
     </MudTable>
@@ -188,6 +270,7 @@
 </MudPaper>
 
 <style>
+
     .task-cell {
         display: flex;
         flex-direction: column;
@@ -386,9 +469,11 @@
             height: 16px;
             fill: currentColor;
         }
+
 </style>
 
 @code {
+
     [Parameter, EditorRequired]
     public List<TaskHierarchyLifeAreaDTO> LifeAreas { get; set; } = [];
 
@@ -398,115 +483,199 @@
     [Parameter]
     public bool IsTracked { get; set; }
 
-    // ── Filter state with auto-rebuild ───────────────────────────────────────
-
     private string _searchText = "";
+
     private string SearchText
     {
         get => _searchText;
-        set { _searchText = value; RebuildFiltered(); }
+        set
+        {
+            _searchText = value;
+            RebuildFiltered();
+        }
     }
 
     private CurrentStatus? _filterStatus;
+
     private CurrentStatus? FilterStatus
     {
         get => _filterStatus;
-        set { _filterStatus = value; RebuildFiltered(); }
+        set
+        {
+            _filterStatus = value;
+            RebuildFiltered();
+        }
     }
 
     private string? _filterLifeAreaName;
+
     private string? FilterLifeAreaName
     {
         get => _filterLifeAreaName;
-        set { _filterLifeAreaName = value; RebuildFiltered(); }
+        set
+        {
+            _filterLifeAreaName = value;
+            RebuildFiltered();
+        }
     }
 
-    // ── Row cache ────────────────────────────────────────────────────────────
-
     private List<TaskHierarchyLifeAreaDTO>? _prevLifeAreas;
+
     private List<FlatTaskRow> _allRows = [];
+
     private List<FlatTaskRow> _filteredRows = [];
 
     protected override void OnParametersSet()
     {
-        if (ReferenceEquals(_prevLifeAreas, LifeAreas)) return;
+        if (ReferenceEquals(_prevLifeAreas, LifeAreas))
+            return;
+
         _prevLifeAreas = LifeAreas;
+
         _allRows = BuildFlatRows();
+
         RebuildFiltered();
     }
 
-    // ── Projection types ─────────────────────────────────────────────────────
-
-    private record TaskEntry(int Id, string Name, CurrentStatus CurrentStatus)
+    private record TaskEntry(
+        int Id,
+        string Name,
+        CurrentStatus CurrentStatus)
     {
         public CurrentStatus CurrentStatus { get; set; } = CurrentStatus;
     }
 
     private record FlatTaskRow(
         List<TaskEntry> Tasks,
-        int GoalId, string GoalName,
-        int LifeAreaId, string LifeAreaName,
+        int GoalId,
+        string GoalName,
+        List<(int Id, string Name)> LifeAreas,
         List<ChainNode> ScenarioChain);
 
-    private record ChainNode(int Id, string Label, bool IsProject);
-
-    // ── Filtering ────────────────────────────────────────────────────────────
+    private record ChainNode(
+        int Id,
+        string Label,
+        bool IsProject);
 
     private void RebuildFiltered()
     {
         IEnumerable<FlatTaskRow> rows = _allRows;
 
         if (_filterStatus.HasValue)
-            rows = rows.Where(r => r.Tasks.Any(t => t.CurrentStatus == _filterStatus.Value));
+        {
+            rows = rows.Where(r =>
+                r.Tasks.Any(t => t.CurrentStatus == _filterStatus.Value));
+        }
 
         if (!string.IsNullOrWhiteSpace(_filterLifeAreaName))
-            rows = rows.Where(r => r.LifeAreaName == _filterLifeAreaName);
+        {
+            rows = rows.Where(r =>
+                r.LifeAreas.Any(x => x.Name == _filterLifeAreaName));
+        }
 
         if (!string.IsNullOrWhiteSpace(_searchText))
         {
             var q = _searchText.Trim();
+
             rows = rows.Where(r =>
-                r.Tasks.Any(t => t.Name.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
-                r.GoalName.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-                r.LifeAreaName.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-                r.ScenarioChain.Any(n => n.Label.Contains(q, StringComparison.OrdinalIgnoreCase)));
+
+                r.Tasks.Any(t =>
+                    t.Name.Contains(q, StringComparison.OrdinalIgnoreCase))
+
+                ||
+
+                r.GoalName.Contains(q, StringComparison.OrdinalIgnoreCase)
+
+                ||
+
+                r.LifeAreas.Any(x =>
+                    x.Name.Contains(q, StringComparison.OrdinalIgnoreCase))
+
+                ||
+
+                r.ScenarioChain.Any(n =>
+                    n.Label.Contains(q, StringComparison.OrdinalIgnoreCase))
+            );
         }
 
         _filteredRows = rows.ToList();
     }
 
-    // ── Row flattening ────────────────────────────────────────────────────────
-
     private List<FlatTaskRow> BuildFlatRows()
     {
-        var groups = new Dictionary<string, (List<TaskEntry> Tasks,
-            TaskHierarchyGoalDTO Goal, TaskHierarchyLifeAreaDTO LifeArea, List<ChainNode> Chain)>();
+        var groups = new Dictionary<string, (
+            List<TaskEntry> Tasks,
+            TaskHierarchyGoalDTO Goal,
+            List<(int Id, string Name)> LifeAreas,
+            List<ChainNode> Chain)>();
 
-        void AddTask(TaskItemDTO task, TaskHierarchyGoalDTO goal,
-                     TaskHierarchyLifeAreaDTO lifeArea, List<ChainNode> chain)
+        void AddTask(
+            TaskItemDTO task,
+            TaskHierarchyGoalDTO goal,
+            TaskHierarchyLifeAreaDTO lifeArea,
+            List<ChainNode> chain)
         {
-            var key = $"{lifeArea.Id}|{goal.Id}|{string.Join(",", chain.Select(n => $"{n.IsProject}:{n.Id}"))}";
+            var key =
+                $"{goal.Id}|{string.Join(",", chain.Select(n => $"{n.IsProject}:{n.Id}"))}";
+
             if (!groups.TryGetValue(key, out var g))
             {
-                g = (new List<TaskEntry>(), goal, lifeArea, chain);
+                g = (
+                    new List<TaskEntry>(),
+                    goal,
+                    new List<(int Id, string Name)>(),
+                    chain);
+
                 groups[key] = g;
             }
-            g.Tasks.Add(new TaskEntry(task.Id, task.Name, task.CurrentStatus));
+
+            if (!g.LifeAreas.Any(x => x.Id == lifeArea.Id))
+            {
+                g.LifeAreas.Add((lifeArea.Id, lifeArea.Name));
+            }
+
+            if (!g.Tasks.Any(x => x.Id == task.Id))
+            {
+                g.Tasks.Add(
+                    new TaskEntry(task.Id, task.Name, task.CurrentStatus));
+            }
         }
 
         foreach (var lifeArea in LifeAreas)
+        {
             foreach (var goal in lifeArea.Goals)
             {
                 foreach (var project in goal.Projects)
+                {
                     foreach (var task in project.Tasks)
-                        AddTask(task, goal, lifeArea, new List<ChainNode> { new(project.Id, project.Name, true) });
+                    {
+                        AddTask(
+                            task,
+                            goal,
+                            lifeArea,
+                            [new ChainNode(project.Id, project.Name, true)]);
+                    }
+                }
 
                 foreach (var scenario in goal.Scenarios)
-                    FlattenScenario(scenario, goal, lifeArea, new List<ChainNode>(), AddTask);
+                {
+                    FlattenScenario(
+                        scenario,
+                        goal,
+                        lifeArea,
+                        [],
+                        AddTask);
+                }
             }
+        }
 
         return groups.Values
-            .Select(g => new FlatTaskRow(g.Tasks, g.Goal.Id, g.Goal.Name, g.LifeArea.Id, g.LifeArea.Name, g.Chain))
+            .Select(g => new FlatTaskRow(
+                g.Tasks,
+                g.Goal.Id,
+                g.Goal.Name,
+                g.LifeAreas,
+                g.Chain))
             .ToList();
     }
 
@@ -515,40 +684,72 @@
         TaskHierarchyGoalDTO goal,
         TaskHierarchyLifeAreaDTO lifeArea,
         List<ChainNode> ancestorChain,
-        Action<TaskItemDTO, TaskHierarchyGoalDTO, TaskHierarchyLifeAreaDTO, List<ChainNode>> addTask)
+        Action<TaskItemDTO,
+            TaskHierarchyGoalDTO,
+            TaskHierarchyLifeAreaDTO,
+            List<ChainNode>> addTask)
     {
-        List<ChainNode> currentChain = [.. ancestorChain, new ChainNode(scenario.Id, scenario.Name, false)];
+        List<ChainNode> currentChain =
+        [
+            .. ancestorChain,
+            new ChainNode(scenario.Id, scenario.Name, false)
+        ];
 
         foreach (var project in scenario.Projects)
+        {
             foreach (var task in project.Tasks)
-                addTask(task, goal, lifeArea, [.. currentChain, new ChainNode(project.Id, project.Name, true)]);
+            {
+                addTask(
+                    task,
+                    goal,
+                    lifeArea,
+                    [
+                        .. currentChain,
+                        new ChainNode(project.Id, project.Name, true)
+                    ]);
+            }
+        }
 
         foreach (var child in scenario.Children)
-            FlattenScenario(child, goal, lifeArea, currentChain, addTask);
+        {
+            FlattenScenario(
+                child,
+                goal,
+                lifeArea,
+                currentChain,
+                addTask);
+        }
     }
 
-    // ── Handlers ─────────────────────────────────────────────────────────────
-
-    private async Task OnStatusChanged(TaskEntry task, CurrentStatus newStatus)
+    private async Task OnStatusChanged(
+        TaskEntry task,
+        CurrentStatus newStatus)
     {
         task.CurrentStatus = newStatus;
-        await OnTaskStatusChanged.InvokeAsync((task.Id, newStatus));
+
+        await OnTaskStatusChanged.InvokeAsync(
+            (task.Id, newStatus));
     }
 
     private static string RowStyle(FlatTaskRow row, int _) =>
-        row.Tasks.All(t => t.CurrentStatus is CurrentStatus.Completed or CurrentStatus.Cancelled)
-            ? "opacity:.55;" : "";
+        row.Tasks.All(t =>
+            t.CurrentStatus is CurrentStatus.Completed
+            or CurrentStatus.Cancelled)
+                ? "opacity:.55;"
+                : "";
 
     private async Task AddToTrack(int taskId)
     {
-        await TaskApi.AddToTrackerAsync(taskId, DateTime.Today, DateTime.Today.AddDays(1));
+        await TaskApi.AddToTrackerAsync(
+            taskId,
+            DateTime.Today,
+            DateTime.Today.AddDays(1));
     }
+
     private async Task RemoveFromTrack(int taskId)
     {
         await TaskApi.RemoveFromTrackerAsync(taskId);
     }
-
-    // ── SVG helpers ───────────────────────────────────────────────────────────
 
     private static string GetStatusSvg(CurrentStatus s) => s switch
     {
@@ -589,6 +790,9 @@
         _ => Color.Default
     };
 
-    private const string AddIconSvg = "<svg viewBox='0 0 24 24' width='18' height='18' fill='currentColor'><path d='M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z'/></svg>";
-    private const string RemoveIconSvg = "<svg viewBox='0 0 24 24' width='18' height='18' fill='currentColor'><path d='M19 13H5v-2h14v2z'/></svg>";
+    private const string AddIconSvg =
+        "<svg viewBox='0 0 24 24' width='18' height='18' fill='currentColor'><path d='M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z'/></svg>";
+
+    private const string RemoveIconSvg =
+        "<svg viewBox='0 0 24 24' width='18' height='18' fill='currentColor'><path d='M19 13H5v-2h14v2z'/></svg>";
 }

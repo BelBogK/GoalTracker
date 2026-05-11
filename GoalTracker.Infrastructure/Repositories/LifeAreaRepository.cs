@@ -115,6 +115,12 @@ namespace GoalTracker.Infrastructure.Repositories
             //            .Sum(t => t.RealPointForTask)
             //    })
             //    .ToListAsync();
+
+            var today = DateTime.Today;
+
+            int diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
+            var startOfWeek = today.AddDays(-diff);
+            var endOfWeek = startOfWeek.AddDays(6);
             var lifeArea = await context.LifeAreas
                    .Where(la => la.UserId == userId)
                    .Select(x => new
@@ -123,7 +129,8 @@ namespace GoalTracker.Infrastructure.Repositories
                        TaskCount = x.Goals
                        .SelectMany(x => x.Projects)
                        .SelectMany(x => x.TaskItems)
-                       .Where(x => x.CurrentStatus == Shared.Enums.CurrentStatus.Completed)
+                       //.Where(x => x.CurrentStatus == Shared.Enums.CurrentStatus.Completed)
+                       .Where(x => x.StartAt >= startOfWeek && x.StartAt <= endOfWeek && x.CurrentStatus > Shared.Enums.CurrentStatus.OnHold)
                        .Count()
                    }).ToListAsync();
 
@@ -169,6 +176,13 @@ namespace GoalTracker.Infrastructure.Repositories
                 //            .Sum(t => t.RealPointForTask)
                 //    })
                 //    .ToListAsync();
+
+                var today = DateTime.Today;
+
+                int diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
+                var startOfWeek = today.AddDays(-diff);
+                var endOfWeek = startOfWeek.AddDays(6); 
+
                 var lifeArea = await context.LifeAreas
                     .Where(la => la.UserId == userId)
                     .Select(x => new
@@ -177,7 +191,8 @@ namespace GoalTracker.Infrastructure.Repositories
                         TaskCount = x.Goals
                         .SelectMany(x => x.Projects)
                         .SelectMany(x => x.TaskItems)
-                        .Where(x => x.CurrentStatus == Shared.Enums.CurrentStatus.InProgress)
+                        //.Where(x => x.CurrentStatus == Shared.Enums.CurrentStatus.InProgress)
+                        .Where(x => (x.StartAt < startOfWeek && x.CurrentStatus < Shared.Enums.CurrentStatus.OnHold) || (x.StartAt >= startOfWeek && x.StartAt <= endOfWeek))
                         .Count()
                     }).ToListAsync();
 
