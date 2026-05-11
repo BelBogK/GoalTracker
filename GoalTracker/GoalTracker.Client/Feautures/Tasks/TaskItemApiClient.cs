@@ -64,5 +64,12 @@ namespace GoalTracker.Client.Feautures.Tasks
             await http.DeleteAsync($"/api/tasks/{taskId}/tracker");
         }
 
+        public async Task<List<TaskItemDTO>> GetTasksForWeekAsync(DateTime startDate, DateTime endDate)
+        {
+            var start = startDate.ToString("yyyy-MM-ddTHH:mm:ss");
+            var end = endDate.ToString("yyyy-MM-ddTHH:mm:ss");
+            return await http.GetFromJsonAsync<List<TaskItemDTO>>(
+                $"/api/tasks/week?startDate={start}&endDate={end}") ?? [];
+        }
     }
 }

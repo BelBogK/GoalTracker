@@ -40,6 +40,15 @@ namespace GoalTracker.Infrastructure.Repositories
             throw new NotImplementedException();
         }
 
+        public async Task<IEnumerable<TaskItem>> GetTasksByRange(string userId, DateTime start, DateTime end)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+            var result = await context.TaskItems
+                .Where(x =>x.StartAt>DateTime.MinValue &&( (x.StartAt >= start && x.StartAt <= end) || (x.StartAt < start && x.CurrentStatus < CurrentStatus.OnHold)))
+                .ToListAsync();
+            return result;
+        }
+
         public async Task<IEnumerable<LifeArea>> NonTrackedTask(string userId)
         {
             await using var context = await contextFactory.CreateDbContextAsync();

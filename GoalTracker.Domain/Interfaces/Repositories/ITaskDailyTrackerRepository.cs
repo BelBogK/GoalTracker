@@ -1,4 +1,5 @@
 ﻿using GoalTracker.Domain.Entities;
+using GoalTracker.Shared;
 using GoalTracker.Shared.Enums;
 using GoalTracker.Shared.SuperClass;
 using System;
@@ -25,6 +26,14 @@ namespace GoalTracker.Domain.Interfaces.Repositories
         /// <param name="dateTime"></param>
         /// <returns></returns>
         Task<IEnumerable<LifeArea>> AddToTracked(string userId, int taskId, DateTime dateTime);
+        /// <summary>
+        /// Возвращает все задачи с данного промежутка, но кроме это-го еще те задачи которые были до(StartAt) но статус не выполненный
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
+        Task<IEnumerable<TaskItem>> GetTasksByRange(string userId, DateTime start, DateTime end);
         Task RemoveTaskFromTrack(string userId, int taskId);
 
         Task UpdateStatusTask(int taskId, CurrentStatus newStatus);

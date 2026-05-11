@@ -1,0 +1,46 @@
+﻿@page "/WeekTasks"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@using GoalTracker.Client.Feautures.Tasks
+@using GoalTracker.Client.Pages.Components
+@using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
+@using MudBlazor
+@inject TaskItemApiClient TaskApi
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mb-4" />
+    @for (int i = 0; i < 3; i++)
+    {
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="60px" Class="mb-2" />
+    }
+}
+else
+{
+    <DayTask Tasks="@_tasks" OnTaskStatusChanged="@HandleStatusChanged" />
+}
+
+@code {
+    private List<TaskItemDTO> _tasks = [];
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var today = DateTime.Today;
+        int diff = ((int)today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+        var weekStart = today.AddDays(-diff);
+        var weekEnd = weekStart.AddDays(7);
+
+        _tasks = await TaskApi.GetTasksForWeekAsync(weekStart, weekEnd);
+        _loading = false;
+    }
+
+    private async Task HandleStatusChanged((int TaskId, CurrentStatus NewStatus) args)
+    {
+        var task = _tasks.FirstOrDefault(t => t.Id == args.TaskId);
+        if (task is null) return;
+
+        task.CurrentStatus = args.NewStatus;
+        await TaskApi.UpdateTaskAsync(task);
+    }
+}

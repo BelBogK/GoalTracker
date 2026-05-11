@@ -57,6 +57,22 @@ DateTime startTime,
             })
  .RequireAuthorization();
 
+
+            app.MapGet("/api/tasks/week", async (
+DateTime startDate,
+   DateTime endDate,
+    IMediator mediator,
+    ClaimsPrincipal user) =>
+            {
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+                var result = await mediator.Send(
+                    new GetTasksByRangeQuery(userId, startDate, endDate));
+
+                return Results.Ok(result);
+            })
+.RequireAuthorization();
+
             app.MapGet("/api/tasks/non-tracked", async (
                IMediator mediator,
                ClaimsPrincipal user) =>

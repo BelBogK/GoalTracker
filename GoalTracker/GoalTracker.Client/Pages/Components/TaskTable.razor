@@ -37,6 +37,7 @@
     <HeaderContent>
         <MudTh><MudTableSortLabel SortBy="new Func<TaskItemDTO, object>(x => x.Name)">Name</MudTableSortLabel></MudTh>
         <MudTh>Description</MudTh>
+        <MudTh>StartAt</MudTh>
         <MudTh>Effort</MudTh>
         <MudTh><MudTableSortLabel SortBy="new Func<TaskItemDTO, object>(x => x.Procents)">%</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortBy="new Func<TaskItemDTO, object>(x => x.CurrentStatus)">Status</MudTableSortLabel></MudTh>
@@ -49,6 +50,13 @@
         {
             <MudTd><MudTextField @bind-Value="context.Name" Margin="Margin.Dense" /></MudTd>
             <MudTd><MudTextField @bind-Value="context.Description" Margin="Margin.Dense" /></MudTd>
+            <MudTd>
+                <MudDatePicker Date="@(context.StartAt == DateTime.MinValue ? null : context.StartAt)"
+                               DateChanged="@(d => context.StartAt = d ?? DateTime.Today)"
+                               Label="Start date"
+                               PickerVariant="PickerVariant.Dialog"
+                               InitialPickerYear="@DateTime.Today.Year" />
+            </MudTd>
             <MudTd><MudTextField @bind-Value="context.Effort" Margin="Margin.Dense" /></MudTd>
             <MudTd>
                 <MudNumericField @bind-Value="context.Procents" Margin="Margin.Dense"
@@ -77,6 +85,7 @@
                 </MudLink>
             </MudTd>
             <MudTd>@context.Description</MudTd>
+            <MudTd>@(context.StartAt == DateTime.MinValue || context.StartAt == null ? "" : context.StartAt.Value.ToString("dd.MM.yyyy"))</MudTd>
             <MudTd>@context.Effort</MudTd>
             <MudTd>
                 <MudText Color="@(context.Procents >= 0 ? Color.Success : Color.Error)">

@@ -29,6 +29,7 @@ namespace GoalTracker.Domain.Entities
         /// </summary>
         public int RealPointForTask { get; set; }
         public CurrentStatus CurrentStatus { get; set; }
+        public DateTime? StartAt { get; set; }
         public DateTime? FinishedAt { get; set; }
         public ICollection<Project> Projects { get; set; } = new List<Project>();
     }

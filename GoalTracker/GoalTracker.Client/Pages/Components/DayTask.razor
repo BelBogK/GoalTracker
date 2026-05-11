@@ -1,0 +1,354 @@
+﻿@using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
+@using MudBlazor
+@inject IJSRuntime JS
+<MudPaper Class="pa-2" Elevation="0">
+
+    <!-- ── Week navigation ── -->
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" OnClick="PrevWeek" />
+        <MudText Typo="Typo.subtitle1" Class="mud-text-secondary">
+            @_weekStart.ToString("dd MMM") — @_weekStart.AddDays(6).ToString("dd MMM yyyy")
+        </MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" OnClick="NextWeek" />
+    </MudStack>
+
+    <!-- ── 7 day columns ── -->
+    <div class="week-grid">
+        @for (int d = 0; d < 7; d++)
+        {
+            var day = _weekStart.AddDays(d);
+            var dayTasks = GetTasksForDay(day);
+            bool isToday = day.Date == DateTime.Today;
+
+            <div class="day-col @(isToday ? "day-col--today" : "")">
+
+                <!-- Day header -->
+                <div class="day-header">
+                    <span class="day-name">@day.ToString("ddd")</span>
+                    <span class="day-num @(isToday ? "day-num--today" : "")">@day.Day</span>
+                </div>
+
+                <!-- Tasks -->
+                @if (dayTasks.Count == 0)
+                {
+                    <div class="day-empty">—</div>
+                }
+                else
+                {
+                    @foreach (var task in dayTasks)
+                    {
+                        <div class="day-task">
+                            <span class="task-status-icon" title="@task.CurrentStatus.ToString()"
+                                  style="color:var(@GetStatusCssVar(task.CurrentStatus))">
+                                @((MarkupString)GetStatusSvg(task.CurrentStatus))
+                            </span>
+                            <div class="task-body">
+                                <span class="task-name">@task.Name</span>
+                                <details class="status-details" id="status-@task.Id">
+                                    <summary class="status-trigger">
+                                        <span class="status-label">@task.CurrentStatus</span>
+                                        <span class="status-caret">▾</span>
+                                    </summary>
+                                    <div class="status-dropdown">
+                                        @foreach (CurrentStatus s in StatusOptions)
+                                        {
+                                            var captured = s;
+                                            var capturedTask = task;
+                                            <button class="status-option"
+                                                    @onclick='() => OnStatusChanged(capturedTask, captured, $"status-{capturedTask.Id}")'>
+                                                <span style="color:var(@GetStatusCssVar(captured))">
+                                                    @((MarkupString)GetStatusSvg(captured))
+                                                </span>
+
+                                                <span>@captured</span>
+                                            </button>
+                                        }
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
+                    }
+                }
+
+            </div>
+        }
+    </div>
+
+</MudPaper>
+
+<style>
+    .week-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 6px;
+    }
+
+    .day-col {
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 8px;
+        padding: 6px;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .day-col--today {
+        border-color: var(--mud-palette-primary);
+        background: var(--mud-palette-primary-hover);
+    }
+
+    .day-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 4px;
+    }
+
+    .day-name {
+        font-size: .75rem;
+        color: var(--mud-palette-text-secondary);
+        text-transform: uppercase;
+    }
+
+    .day-num {
+        font-size: 1.1rem;
+        font-weight: 500;
+        line-height: 1.4;
+        color: var(--mud-palette-text-primary);
+    }
+
+    .day-num--today {
+        background: var(--mud-palette-primary);
+        color: var(--mud-palette-primary-text);
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .95rem;
+    }
+
+    .day-empty {
+        color: var(--mud-palette-text-disabled);
+        font-size: .8rem;
+        text-align: center;
+        margin-top: 8px;
+    }
+
+    .day-task {
+        display: flex;
+        align-items: flex-start;
+        gap: 4px;
+        background: var(--mud-palette-surface);
+        border-radius: 6px;
+        padding: 4px 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    }
+
+    .task-status-icon {
+        display: inline-flex;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+        .task-status-icon svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+    .task-body {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    .task-name {
+        font-size: .8rem;
+        font-weight: 500;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* ── Status dropdown (same pattern as table) ── */
+    .status-details {
+        position: relative;
+        display: inline-block;
+    }
+
+    .status-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        cursor: pointer;
+        padding: 1px 4px;
+        border-radius: 4px;
+        list-style: none;
+        font-size: .72rem;
+        color: var(--mud-palette-text-secondary);
+        transition: background .15s;
+        user-select: none;
+    }
+
+        .status-trigger:hover {
+            background: var(--mud-palette-action-hover);
+        }
+
+        .status-trigger::-webkit-details-marker {
+            display: none;
+        }
+
+    .status-caret {
+        font-size: .6rem;
+        color: var(--mud-palette-text-disabled);
+    }
+
+    .status-label {
+        white-space: nowrap;
+    }
+
+    .status-dropdown {
+        position: absolute;
+        z-index: 1000;
+        left: 0;
+        top: 100%;
+        background: var(--mud-palette-surface);
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 6px;
+        box-shadow: 0 4px 16px rgba(0,0,0,.12);
+        min-width: 160px;
+        padding: 4px 0;
+        margin-top: 2px;
+    }
+
+    .status-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 5px 10px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        font-size: .8rem;
+        color: var(--mud-palette-text-primary);
+        text-align: left;
+        transition: background .1s;
+    }
+
+        .status-option svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        .status-option:hover {
+            background: var(--mud-palette-action-hover);
+        }
+</style>
+
+@code {
+    [Parameter, EditorRequired]
+    public List<TaskItemDTO> Tasks { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<(int TaskId, CurrentStatus NewStatus)> OnTaskStatusChanged { get; set; }
+
+    // Active statuses that qualify a task to show (today or overdue)
+    private static readonly HashSet<CurrentStatus> ActiveStatuses =
+    [
+        CurrentStatus.Analyzing,
+        CurrentStatus.NotStarted,
+        CurrentStatus.InProgress
+    ];
+
+    // Status order for sorting (MaybeInOneDay last)
+    private static readonly Dictionary<CurrentStatus, int> StatusOrder = new()
+    {
+        { CurrentStatus.InProgress,   0 },
+        { CurrentStatus.Analyzing,    1 },
+        { CurrentStatus.NotStarted,   2 },
+        { CurrentStatus.OnHold,       3 },
+        { CurrentStatus.Completed,    4 },
+        { CurrentStatus.Achieved,     5 },
+        { CurrentStatus.Cancelled,    6 },
+        { CurrentStatus.MaybeInOneDay,7 },
+    };
+
+    // Options shown in dropdown (MaybeInOneDay last)
+    private static readonly CurrentStatus[] StatusOptions =
+        Enum.GetValues<CurrentStatus>().OrderBy(s => StatusOrder[s]).ToArray();
+
+    private DateTime _weekStart;
+
+    protected override void OnInitialized()
+    {
+        // Start from Monday of current week
+        var today = DateTime.Today;
+        int diff = ((int)today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+        _weekStart = today.AddDays(-diff);
+    }
+
+    private List<TaskItemDTO> GetTasksForDay(DateTime day)
+    {
+        var today = DateTime.Today;
+
+        return Tasks
+            .Where(t =>
+            {
+                if (t.StartAt == null) return false;
+                var start = t.StartAt.Value.Date;
+
+                // Today or future day in week: show if StartAt matches
+                if (start == day.Date) return true;
+
+                // Overdue (start < today) with active status — show on today only
+                if (day.Date == today && start < today && ActiveStatuses.Contains(t.CurrentStatus))
+                    return true;
+
+                return false;
+            })
+            .OrderBy(t => StatusOrder.GetValueOrDefault(t.CurrentStatus, 99))
+            .ToList();
+    }
+
+    private void PrevWeek() => _weekStart = _weekStart.AddDays(-7);
+    private void NextWeek() => _weekStart = _weekStart.AddDays(7);
+
+    private async Task OnStatusChanged(TaskItemDTO task, CurrentStatus newStatus, string detailsId)
+    {
+        task.CurrentStatus = newStatus;
+        await JS.InvokeVoidAsync("eval", $"document.getElementById('{detailsId}').removeAttribute('open')");
+        await OnTaskStatusChanged.InvokeAsync((task.Id, newStatus));
+    }
+
+    private static string GetStatusCssVar(CurrentStatus s) => s switch
+    {
+        CurrentStatus.InProgress => "--mud-palette-info",
+        CurrentStatus.OnHold => "--mud-palette-warning",
+        CurrentStatus.Completed => "--mud-palette-success",
+        CurrentStatus.Achieved => "--mud-palette-success",
+        CurrentStatus.Cancelled => "--mud-palette-error",
+        CurrentStatus.MaybeInOneDay => "--mud-palette-text-disabled",
+        _ => "--mud-palette-text-secondary"
+    };
+
+    private static string GetStatusSvg(CurrentStatus s) => s switch
+    {
+        CurrentStatus.Analyzing => "<svg viewBox='0 0 24 24'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z'/></svg>",
+        CurrentStatus.NotStarted => "<svg viewBox='0 0 24 24'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z'/></svg>",
+        CurrentStatus.InProgress => "<svg viewBox='0 0 24 24'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z'/></svg>",
+        CurrentStatus.OnHold => "<svg viewBox='0 0 24 24'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z'/></svg>",
+        CurrentStatus.Completed => "<svg viewBox='0 0 24 24'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.59L5.41 12l1.42-1.42L10 13.17l7.17-7.17 1.42 1.42L10 16.59z'/></svg>",
+        CurrentStatus.Achieved => "<svg viewBox='0 0 24 24'><path d='M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z'/></svg>",
+        CurrentStatus.Cancelled => "<svg viewBox='0 0 24 24'><path d='M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z'/></svg>",
+        CurrentStatus.MaybeInOneDay => "<svg viewBox='0 0 24 24'><path d='M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z'/></svg>",
+        _ => "<svg viewBox='0 0 24 24'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z'/></svg>"
+    };
+}

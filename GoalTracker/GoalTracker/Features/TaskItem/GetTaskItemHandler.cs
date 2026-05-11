@@ -58,6 +58,16 @@ namespace GoalTracker.Features.TaskItem
         }
     }
 
+    public class GetTasksByRangeHandler(ITaskDailyTrackerRepository repository, AppMapper mapper)
+    : IRequestHandler<GetTasksByRangeQuery, IEnumerable<TaskItemDTO>>
+    { 
+        public async Task<IEnumerable<TaskItemDTO>> Handle(GetTasksByRangeQuery request, CancellationToken cancellationToken)
+        {
+            var result = await repository.GetTasksByRange(request.UserId, request.start, request.end);
+            return result.Select(x => x.ToDto());
+        }
+    }
+
     public class GetNonTrackedQueryHandler(ITaskDailyTrackerRepository repository, AppMapper mapper)
       : IRequestHandler<GetNonTrackedQuery, IEnumerable<TaskHierarchyLifeAreaDTO>>
     {
