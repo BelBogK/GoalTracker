@@ -1,0 +1,355 @@
+﻿@page "/do-it-lists"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@using GoalTracker.Shared
+@using MudBlazor
+@using GoalTracker.Client.Feautures.Lists
+@inject DoItListApiClient Api
+
+<MudPaper Class="pa-4" Elevation="0">
+
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+        <MudText Typo="Typo.h5" Class="mud-text-secondary">
+            <MudIcon Icon="@Icons.Material.Filled.Checklist" Class="mr-2 mb-n1" />
+            My Lists
+        </MudText>
+        <MudButton StartIcon="@Icons.Material.Filled.Add"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="OpenCreateList">
+            New List
+        </MudButton>
+    </MudStack>
+
+    @if (_loading)
+    {
+        @for (int i = 0; i < 3; i++)
+        {
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="80px" Class="mb-2" />
+        }
+    }
+    else
+    {
+        <div class="lists-grid">
+            @foreach (var list in _lists)
+            {
+                <MudPaper Class="list-card pa-3" Elevation="2">
+
+                    <!-- List header -->
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
+                        <div>
+                            @if (_editingListId == list.Id)
+                            {
+                                <MudTextField @bind-Value="list.Name"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Immediate="true" />
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.subtitle1" Style="font-weight:600">@list.Name</MudText>
+                                @if (!string.IsNullOrEmpty(list.Description))
+                                {
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@list.Description</MudText>
+                                }
+                            }
+                        </div>
+                        <MudStack Row="true" Spacing="0">
+                            @if (_editingListId == list.Id)
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.Check"
+                                               Color="Color.Success"
+                                               Size="Size.Small"
+                                               OnClick="() => SaveList(list)" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                               Size="Size.Small"
+                                               OnClick="() => _editingListId = null" />
+                            }
+                            else
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Size="Size.Small"
+                                               OnClick="() => _editingListId = list.Id" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               OnClick="() => DeleteList(list.Id)" />
+                            }
+                        </MudStack>
+                    </MudStack>
+
+                    <!-- Progress bar -->
+                    @{
+                        var total = list.Items.Count;
+                        var done = list.Items.Count(i => i.IsFinished);
+                        var pct = total == 0 ? 0 : (int)((double)done / total * 100);
+                    }
+                    @if (total > 0)
+                    {
+                        <MudProgressLinear Value="@pct" Color="Color.Success" Rounded="true" Size="Size.Small" Class="mb-2" />
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2">@done / @total done</MudText>
+                    }
+
+                    <!-- Items -->
+                    @foreach (var item in list.Items.OrderBy(i => i.IsFinished))
+                    {
+                        <div class="list-item @(item.IsFinished ? "list-item--done" : "")">
+                            <MudCheckBox T="bool"
+                                         Value="@item.IsFinished"
+                                         ValueChanged="@(v => ToggleItem(list, item, v))"
+                                         Color="Color.Success"
+                                         Size="Size.Small" />
+                            <div class="item-body">
+                                @if (_editingItemId == item.Id)
+                                {
+                                    <MudTextField @bind-Value="item.Name"
+                                                  Variant="Variant.Text"
+                                                  Margin="Margin.Dense"
+                                                  Immediate="true" />
+                                    <MudTextField @bind-Value="item.Link"
+                                                  Placeholder="Link (optional)"
+                                                  Variant="Variant.Text"
+                                                  Margin="Margin.Dense" />
+                                    <MudStack Row="true" Spacing="0">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Check" Color="Color.Success" Size="Size.Small" OnClick="() => SaveItem(list.Id, item)" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="() => _editingItemId = null" />
+                                    </MudStack>
+                                }
+                                else
+                                {
+                                    <span class="item-name">@item.Name</span>
+                                    @if (!string.IsNullOrEmpty(item.Link))
+                                    {
+                                        <a href="@item.Link" target="_blank" class="item-link">
+                                            <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" />
+                                        </a>
+                                    }
+                                    <MudStack Row="true" Spacing="0" Class="item-actions">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => _editingItemId = item.Id" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="() => DeleteItem(list, item.Id)" />
+                                    </MudStack>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Add item inline -->
+                    @if (_addingItemListId == list.Id)
+                    {
+                        <div class="add-item-form">
+                            <MudTextField @bind-Value="_newItemName"
+                                          Placeholder="Item name"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Immediate="true" />
+                            <MudTextField @bind-Value="_newItemLink"
+                                          Placeholder="Link (optional)"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense" />
+                            <MudStack Row="true" Spacing="1">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                                           OnClick="() => ConfirmAddItem(list)">Add</MudButton>
+                                <MudButton Size="Size.Small" OnClick="CancelAddItem">Cancel</MudButton>
+                            </MudStack>
+                        </div>
+                    }
+                    else
+                    {
+                        <MudButton StartIcon="@Icons.Material.Filled.Add"
+                                   Size="Size.Small"
+                                   Variant="Variant.Text"
+                                   Class="mt-1"
+                                   OnClick="() => StartAddItem(list.Id)">
+                            Add item
+                        </MudButton>
+                    }
+
+                </MudPaper>
+            }
+
+            <!-- New list card -->
+            @if (_creatingList)
+            {
+                <MudPaper Class="list-card pa-3" Elevation="2">
+                    <MudTextField @bind-Value="_newListName" Placeholder="List name"
+                                  Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+                    <MudTextField @bind-Value="_newListDesc" Placeholder="Description (optional)"
+                                  Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+                    <MudStack Row="true" Spacing="1">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                                   OnClick="ConfirmCreateList">Create</MudButton>
+                        <MudButton Size="Size.Small" OnClick="() => _creatingList = false">Cancel</MudButton>
+                    </MudStack>
+                </MudPaper>
+            }
+        </div>
+    }
+
+</MudPaper>
+
+<style>
+    .lists-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 16px;
+    }
+
+    .list-card {
+        border-radius: 12px !important;
+    }
+
+    .list-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 0;
+        border-radius: 6px;
+        transition: background .1s;
+    }
+
+        .list-item:hover .item-actions {
+            opacity: 1;
+        }
+
+    .list-item--done .item-name {
+        text-decoration: line-through;
+        color: var(--mud-palette-text-disabled);
+    }
+
+    .item-body {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .item-name {
+        font-size: .875rem;
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .item-link {
+        color: var(--mud-palette-primary);
+        display: inline-flex;
+        flex-shrink: 0;
+    }
+
+    .item-actions {
+        opacity: 0;
+        transition: opacity .15s;
+        flex-shrink: 0;
+    }
+
+    .add-item-form {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 8px;
+        padding: 8px;
+        background: var(--mud-palette-action-default-hover);
+        border-radius: 8px;
+    }
+</style>
+
+@code {
+    private List<DoItListDTO> _lists = [];
+    private bool _loading = true;
+
+    private int? _editingListId;
+    private int? _editingItemId;
+    private int? _addingItemListId;
+
+    private bool _creatingList;
+    private string _newListName = "";
+    private string _newListDesc = "";
+    private string _newItemName = "";
+    private string _newItemLink = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _lists = await Api.GetAllAsync();
+        _loading = false;
+    }
+
+    // ── List CRUD ─────────────────────────────────────────────────────────────
+
+    private void OpenCreateList()
+    {
+        _newListName = "";
+        _newListDesc = "";
+        _creatingList = true;
+    }
+
+    private async Task ConfirmCreateList()
+    {
+        if (string.IsNullOrWhiteSpace(_newListName)) return;
+
+        var created = new DoItListDTO
+        {
+            Name = _newListName.Trim(),
+            Description = string.IsNullOrWhiteSpace(_newListDesc) ? null : _newListDesc.Trim()
+        };
+        created.Id = await Api.CreateAsync(created);
+
+        _lists.Add(created);
+        _creatingList = false;
+    }
+
+    private async Task SaveList(DoItListDTO list)
+    {
+        await Api.UpdateAsync(list);
+        _editingListId = null;
+    }
+
+    private async Task DeleteList(int id)
+    {
+        await Api.DeleteAsync(id);
+        _lists.RemoveAll(l => l.Id == id);
+    }
+
+    // ── Item CRUD ─────────────────────────────────────────────────────────────
+
+    private void StartAddItem(int listId)
+    {
+        _newItemName = "";
+        _newItemLink = "";
+        _addingItemListId = listId;
+    }
+
+    private void CancelAddItem() => _addingItemListId = null;
+
+    private async Task ConfirmAddItem(DoItListDTO list)
+    {
+        if (string.IsNullOrWhiteSpace(_newItemName)) return;
+        var item = new DoItListItemDTO
+        {
+            Name = _newItemName.Trim(),
+            Link = string.IsNullOrWhiteSpace(_newItemLink) ? null : _newItemLink.Trim(),
+            DoItListId = list.Id
+        };
+        item.Id = await Api.AddItemAsync(list.Id, item);
+        list.Items.Add(item);
+        _addingItemListId = null;
+    }
+
+    private async Task SaveItem(int listId, DoItListItemDTO item)
+    {
+        await Api.UpdateItemAsync(listId, item);
+        _editingItemId = null;
+    }
+
+    private async Task ToggleItem(DoItListDTO list, DoItListItemDTO item, bool value)
+    {
+        item.IsFinished = value;
+        await Api.UpdateItemAsync(list.Id, item);
+    }
+
+    private async Task DeleteItem(DoItListDTO list, int itemId)
+    {
+        await Api.DeleteItemAsync(list.Id, itemId);
+        list.Items.RemoveAll(i => i.Id == itemId);
+    }
+}

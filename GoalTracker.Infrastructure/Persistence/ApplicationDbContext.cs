@@ -23,6 +23,8 @@ namespace GoalTracker.Data
         public DbSet<ProjectScenario> ProjectScenarios { get; set; }
         public DbSet<TaskItem> TaskItems { get; set; } 
         public DbSet<TaskDailyTracker> DailyTrackers { get; set; } 
+        public DbSet<DoItList> DoItLists { get; set; }
+        public DbSet<DoItListItem> DoItListItems { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder); 

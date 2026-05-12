@@ -19,7 +19,15 @@
         {
             var day = _weekStart.AddDays(d);
             var dayTasks = GetTasksForDay(day);
+
             bool isToday = day.Date == DateTime.Today;
+
+            var completedCount = dayTasks.Count(x =>
+                x.CurrentStatus == CurrentStatus.Completed ||
+                x.CurrentStatus == CurrentStatus.Achieved ||
+                x.CurrentStatus == CurrentStatus.Cancelled);
+
+            var totalCount = dayTasks.Count;
 
             <div class="day-col @(isToday ? "day-col--today" : "")">
 
@@ -27,7 +35,8 @@
                 <div class="day-header">
                     <span class="day-name">@day.ToString("ddd")</span>
                     <span class="day-num @(isToday ? "day-num--today" : "")">@day.Day</span>
-                </div>
+                    <span>@completedCount / @totalCount completed</span>
+                </div> 
 
                 <!-- Tasks -->
                 @if (dayTasks.Count == 0)
@@ -39,25 +48,39 @@
                     @foreach (var task in dayTasks)
                     {
                         <div class="day-task">
-                            <span class="task-status-icon" title="@task.CurrentStatus.ToString()"
+                            <span class="task-status-icon"
+                                  title="@task.CurrentStatus.ToString()"
                                   style="color:var(@GetStatusCssVar(task.CurrentStatus))">
                                 @((MarkupString)GetStatusSvg(task.CurrentStatus))
                             </span>
                             <div class="task-body">
-                                <span class="task-name">@task.Name</span>
+                                <NavLink class="task-name-link" href="@($"task/{task.Id}")">
+                                    <span class="task-name">@task.Name</span>
+                                </NavLink>
+                                @if (!string.IsNullOrEmpty(task.Description))
+                                {
+                                    <span class="task-desc">@task.Description</span>
+                                }
+
                                 <details class="status-details" id="status-@task.Id">
                                     <summary class="status-trigger">
                                         <span class="status-label">@task.CurrentStatus</span>
                                         <span class="status-caret">▾</span>
                                     </summary>
+
                                     <div class="status-dropdown">
                                         @foreach (CurrentStatus s in StatusOptions)
                                         {
                                             var captured = s;
                                             var capturedTask = task;
+
                                             <button class="status-option"
-                                                    @onclick='() => OnStatusChanged(capturedTask, captured, $"status-{capturedTask.Id}")'>
-                                                <span style="color:var(@GetStatusCssVar(captured))">
+                                                    @onclick='() => OnStatusChanged(
+                                                                                                    capturedTask,
+                                                                                                    captured,
+                                                                                                    $"status-{capturedTask.Id}")'>
+
+<span style="color:var(@GetStatusCssVar(captured))">
                                                     @((MarkupString)GetStatusSvg(captured))
                                                 </span>
 
@@ -71,29 +94,42 @@
                     }
                 }
 
+             
             </div>
         }
     </div>
 
 </MudPaper>
 
-<style>
+<style> 
+
+    .day-footer {
+        margin-top: auto;
+        padding-top: 10px;
+        font-size: 12px;
+        opacity: 0.8;
+        border-top: 1px solid var(--border-color);
+    }
+
     .week-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 6px;
-    }
-
-    .day-col {
-        border: 1px solid var(--mud-palette-lines-default);
-        border-radius: 8px;
-        padding: 6px;
-        min-height: 120px;
         display: flex;
-        flex-direction: column;
-        gap: 4px;
+        gap: 6px;
+        overflow-x: auto;
+        padding-bottom: 4px;
     }
 
+.day-col {
+    flex: 0 0 200px;
+    min-width: 200px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 8px;
+    padding: 6px;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* было 4px — увеличь до нужного */
+}
+    
     .day-col--today {
         border-color: var(--mud-palette-primary);
         background: var(--mud-palette-primary-hover);
@@ -145,6 +181,7 @@
         background: var(--mud-palette-surface);
         border-radius: 6px;
         padding: 4px 6px;
+        border: 1px solid var(--mud-palette-lines-default);
         box-shadow: 0 1px 3px rgba(0,0,0,.08);
     }
 
@@ -171,9 +208,19 @@
         font-size: .8rem;
         font-weight: 500;
         line-height: 1.3;
-        white-space: nowrap;
+        white-space: normal;
+        word-break: break-word;
         overflow: hidden;
-        text-overflow: ellipsis;
+    }
+
+    .task-desc {
+        font-size: .72rem;
+        color: var(--mud-palette-text-secondary);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.3;
     }
 
     /* ── Status dropdown (same pattern as table) ── */
@@ -279,6 +326,7 @@
         { CurrentStatus.Achieved,     5 },
         { CurrentStatus.Cancelled,    6 },
         { CurrentStatus.MaybeInOneDay,7 },
+        { CurrentStatus.Failed,       8 },
     };
 
     // Options shown in dropdown (MaybeInOneDay last)

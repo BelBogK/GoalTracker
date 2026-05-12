@@ -9,6 +9,7 @@
         Completed = 4,
         Achieved = 5,
         Cancelled= 6,
-        MaybeInOneDay =7
+        MaybeInOneDay =7,
+        Failed = 8
     }
 }

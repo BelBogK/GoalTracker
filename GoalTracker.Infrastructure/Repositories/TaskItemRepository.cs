@@ -1,6 +1,7 @@
 ﻿using GoalTracker.Data;
 using GoalTracker.Domain.Entities;
 using GoalTracker.Domain.Interfaces.Repositories;
+using GoalTracker.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -67,14 +68,27 @@ namespace GoalTracker.Infrastructure.Repositories
 
         public async Task<TaskItem> UpdateAsync(TaskItem entity)
         {
-            var needUpdateList=await taskDailyTrackerRepository.TaskInDaily(entity.Id);
+            var needUpdateList = await taskDailyTrackerRepository.TaskInDaily(entity.Id);
             using var context = await contextFactory.CreateDbContextAsync();
+            var entityDb = await context.TaskItems.AsNoTracking().FirstOrDefaultAsync(x => x.Id == entity.Id);
+
+            if (entityDb != null)
+            {
+                if (entityDb.CurrentStatus != entity.CurrentStatus)
+                {
+                    var statutesWithUpdateDate = new[] { CurrentStatus.Achieved, CurrentStatus.Completed, CurrentStatus.Cancelled, CurrentStatus.Failed };
+                    if (statutesWithUpdateDate.Contains(entity.CurrentStatus))
+                    {
+                        entity.StartAt = DateTime.UtcNow;
+                    }
+                }
+            }
             context.Entry(entity).State = EntityState.Modified;
             await context.SaveChangesAsync();
             if (needUpdateList)
             {
                 //await taskDailyTrackerRepository.UpdateStatusTask(entity.Id, entity.CurrentStatus);
-            }    
+            }
             return entity;
         }
     }

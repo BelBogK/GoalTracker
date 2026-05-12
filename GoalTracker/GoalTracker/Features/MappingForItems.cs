@@ -1,5 +1,6 @@
 ﻿using GoalTracker.Features.Goal;
 using GoalTracker.Features.GoalScenario;
+using GoalTracker.Features.Lists;
 using GoalTracker.Features.TaskItem;
 
 namespace GoalTracker.Features
@@ -13,6 +14,7 @@ namespace GoalTracker.Features
             MappingsForProject.Map(app);
             MappingsForTaskItem.Map(app);
             GoalScenarioEndpoints.Map(app);
+            DoItListEndpoints.Map(app);
         }
     }
 }

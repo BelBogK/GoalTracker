@@ -103,6 +103,27 @@ else
         </MudItem>
         <MudItem xs="12" md="4">
             <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Style="margin-bottom: 4px;">
+                StartAt %
+            </MudText>
+            @if (_editing)
+            {
+                <MudTd>
+                    <MudDatePicker Date="@(_task.StartAt == DateTime.MinValue ? null : _task.StartAt)"
+                                   DateChanged="@(d => _task.StartAt = d ?? DateTime.Today)"
+                                   Label="Start date"
+                                   PickerVariant="PickerVariant.Dialog"
+                                   InitialPickerYear="@DateTime.Today.Year" />
+                </MudTd>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2">
+                    @(_task.StartAt == DateTime.MinValue || _task.StartAt == null ? "" : _task.StartAt.Value.ToString("dd.MM.yyyy"))
+                </MudText>
+            }
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Style="margin-bottom: 4px;">
                 Impact %
             </MudText>
             @if (_editing)
