@@ -177,6 +177,8 @@ namespace GoalTracker.Features.Lists
             {
                 DoItListId = request.ListId,
                 Name = request.DTO.Name,
+                Description = request.DTO.Description,
+                Link= request.DTO.Link,
                 IsFinished = request.DTO.IsFinished,
                 UserId = request.UserId
             };
@@ -219,7 +221,8 @@ namespace GoalTracker.Features.Lists
 
             entity.Name = request.DTO.Name;
             entity.IsFinished = request.DTO.IsFinished;
-
+            entity.Description= request.DTO.Description;
+            entity.Link= request.DTO.Link;
             await _context.SaveChangesAsync(cancellationToken);
         }
     }

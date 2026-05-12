@@ -35,11 +35,10 @@ namespace GoalTracker.Client.Feautures.Lists
             return await r.Content.ReadFromJsonAsync<int>() ;
         }
 
-        public async Task<DoItListItemDTO> UpdateItemAsync(int listId, DoItListItemDTO dto)
+        public async Task UpdateItemAsync(int listId, DoItListItemDTO dto)
         {
             var r = await http.PutAsJsonAsync($"/api/do-it-lists/{listId}/items/{dto.Id}", dto);
-            r.EnsureSuccessStatusCode();
-            return await r.Content.ReadFromJsonAsync<DoItListItemDTO>() ?? dto;
+            r.EnsureSuccessStatusCode(); 
         }
 
         public async Task DeleteItemAsync(int listId, int itemId)

@@ -3,8 +3,12 @@
 @using GoalTracker.Shared
 @using MudBlazor
 @using GoalTracker.Client.Feautures.Lists
+@using GoalTracker.Client.Pages.Components
 @inject DoItListApiClient Api
-
+@inject IDialogService DialogService 
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
 <MudPaper Class="pa-4" Elevation="0">
 
     <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
@@ -116,7 +120,12 @@
                                 }
                                 else
                                 {
-                                    <span class="item-name">@item.Name</span>
+                                    <button class="item-name-btn"
+                                            @onclick="() => OpenItemDialog(list, item)">
+
+                                        @item.Name
+
+                                    </button>
                                     @if (!string.IsNullOrEmpty(item.Link))
                                     {
                                         <a href="@item.Link" target="_blank" class="item-link">
@@ -351,5 +360,38 @@
     {
         await Api.DeleteItemAsync(list.Id, itemId);
         list.Items.RemoveAll(i => i.Id == itemId);
+    }
+    private async Task OpenItemDialog(
+    DoItListDTO list,
+    DoItListItemDTO item)
+    {
+        var parameters = new DialogParameters
+        {
+            ["Item"] = item
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            CloseButton = true
+        };
+
+        var dialog = await DialogService.ShowAsync<DoItItemDialog>(
+            "Item Details",
+            parameters,
+            options);
+
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: DoItListItemDTO updated })
+        {
+            item.Name = updated.Name;
+            item.Description = updated.Description;
+            item.Link = updated.Link;
+            item.IsFinished = updated.IsFinished;
+
+            await SaveItem(list.Id, item);
+        }
     }
 }

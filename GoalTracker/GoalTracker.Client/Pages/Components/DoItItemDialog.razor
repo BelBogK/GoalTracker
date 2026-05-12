@@ -1,0 +1,82 @@
+﻿@using GoalTracker.Shared
+@using MudBlazor
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="2">
+            <MudTextField Label="Name"
+            @bind-Value="_item.Name"
+            Variant="Variant.Outlined"
+            Immediate="true" />
+
+            <MudTextField Label="Description"
+            @bind-Value="_item.Description"
+            Variant="Variant.Outlined"
+            Lines="6"
+            AutoGrow="true" />
+
+            <MudTextField Label="Link"
+            @bind-Value="_item.Link"
+            Variant="Variant.Outlined" />
+
+            @if (!string.IsNullOrWhiteSpace(_item.Link))
+            {
+                <MudLink Href="@_item.Link"
+                Target="_blank">
+
+                    Open Link
+
+                </MudLink>
+            }
+
+            <MudCheckBox T="bool"
+            @bind-Value="_item.IsFinished"
+            Label="Completed" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">
+            Cancel
+        </MudButton>
+        <MudButton Color="Color.Primary"
+        Variant="Variant.Filled"
+        OnClick="Save">
+
+            Save
+
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public DoItListItemDTO Item { get; set; } = new();
+
+    private DoItListItemDTO _item = new();
+
+    protected override void OnInitialized()
+    {
+        _item = new DoItListItemDTO
+        {
+            Id = Item.Id,
+            Name = Item.Name,
+            Description = Item.Description,
+            Link = Item.Link,
+            IsFinished = Item.IsFinished
+        };
+    }
+
+    private void Save()
+    {
+        MudDialog.Close(DialogResult.Ok(_item));
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}
