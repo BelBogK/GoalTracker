@@ -64,7 +64,7 @@ namespace GoalTracker.Features.Lists
                 {
                     Id = x.Id,
                     Name = x.Name,
-                    Description = x.Description
+                    Description = x.Description,
                 })
                 .FirstOrDefaultAsync(cancellationToken);
         }

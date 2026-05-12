@@ -1,7 +1,9 @@
 ﻿using GoalTracker.Domain.Entities.Base;
 using GoalTracker.Shared.Enums;
+using GoalTracker.Shared.Path;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace GoalTracker.Domain.Entities
@@ -32,5 +34,7 @@ namespace GoalTracker.Domain.Entities
         public DateTime? StartAt { get; set; }
         public DateTime? FinishedAt { get; set; }
         public ICollection<Project> Projects { get; set; } = new List<Project>();
+        [NotMapped]
+        public List<EntityPathDto> Path { get; set; }
     }
 }

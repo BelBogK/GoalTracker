@@ -1,0 +1,184 @@
+﻿@using GoalTracker.Shared.Enums
+@using GoalTracker.Shared.Path
+
+@if (Paths?.Any() == true)
+{
+    <div class="path-container">
+
+        @foreach (var path in Paths)
+        {
+            <div class="path-row">
+
+                @for (int i = 0; i < path.Nodes.Count; i++)
+                {
+                    var node = path.Nodes[i];
+
+                    <a href="@BuildUrl(node)"
+                       class="path-node @GetNodeClass(node.Type)">
+
+                        <span class="path-icon">
+                            @GetIcon(node.Type)
+                        </span>
+
+                        <span class="path-text">
+                            @node.Name
+                        </span>
+
+                    </a>
+
+                    @if (i < path.Nodes.Count - 1)
+                    {
+                        <span class="path-separator">
+                            ›
+                        </span>
+                    }
+                }
+
+            </div>
+        }
+
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public List<EntityPathDto> Paths { get; set; } = [];
+
+    private static string BuildUrl(PathNodeDto node)
+    {
+        return node.Type switch
+        {
+            PathEntityType.LifeArea => $"/life-areas/{node.Id}",
+
+            PathEntityType.Goal => $"/goals/{node.Id}",
+
+            PathEntityType.Scenario => $"/scenario/{node.Id}",
+
+            PathEntityType.Project => $"/project/{node.Id}",
+
+            PathEntityType.Task => $"/task/{node.Id}",
+
+            _ => "#"
+        };
+    }
+
+    private static string GetNodeClass(PathEntityType type)
+    {
+        return type switch
+        {
+            PathEntityType.LifeArea => "path-lifearea",
+
+            PathEntityType.Goal => "path-goal",
+
+            PathEntityType.Scenario => "path-scenario",
+
+            PathEntityType.Project => "path-project",
+
+            PathEntityType.Task => "path-task",
+
+            _ => ""
+        };
+    }
+
+    private static string GetIcon(PathEntityType type)
+    {
+        return type switch
+        {
+            PathEntityType.LifeArea => "🧠",
+
+            PathEntityType.Goal => "🎯",
+
+            PathEntityType.Scenario => "🧩",
+
+            PathEntityType.Project => "📁",
+
+            PathEntityType.Task => "✅",
+
+            _ => "•"
+        };
+    }
+
+}
+<style>
+
+    .path-container {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        width: 100%;
+    }
+
+    .path-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 4px;
+        font-size: .82rem;
+        line-height: 1.3;
+    }
+
+    .path-node {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        text-decoration: none;
+        padding: 2px 8px;
+        border-radius: 999px;
+        transition: all .15s ease;
+        white-space: nowrap;
+        border: 1px solid transparent;
+    }
+
+        .path-node:hover {
+            opacity: .85;
+            transform: translateY(-1px);
+        }
+
+    .path-icon {
+        font-size: .78rem;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .path-text {
+        font-weight: 500;
+    }
+
+    .path-separator {
+        color: var(--mud-palette-text-disabled);
+        font-size: .9rem;
+        user-select: none;
+    }
+
+    .path-lifearea {
+        background: var(--mud-palette-secondary-hover);
+        color: var(--mud-palette-secondary);
+        border-color: var(--mud-palette-secondary);
+    }
+
+    .path-goal {
+        background: var(--mud-palette-tertiary-hover);
+        color: var(--mud-palette-tertiary);
+        border-color: var(--mud-palette-tertiary);
+    }
+
+    .path-scenario {
+        background: var(--mud-palette-info-hover);
+        color: var(--mud-palette-info);
+        border-color: var(--mud-palette-info);
+    }
+
+    .path-project {
+        background: var(--mud-palette-primary-hover);
+        color: var(--mud-palette-primary);
+        border-color: var(--mud-palette-primary);
+    }
+
+    .path-task {
+        background: var(--mud-palette-success-hover);
+        color: var(--mud-palette-success);
+        border-color: var(--mud-palette-success);
+    }
+
+</style>

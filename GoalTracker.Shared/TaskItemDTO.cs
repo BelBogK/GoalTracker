@@ -1,4 +1,5 @@
 ﻿using GoalTracker.Shared.Enums;
+using GoalTracker.Shared.Path;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -23,5 +24,6 @@ namespace GoalTracker.Shared
         public CurrentStatus CurrentStatus { get; set; }
         public int AchievePoints { get; }
         public ICollection<ProjectDTO> Projects { get; set; } = new List<ProjectDTO>();
+        public List<EntityPathDto> Path { get; set; }
     }
 }

@@ -86,7 +86,8 @@ namespace GoalTracker.Features.Extensions
                 Effort = task.Effort,
                 Procents = task.Procents,
                 CurrentStatus = task.CurrentStatus,
-                StartAt= task.StartAt
+                StartAt= task.StartAt,
+                Path=task.Path
             };
         }
 

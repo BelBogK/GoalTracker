@@ -1,5 +1,7 @@
 ﻿using GoalTracker.Domain.Entities.Base;
 using GoalTracker.Shared.Enums;
+using GoalTracker.Shared.Path;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GoalTracker.Domain.Entities
 {
@@ -20,5 +22,7 @@ namespace GoalTracker.Domain.Entities
         public int PointsForCompletedProject { get; set; }
         public virtual ICollection<Goal> Goals { get; set; } = new List<Goal>();
         public virtual ICollection<TaskItem> TaskItems { get; set; }
+        [NotMapped]
+        public List<EntityPathDto> Path { get; set; }
     }
 }

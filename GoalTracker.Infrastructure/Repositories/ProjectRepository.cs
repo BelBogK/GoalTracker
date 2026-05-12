@@ -1,6 +1,8 @@
 ﻿using GoalTracker.Data;
 using GoalTracker.Domain.Entities;
 using GoalTracker.Domain.Interfaces.Repositories;
+using GoalTracker.Domain.Interfaces.Services;
+using GoalTracker.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 
@@ -54,7 +56,14 @@ namespace GoalTracker.Infrastructure.Repositories
         public async Task<IEnumerable<Project>> GetAllAsync(string userId)
         {
             using var context = contextFactory.CreateDbContext();
-            return await context.Projects.Where(p => p.UserId == userId).Include(x => x.Goals).ToListAsync();
+            IPathBuilderService pathService = new PathBuilderService(context);
+
+            var projects = await context.Projects.Where(p => p.UserId == userId).Include(x => x.Goals).ToListAsync();
+            foreach (var project in projects)
+            {
+                project.Path = await pathService.BuildPathsAsync(project.Id, Shared.Enums.PathEntityType.Project);
+            }
+            return projects;
         }
 
         public async Task<IEnumerable<Project>> GetByGoalAsync(string userId, int goalId)
@@ -66,9 +75,12 @@ namespace GoalTracker.Infrastructure.Repositories
         public async Task<Project?> GetByIdAsync(int id)
         {
             using var context = contextFactory.CreateDbContext();
-            return await context.Projects
+            IPathBuilderService pathService = new PathBuilderService(context);
+            var result= await context.Projects
                 .Include(x=>x.Goals)
                 .FirstOrDefaultAsync(p => p.Id == id);
+            result.Path= await pathService.BuildPathsAsync(result.Id, Shared.Enums.PathEntityType.Project);
+            return result;
         }
 
         public async Task<IEnumerable<Project>> GetByScenIdAsync(string userId, int scenId)

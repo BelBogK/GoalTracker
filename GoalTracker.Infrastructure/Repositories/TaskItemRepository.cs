@@ -1,11 +1,10 @@
 ﻿using GoalTracker.Data;
 using GoalTracker.Domain.Entities;
 using GoalTracker.Domain.Interfaces.Repositories;
+using GoalTracker.Domain.Interfaces.Services;
+using GoalTracker.Infrastructure.Services;
 using GoalTracker.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace GoalTracker.Infrastructure.Repositories
 {
@@ -48,14 +47,23 @@ namespace GoalTracker.Infrastructure.Repositories
 
         public async Task<IEnumerable<TaskItem>> GetAllAsync(string userId)
         {
-            using var context = contextFactory.CreateDbContext();
-            return await context.TaskItems.Where(t => t.UserId == userId).ToListAsync();
+            using var context = contextFactory.CreateDbContext(); 
+            IPathBuilderService pathService = new PathBuilderService(context);
+            var result= await context.TaskItems.Where(t => t.UserId == userId).ToListAsync();
+            foreach(var item in result)
+            {
+                item.Path = await pathService.BuildPathsAsync(item.Id, Shared.Enums.PathEntityType.Task);
+            }
+            return result;
         }
 
         public async Task<TaskItem?> GetByIdAsync(int id)
         {
             using var context = contextFactory.CreateDbContext();
-            return await context.TaskItems.FirstOrDefaultAsync(x => x.Id == id);
+            IPathBuilderService pathService = new PathBuilderService(context);
+            var result = await context.TaskItems.FirstOrDefaultAsync(x => x.Id == id);
+            result.Path = await pathService.BuildPathsAsync(result.Id, Shared.Enums.PathEntityType.Task);
+            return result;
         }
 
         public async Task<List<TaskItem>> GetTasksForProject(int projectId, string userId)

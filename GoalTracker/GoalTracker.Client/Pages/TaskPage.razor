@@ -1,5 +1,6 @@
 ﻿@page "/Task/{id:int}"
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@using GoalTracker.Client.Pages.Components
 @using GoalTracker.Shared
 @using GoalTracker.Shared.Enums
 @using MudBlazor
@@ -17,6 +18,7 @@
 }
 else
 {
+    <PathBreadcrumb Paths="@_task.Path" />
     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
         <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"  />
         @if (_editing)
