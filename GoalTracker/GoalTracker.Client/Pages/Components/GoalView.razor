@@ -13,6 +13,11 @@
         <CardHeaderContent>
             <MudText Typo="Typo.caption" Color="Color.Secondary">Goal</MudText>
             <MudText Typo="Typo.h6">@Goal.Name</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Life areas:</MudText>
+            @foreach(var lifeArea in Goal.LifeAreas)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Info"> @lifeArea.Name</MudChip>
+            }
         </CardHeaderContent>
         <CardHeaderActions>
             <MudChip T="string" Size="Size.Small" Color="Color.Info">@Goal.GoalType</MudChip>

@@ -57,6 +57,16 @@ namespace GoalTracker.Features.Goal
                     }
                     item.Scenarios.Add(goalSc);
                 }
+
+                foreach (var lifeArea in goal.LifeAreas)
+                {
+                    item.LifeAreas.Add(new LifeAreaDTO()
+                    {
+                        Description = lifeArea.Description,
+                        Name = lifeArea.Name,
+                        Id = lifeArea.Id
+                    });
+                }
                 result.Add(item);
             }
 
