@@ -4,6 +4,7 @@ using GoalTracker.Domain.Interfaces.Services;
 using GoalTracker.Shared.Enums;
 using GoalTracker.Shared.Path;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 namespace GoalTracker.Infrastructure.Services
 {
 
@@ -119,43 +120,48 @@ namespace GoalTracker.Infrastructure.Services
 
             if (project == null)
                 return [];
+           
 
             var result = new List<EntityPathDto>();
-
-            foreach (var goal in project.Goals)
-            {
-                foreach (var lifeArea in goal.LifeAreas)
-                {
-                    result.Add(new EntityPathDto
-                    {
-                        Nodes =
-                        [
-                            CreateNode(lifeArea),
-                        CreateNode(goal),
-                        CreateNode(project)
-                        ]
-                    });
-                }
-
-                foreach (var scenario in goal.Scenarios)
-                {
-                    foreach (var lifeArea in goal.LifeAreas)
-                    {
-                        result.Add(new EntityPathDto
-                        {
-                            Nodes =
-                            [
-                                CreateNode(lifeArea),
-                            CreateNode(goal),
-                            CreateNode(scenario),
-                            CreateNode(project)
-                            ]
-                        });
-                    }
-                }
-            }
-
             return result;
+            // var scen=await _db.Scenarios.FirstOrDefaultAsync(x=>x.Projects.Any(p=>p.Id == projectId));
+            //var scens=await GetAllParentsAsync(scen);
+            //var lastScen = scens.Last();
+            //var goals = _db.Goals.Where(x => x.Scenarios.Any(s => s.Id == lastScen.Id)).ToList();
+            //var goalsIds=goals.Select(x=>x.Id).ToList();
+            //var lifeArea=_db.LifeAreas.Where(x=>x.Goals.Any(g=>goalsIds.Contains(g.Id))).ToList();
+            //foreach (var goal in project.Goals)
+            //{
+            //    foreach (var lifeArea in goal.LifeAreas)
+            //    {
+            //        result.Add(new EntityPathDto
+            //        {
+            //            Nodes =
+            //            [
+            //                CreateNode(lifeArea),
+            //            CreateNode(goal),
+            //            CreateNode(project)
+            //            ]
+            //        });
+            //    }
+
+            //    foreach (var scenario in goal.Scenarios)
+            //    {
+            //        foreach (var lifeArea in goal.LifeAreas)
+            //        {
+            //            result.Add(new EntityPathDto
+            //            {
+            //                Nodes =
+            //                [
+            //                    CreateNode(lifeArea),
+            //                CreateNode(goal),
+            //                CreateNode(scenario),
+            //                CreateNode(project)
+            //                ]
+            //            });
+            //        }
+            //    }
+            //}  
         }
 
         // =========================================================
@@ -192,7 +198,45 @@ namespace GoalTracker.Infrastructure.Services
 
             return result;
         }
+        public async Task<List<GoalScenario>> GetAllParentsAsync(
+    GoalScenario scenario)
+        {
+            var result = new List<GoalScenario>();
+            var visited = new HashSet<int>();
 
+            await LoadParentsRecursive(scenario, result, visited);
+
+            return result;
+        }
+        private async Task LoadParentsRecursive(
+    GoalScenario scenario,
+    List<GoalScenario> result,
+    HashSet<int> visited)
+        {
+            if (visited.Contains(scenario.Id))
+                return;
+
+            visited.Add(scenario.Id);
+
+            await _db.Entry(scenario)
+                .Collection(x => x.ParentRelations)
+                .Query()
+                .Include(x => x.Parent)
+                .LoadAsync();
+
+            foreach (var relation in scenario.ParentRelations)
+            {
+                if (visited.Contains(relation.ParentId))
+                    continue;
+
+                result.Add(relation.Parent);
+
+                await LoadParentsRecursive(
+                    relation.Parent,
+                    result,
+                    visited);
+            }
+        }
         // =========================================================
         // GOAL
         // =========================================================

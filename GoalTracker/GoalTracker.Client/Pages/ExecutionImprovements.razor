@@ -1,0 +1,111 @@
+﻿@page "/execution-improvements"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false)) 
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using GoalTracker.Client.Pages.Components.Improve
+@using MudBlazor
+@using GoalTracker.Shared.ImproveWorking
+@using GoalTracker.Client.Feautures.Inprove
+@inject ExecutionImprovementApiClient Api
+@inject IDialogService DialogService
+
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPaper Class="pa-4" Elevation="0">
+
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+        <MudText Typo="Typo.h5" Class="mud-text-secondary">
+            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Class="mr-2 mb-n1" />
+            Execution Improvements
+        </MudText>
+    </MudStack>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+        <MudText Typo="Typo.h5" Class="mud-text-secondary">
+            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Class="mr-2 mb-n1" />
+            Execution Improvements
+        </MudText>
+        <MudButton StartIcon="@Icons.Material.Filled.Add"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="OpenCreateDialog">
+            New Improvement
+        </MudButton>
+    </MudStack>
+    @if (_loading)
+    {
+        @for (int i = 0; i < 3; i++)
+        {
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="120px" Class="mb-3" />
+        }
+    }
+    else if (_improvements.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">No improvements found.</MudAlert>
+    }
+    else
+    {
+        <MudExpansionPanels MultiExpansion="true">
+            @foreach (var improvement in _improvements)
+            {
+                <MudExpansionPanel>
+                    <TitleContent>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Size="Size.Small" Color="Color.Primary" />
+                            <MudText Typo="Typo.subtitle1" Style="font-weight:600">@improvement.Name</MudText>
+                            @if (!string.IsNullOrEmpty(improvement.Description))
+                            {
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">@improvement.Description</MudText>
+                            }
+                            <MudSpacer />
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default">
+                                @improvement.HistoreImproveds.Count entries
+                            </MudChip>
+                            @{
+                                var improved = improvement.HistoreImproveds.Count(h => h.IsImproved == true);
+                            }
+                            @if (improved > 0)
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Success">
+                                    @improved improved
+                                </MudChip>
+                            }
+                        </MudStack>
+                    </TitleContent>
+                    <ChildContent>
+                        <ExecutionImprovementPanel ImprovementId="@improvement.Id" />
+                    </ChildContent>
+                </MudExpansionPanel>
+            }
+        </MudExpansionPanels>
+    }
+
+</MudPaper>
+
+@code {
+    private List<ExecutionImprovementDTO> _improvements = [];
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _improvements = await Api.GetAllAsync();
+        _loading = false;
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var dto = new ExecutionImprovementDTO();
+        var parameters = new DialogParameters
+    {
+        { nameof(ExecutionImprovementDialog.Model), dto }
+    };
+
+        var dialog = await DialogService.ShowAsync<ExecutionImprovementDialog>("New Improvement", parameters);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: ExecutionImprovementDTO created })
+        {
+            _improvements.Add(created);
+        }
+    }
+}

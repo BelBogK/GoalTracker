@@ -1,5 +1,7 @@
 ﻿@page "/do-it-lists"
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
 @using GoalTracker.Shared
 @using MudBlazor
 @using GoalTracker.Client.Feautures.Lists
@@ -92,7 +94,36 @@
                         <MudProgressLinear Value="@pct" Color="Color.Success" Rounded="true" Size="Size.Small" Class="mb-2" />
                         <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2">@done / @total done</MudText>
                     }
-
+                    <!-- Add item inline -->
+                    @if (_addingItemListId == list.Id)
+                    {
+                        <div class="add-item-form">
+                            <MudTextField @bind-Value="_newItemName"
+                                          Placeholder="Item name"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Immediate="true" />
+                            <MudTextField @bind-Value="_newItemLink"
+                                          Placeholder="Link (optional)"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense" />
+                            <MudStack Row="true" Spacing="1">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                                           OnClick="() => ConfirmAddItem(list)">Add</MudButton>
+                                <MudButton Size="Size.Small" OnClick="CancelAddItem">Cancel</MudButton>
+                            </MudStack>
+                        </div>
+                    }
+                    else
+                    {
+                        <MudButton StartIcon="@Icons.Material.Filled.Add"
+                                   Size="Size.Small"
+                                   Variant="Variant.Text"
+                                   Class="mt-1"
+                                   OnClick="() => StartAddItem(list.Id)">
+                            Add item
+                        </MudButton>
+                    }
                     <!-- Items -->
                     @foreach (var item in list.Items.OrderBy(i => i.IsFinished))
                     {
@@ -139,39 +170,7 @@
                                 }
                             </div>
                         </div>
-                    }
-
-                    <!-- Add item inline -->
-                    @if (_addingItemListId == list.Id)
-                    {
-                        <div class="add-item-form">
-                            <MudTextField @bind-Value="_newItemName"
-                                          Placeholder="Item name"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense"
-                                          Immediate="true" />
-                            <MudTextField @bind-Value="_newItemLink"
-                                          Placeholder="Link (optional)"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense" />
-                            <MudStack Row="true" Spacing="1">
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
-                                           OnClick="() => ConfirmAddItem(list)">Add</MudButton>
-                                <MudButton Size="Size.Small" OnClick="CancelAddItem">Cancel</MudButton>
-                            </MudStack>
-                        </div>
-                    }
-                    else
-                    {
-                        <MudButton StartIcon="@Icons.Material.Filled.Add"
-                                   Size="Size.Small"
-                                   Variant="Variant.Text"
-                                   Class="mt-1"
-                                   OnClick="() => StartAddItem(list.Id)">
-                            Add item
-                        </MudButton>
-                    }
-
+                    } 
                 </MudPaper>
             }
 

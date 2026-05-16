@@ -1,6 +1,9 @@
 ﻿@page "/Task/{id:int}"
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
 @using GoalTracker.Client.Pages.Components
+@using GoalTracker.Client.Pages.Components.Improve
 @using GoalTracker.Shared
 @using GoalTracker.Shared.Enums
 @using MudBlazor
@@ -141,6 +144,12 @@ else
                     @(_task.Procents >= 0 ? "+" : "")@_task.Procents%
                 </MudText>
             }
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Style="margin-bottom: 4px;">
+                Improvements(make it faster and easier)
+            </MudText>
+            <EntityImprovementsChips EntityId="@_task.Id" Type="TrackedEntitiesType.Task" />
         </MudItem>
     </MudGrid>
 

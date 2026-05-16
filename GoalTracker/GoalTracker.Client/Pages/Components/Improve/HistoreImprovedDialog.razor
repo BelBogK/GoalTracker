@@ -1,0 +1,74 @@
+﻿@using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
+@using GoalTracker.Shared.ImproveWorking
+@using MudBlazor
+@inject IDialogService DialogService
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="3">
+
+            <MudDatePicker @bind-Date="_date"
+                           Label="Start date"
+                           Variant="Variant.Outlined" />
+
+            <MudSelect T="TrackedEntitiesType" @bind-Value="Model.TrackedEntitiesType"
+                       Label="Entity type"
+                       Variant="Variant.Outlined">
+                @foreach (TrackedEntitiesType t in Enum.GetValues<TrackedEntitiesType>())
+                {
+                    <MudSelectItem T="TrackedEntitiesType" Value="t">@t</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudNumericField @bind-Value="Model.EntityeId"
+                             Label="Entity ID"
+                             Variant="Variant.Outlined" />
+
+            <MudTextField @bind-Value="Model.Comments"
+                          Label="Comments"
+                          Lines="3"
+                          Variant="Variant.Outlined" />
+
+            <MudTextField @bind-Value="Model.Result"
+                          Label="Result"
+                          Lines="3"
+                          Variant="Variant.Outlined" />
+
+            <MudSelect T="bool?" @bind-Value="Model.IsImproved"
+                       Label="Is Improved?"
+                       Variant="Variant.Outlined"
+                       Clearable="true">
+                <MudSelectItem T="bool?" Value="@((bool?)true)">Yes</MudSelectItem>
+                <MudSelectItem T="bool?" Value="@((bool?)false)">No</MudSelectItem>
+            </MudSelect>
+
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public HistoreImprovedDTO Model { get; set; } = new();
+    [Parameter] public bool IsNew { get; set; }
+
+    private DateTime? _date;
+
+    protected override void OnParametersSet()
+    {
+        _date = Model.StartImprove == default ? DateTime.Today : Model.StartImprove;
+    }
+
+    private void Submit()
+    {
+        Model.StartImprove = _date ?? DateTime.Today;
+        MudDialog.Close(DialogResult.Ok(Model));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

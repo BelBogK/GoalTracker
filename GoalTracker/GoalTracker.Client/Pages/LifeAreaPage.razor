@@ -1,5 +1,7 @@
 ﻿@page "/life-area"
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
 @using GoalTracker.Shared
 @using MudBlazor
 @inject GoalTracker.Client.Feautures.LifeAreas.LifeAreaApiClient LifeAreaApi

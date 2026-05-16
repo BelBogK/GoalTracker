@@ -78,9 +78,9 @@ namespace GoalTracker.Infrastructure.Repositories
         public async Task<IEnumerable<LifeArea>> TrackedTask(string userId, DateTime from, DateTime to)
         {
             await using var context = await contextFactory.CreateDbContextAsync();
-            var trackedTaskIds = context.DailyTrackers.Where(x => x.UserId == userId).Select(t => t.TaskItemId);
-             
-            return await lifeAreaRepository.GetLifeAreasByTaskIdsAsync(trackedTaskIds);
+            //var trackedTaskIds = context.DailyTrackers.Where(x => x.UserId == userId).Select(t => t.TaskItemId);
+             var taskNonManaged=await context.TaskItems.Where(x=>x.UserId==userId && x.StartAt<=DateTime.MinValue && x.CurrentStatus<CurrentStatus.Completed).Select(x=>x.Id).ToListAsync();
+            return await lifeAreaRepository.GetLifeAreasByTaskIdsAsync(taskNonManaged);
         }
 
         public Task UpdateStatusTask(int taskId, CurrentStatus newStatus)

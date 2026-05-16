@@ -1,5 +1,7 @@
 ﻿@page "/TaskManager"
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
 @using GoalTracker.Client.Pages.Components
 @using GoalTracker.Client.Pages.Components.ModelComponents
 @using GoalTracker.Shared
@@ -49,7 +51,7 @@
 @* Tracked tasks *@
 <MudText Typo="Typo.h6" Style="margin-bottom: 12px;">
     <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" Style="margin-right: 6px;" />
-    Tracked tasks
+    Tracked tasks NotPlanned
 </MudText>
 
 @if (_trackedLoading)

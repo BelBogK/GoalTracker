@@ -62,6 +62,7 @@
                 <MudNumericField @bind-Value="context.Procents" Margin="Margin.Dense"
                 Min="-100" Max="100" Adornment="Adornment.End" AdornmentText="%" />
             </MudTd>
+            <MudTd><MudTextField @bind-Value="context.StartAt" Margin="Margin.Dense" /></MudTd>
             <MudTd>
                 <MudSelect @bind-Value="context.CurrentStatus" T="CurrentStatus" Margin="Margin.Dense">
                     @foreach (var s in Enum.GetValues<CurrentStatus>())
@@ -92,6 +93,13 @@
                     @(context.Procents >= 0 ? "+" : "")@context.Procents%
                 </MudText>
             </MudTd>
+            <MudTh>
+                <MudDatePicker Date="@(context.StartAt == DateTime.MinValue ? null : context.StartAt)"
+                               DateChanged="@(d => context.StartAt = d ?? DateTime.Today)"
+                               Label="Start date"
+                               PickerVariant="PickerVariant.Dialog"
+                               InitialPickerYear="@DateTime.Today.Year" />
+            </MudTh>
             <MudTd>
                 @{
                     var (color, icon) = GetStatusStyle(context.CurrentStatus);

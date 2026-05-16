@@ -1,5 +1,7 @@
 ﻿@page "/Goals"
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
 @using GoalTracker.Client.Pages.Components
 @using MudBlazor
 @using GoalTracker.Shared
@@ -12,6 +14,10 @@
 <MudSnackbarProvider />
 <MudPopoverProvider />
 <h3>Goals</h3> 
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ma-4" OnClick="OpenCreateDialog">
+    Add goal
+</MudButton>
 @if (_goals.Count == 0)
 {
     <MudText Class="ma-4">No goals found.</MudText>
@@ -19,7 +25,7 @@
 else
 {
     <MudExpansionPanels MultiExpansion="true"> 
-      @foreach (var goal in _goals)
+      @foreach (var goal in _goals.Where(x=>x.CurrentStatus<Shared.Enums.CurrentStatus.OnHold))
 {
     var g = goal;
     <MudExpansionPanel Text="@g.Name" MaxHeight="1000"
@@ -31,12 +37,39 @@ else
     </MudExpansionPanel>
 }
         </MudExpansionPanels>
+
+        
+    <h3>Goasl hold or waite</h3>
+    <MudExpansionPanels MultiExpansion="true">
+        @foreach (var goal in _goals.Where(x => x.CurrentStatus == Shared.Enums.CurrentStatus.OnHold))
+        {
+            var g = goal;
+            <MudExpansionPanel Text="@g.Name" MaxHeight="1000"
+                               ExpandedChanged="@(() => OnPanelExpanded( g.Id))">
+                @if (_expandedGoals.Contains(g.Id))
+                {
+                    <GoalView Goal="@g" OnUpdated="UpdateGoal" />
+                }
+            </MudExpansionPanel>
+        }
+    </MudExpansionPanels>
+
+    <h3>Finished work on </h3>
+    <MudExpansionPanels MultiExpansion="true">
+        @foreach (var goal in _goals.Where(x => x.CurrentStatus > Shared.Enums.CurrentStatus.OnHold))
+        {
+            var g = goal;
+            <MudExpansionPanel Text="@g.Name" MaxHeight="1000"
+                               ExpandedChanged="@(() => OnPanelExpanded( g.Id))">
+                @if (_expandedGoals.Contains(g.Id))
+                {
+                    <GoalView Goal="@g" OnUpdated="UpdateGoal" />
+                }
+            </MudExpansionPanel>
+        }
+    </MudExpansionPanels>
 }
 
-
-<MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ma-4" OnClick="OpenCreateDialog">
-    Add goal
-</MudButton>
 
 @code {
     private List<GoalDTO> _goals { get; set; } = [];

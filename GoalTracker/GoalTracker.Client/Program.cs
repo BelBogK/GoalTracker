@@ -20,6 +20,7 @@ builder.Services.AddScoped<GoalTracker.Client.Feautures.LifeAreas.LifeAreaApiCli
 builder.Services.AddScoped<GoalTracker.Client.Feautures.Projects.ProjectsAPIClient>();
 builder.Services.AddScoped<GoalTracker.Client.Feautures.Tasks.TaskItemApiClient>();
 builder.Services.AddScoped<GoalTracker.Client.Feautures.Lists.DoItListApiClient>();
+builder.Services.AddScoped<GoalTracker.Client.Feautures.Inprove.ExecutionImprovementApiClient>();
 builder.Services.AddScoped<GoalScenarioApiClient>();
 
 await builder.Build().RunAsync();

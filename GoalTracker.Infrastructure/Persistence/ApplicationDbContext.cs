@@ -1,5 +1,6 @@
 using GoalTracker.Domain.Entities;
 using GoalTracker.Domain.Entities.Base;
+using GoalTracker.Domain.Entities.ImproveWorking;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
@@ -25,6 +26,8 @@ namespace GoalTracker.Data
         public DbSet<TaskDailyTracker> DailyTrackers { get; set; } 
         public DbSet<DoItList> DoItLists { get; set; }
         public DbSet<DoItListItem> DoItListItems { get; set; }
+        public DbSet<ExecutionImprovement> ExecutionImprovements { get; set; }
+        public DbSet<HistoreImproved> HistoreImproveds { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder); 

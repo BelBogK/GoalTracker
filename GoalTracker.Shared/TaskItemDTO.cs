@@ -23,6 +23,7 @@ namespace GoalTracker.Shared
         public DateTime Created { get; set; }
         public CurrentStatus CurrentStatus { get; set; }
         public int AchievePoints { get; }
+        public bool Overdue => StartAt.HasValue && DateTime.Now >= StartAt.Value.AddDays(1) && CurrentStatus<CurrentStatus.OnHold;
         public ICollection<ProjectDTO> Projects { get; set; } = new List<ProjectDTO>();
         public List<EntityPathDto> Path { get; set; }
     }

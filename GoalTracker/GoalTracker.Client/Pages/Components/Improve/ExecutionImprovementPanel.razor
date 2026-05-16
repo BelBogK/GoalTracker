@@ -1,0 +1,245 @@
+﻿@using GoalTracker.Client.Feautures.Inprove
+@using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
+@using GoalTracker.Shared.ImproveWorking
+@using MudBlazor
+@inject ExecutionImprovementApiClient Api
+@inject IDialogService DialogService
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (_improvement is null)
+{
+    <MudAlert Severity="Severity.Info">No improvement data found.</MudAlert>
+}
+else
+{
+    <MudPaper Class="pa-4" Elevation="2">
+
+        <!-- ── Header ── -->
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
+            <div>
+                <MudText Typo="Typo.h6">@_improvement.Name</MudText>
+                @if (!string.IsNullOrEmpty(_improvement.Description))
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@_improvement.Description</MudText>
+                }
+            </div>
+            <MudButton StartIcon="@Icons.Material.Filled.Add"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       OnClick="OpenAddDialog">
+                Add Improve
+            </MudButton>
+        </MudStack>
+
+        <!-- ── Current (filtered by EntityId+Type) ── -->
+        @if (EntityId.HasValue && TrackedEntitiesType.HasValue && _current.Count > 0)
+        {
+            <MudText Typo="Typo.subtitle2" Class="mb-2">Current</MudText>
+            <MudTable T="HistoreImprovedDTO"
+                      Items="@_current"
+                      Dense="true" Hover="true" Class="mb-4">
+                <HeaderContent>
+                    <MudTh>Date</MudTh>
+                    <MudTh>Comments</MudTh>
+                    <MudTh>Result</MudTh>
+                    <MudTh>Improved</MudTh>
+                    <MudTh Style="width:80px"></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    @HistoryRow(context)
+                </RowTemplate>
+            </MudTable>
+            <MudDivider Class="mb-4" />
+        }
+
+        <!-- ── Full history ── -->
+        <MudText Typo="Typo.subtitle2" Class="mb-2">All History</MudText>
+        @if (_improvement.HistoreImproveds.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-disabled">No history yet.</MudText>
+        }
+        else
+        {
+            <MudTable T="HistoreImprovedDTO"
+                      Items="@_improvement.HistoreImproveds.OrderByDescending(h => h.StartImprove)"
+                      Dense="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Date</MudTh>
+                    <MudTh>Type</MudTh>
+                    <MudTh>Comments</MudTh>
+                    <MudTh>Result</MudTh>
+                    <MudTh>Improved</MudTh>
+                    <MudTh Style="width:80px"></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.StartImprove.ToString("dd.MM.yyyy")</MudTd>
+                    <MudTd>
+                        <MudChip T="string" Size="Size.Small" Color="@GetTypeColor(context.TrackedEntitiesType)">
+                            @context.TrackedEntitiesType
+                        </MudChip>
+                    </MudTd>
+                    <MudTd>@context.Comments</MudTd>
+                    <MudTd>@context.Result</MudTd>
+                    <MudTd>
+                        @ImprovedBadge(context.IsImproved)
+                    </MudTd>
+                    <MudTd>
+                        <MudStack Row="true" Spacing="0">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                           OnClick="() => OpenEditDialog(context)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                                           Color="Color.Error"
+                                           OnClick="() => DeleteHistory(context)" />
+                        </MudStack>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+
+    </MudPaper>
+}
+
+@code {
+    // ── Parameters ────────────────────────────────────────────────────────────
+
+    /// <summary>Load by improvement ID directly.</summary>
+    [Parameter] public int? ImprovementId { get; set; }
+
+    /// <summary>Load by entity — also filters Current table.</summary>
+    [Parameter] public int? EntityId { get; set; }
+    [Parameter] public TrackedEntitiesType? TrackedEntitiesType { get; set; }
+
+    // ── State ─────────────────────────────────────────────────────────────────
+
+    private ExecutionImprovementDTO? _improvement;
+    private List<HistoreImprovedDTO> _current = [];
+    private bool _loading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+
+        if (ImprovementId.HasValue)
+        {
+            _improvement = await Api.GetByIdAsync(ImprovementId.Value);
+        }
+        else if (EntityId.HasValue && TrackedEntitiesType.HasValue)
+        {
+            _improvement = await Api.GetByEntityAsync(EntityId.Value, TrackedEntitiesType.Value);
+        }
+
+        if (_improvement is not null && EntityId.HasValue && TrackedEntitiesType.HasValue)
+        {
+            _current = _improvement.HistoreImproveds
+                .Where(h => h.EntityeId == EntityId.Value && h.TrackedEntitiesType == TrackedEntitiesType.Value)
+                .OrderByDescending(h => h.StartImprove)
+                .ToList();
+        }
+
+        _loading = false;
+    }
+
+    // ── Dialogs ───────────────────────────────────────────────────────────────
+
+    private async Task OpenAddDialog()
+    {
+        var dto = new HistoreImprovedDTO
+        {
+            StartImprove = DateTime.Today,
+            TrackedEntitiesType = TrackedEntitiesType ?? Shared.Enums.TrackedEntitiesType.Task,
+            EntityeId = EntityId ?? 0
+        };
+        await OpenDialog(dto, isNew: true);
+    }
+
+    private async Task OpenEditDialog(HistoreImprovedDTO dto) =>
+        await OpenDialog(dto, isNew: false);
+
+    private async Task OpenDialog(HistoreImprovedDTO dto, bool isNew)
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(HistoreImprovedDialog.Model), dto },
+            { nameof(HistoreImprovedDialog.IsNew), isNew }
+        };
+
+        var dialog = await DialogService.ShowAsync<HistoreImprovedDialog>(
+            isNew ? "Add Improvement" : "Edit Improvement", parameters);
+
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: HistoreImprovedDTO saved })
+        {
+            if (isNew)
+            {
+                var created = await Api.AddHistoryAsync(_improvement!.Id, saved);
+                _improvement.HistoreImproveds.Add(created);
+                if (EntityId.HasValue && TrackedEntitiesType.HasValue &&
+                    created.EntityeId == EntityId.Value && created.TrackedEntitiesType == TrackedEntitiesType.Value)
+                    _current.Add(created);
+            }
+            else
+            {
+                await Api.UpdateHistoryAsync(_improvement!.Id, saved);
+                var idx = _improvement.HistoreImproveds.FindIndex(h => h.Id == saved.Id);
+                if (idx >= 0) _improvement.HistoreImproveds[idx] = saved;
+                RefreshCurrent();
+            }
+        }
+    }
+
+    private async Task DeleteHistory(HistoreImprovedDTO dto)
+    {
+        await Api.DeleteHistoryAsync(_improvement!.Id, dto.Id);
+        _improvement.HistoreImproveds.RemoveAll(h => h.Id == dto.Id);
+        RefreshCurrent();
+    }
+
+    private void RefreshCurrent()
+    {
+        if (!EntityId.HasValue || !TrackedEntitiesType.HasValue) return;
+        _current = _improvement!.HistoreImproveds
+            .Where(h => h.EntityeId == EntityId.Value && h.TrackedEntitiesType == TrackedEntitiesType.Value)
+            .OrderByDescending(h => h.StartImprove)
+            .ToList();
+    }
+
+    // ── Render helpers ────────────────────────────────────────────────────────
+
+    private RenderFragment HistoryRow(HistoreImprovedDTO context) =>
+        @<text>
+            <MudTd>@context.StartImprove.ToString("dd.MM.yyyy")</MudTd>
+            <MudTd>@context.Comments</MudTd>
+            <MudTd>@context.Result</MudTd>
+            <MudTd>@ImprovedBadge(context.IsImproved)</MudTd>
+            <MudTd>
+                <MudStack Row="true" Spacing="0">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                   OnClick="() => OpenEditDialog(context)" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                                   Color="Color.Error" OnClick="() => DeleteHistory(context)" />
+                </MudStack>
+            </MudTd>
+        </text>;
+
+    private static RenderFragment ImprovedBadge(bool? isImproved) => isImproved switch
+    {
+    true => @<MudChip T="string" Color="Color.Success" Size="Size.Small">Yes</MudChip>,
+        false => @<MudChip T="string" Color="Color.Error" Size="Size.Small">No</MudChip>,
+        null => @<MudChip T="string" Color="Color.Default" Size="Size.Small">—</MudChip>
+        };
+
+    private static Color GetTypeColor(TrackedEntitiesType t) => t switch
+    {
+        Shared.Enums.TrackedEntitiesType.Area => Color.Secondary,
+        Shared.Enums.TrackedEntitiesType.Goal => Color.Primary,
+        Shared.Enums.TrackedEntitiesType.Scenario => Color.Tertiary,
+        Shared.Enums.TrackedEntitiesType.Project => Color.Info,
+        Shared.Enums.TrackedEntitiesType.Task => Color.Warning,
+        _ => Color.Default
+    };
+}

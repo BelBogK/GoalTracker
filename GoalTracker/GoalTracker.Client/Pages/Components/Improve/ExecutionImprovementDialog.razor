@@ -1,0 +1,41 @@
+﻿@using GoalTracker.Shared.ImproveWorking
+@using GoalTracker.Client.Feautures.Inprove
+@using MudBlazor
+@inject ExecutionImprovementApiClient Api
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudTextField @bind-Value="Model.Name"
+                          Label="Name"
+                          Variant="Variant.Outlined"
+                          Required="true" />
+            <MudTextField @bind-Value="Model.Description"
+                          Label="Description"
+                          Lines="3"
+                          Variant="Variant.Outlined" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="@string.IsNullOrWhiteSpace(Model.Name)"
+                   OnClick="Submit">
+            Create
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public ExecutionImprovementDTO Model { get; set; } = new();
+
+    private async Task Submit()
+    {
+        var created = await Api.CreateAsync(Model);
+        MudDialog.Close(DialogResult.Ok(created));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

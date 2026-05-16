@@ -1,0 +1,77 @@
+﻿@using GoalTracker.Shared.ImproveWorking
+@using GoalTracker.Shared.Enums
+@using GoalTracker.Client.Feautures.Inprove
+@using MudBlazor
+@inject ExecutionImprovementApiClient Api
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudSelect T="ExecutionImprovementDTO"
+                       @bind-Value="_selected"
+                       Label="Select Improvement"
+                       Variant="Variant.Outlined"
+                       ToStringFunc="@(x => x?.Name ?? "")">
+                @foreach (var imp in _all)
+                {
+                    <MudSelectItem T="ExecutionImprovementDTO" Value="imp">@imp.Name</MudSelectItem>
+                }
+            </MudSelect>
+
+            @if (_selected is not null)
+            {
+                <MudDatePicker @bind-Date="_date" Label="Start date" Variant="Variant.Outlined" />
+                <MudTextField @bind-Value="_comments" Label="Comments" Lines="2" Variant="Variant.Outlined" />
+                <MudTextField @bind-Value="_result" Label="Result" Lines="2" Variant="Variant.Outlined" />
+                <MudSelect T="bool?" @bind-Value="_isImproved" Label="Is Improved?" Variant="Variant.Outlined" Clearable="true">
+                    <MudSelectItem T="bool?" Value="@((bool?)true)">Yes</MudSelectItem>
+                    <MudSelectItem T="bool?" Value="@((bool?)false)">No</MudSelectItem>
+                </MudSelect>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   Disabled="@(_selected is null)"
+                   OnClick="Submit">
+            Link
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public int EntityId { get; set; }
+    [Parameter] public TrackedEntitiesType Type { get; set; }
+
+    private List<ExecutionImprovementDTO> _all = [];
+    private ExecutionImprovementDTO? _selected;
+    private DateTime? _date = DateTime.Today;
+    private string? _comments;
+    private string? _result;
+    private bool? _isImproved;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _all = await Api.GetAllAsync();
+    }
+
+    private async Task Submit()
+    {
+        var dto = new HistoreImprovedDTO
+        {
+            StartImprove = _date ?? DateTime.Today,
+            Comments = _comments,
+            Result = _result,
+            IsImproved = _isImproved,
+            TrackedEntitiesType = Type,
+            EntityeId = EntityId
+        };
+        var created = await Api.AddHistoryAsync(_selected!.Id, dto);
+        _selected.HistoreImproveds.Add(created);
+        MudDialog.Close(DialogResult.Ok(_selected));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

@@ -1,4 +1,5 @@
-﻿using GoalTracker.Features.Goal;
+﻿using GoalTracker.Features.ExecutionImprovements;
+using GoalTracker.Features.Goal;
 using GoalTracker.Features.GoalScenario;
 using GoalTracker.Features.Lists;
 using GoalTracker.Features.TaskItem;
@@ -15,6 +16,7 @@ namespace GoalTracker.Features
             MappingsForTaskItem.Map(app);
             GoalScenarioEndpoints.Map(app);
             DoItListEndpoints.Map(app);
+            ExecutionImprovementEndpoints.Map(app);
         }
     }
 }

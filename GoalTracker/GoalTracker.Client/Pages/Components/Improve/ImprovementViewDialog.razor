@@ -1,0 +1,56 @@
+﻿@using GoalTracker.Shared.ImproveWorking
+@using MudBlazor
+
+<MudDialog>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(Improvement.Description))
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">@Improvement.Description</MudText>
+        }
+
+        @if (Improvement.HistoreImproveds.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info">No history entries.</MudAlert>
+        }
+        else
+        {
+            <MudTable T="HistoreImprovedDTO"
+                      Items="@Improvement.HistoreImproveds.OrderByDescending(h => h.StartImprove)"
+                      Dense="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Date</MudTh>
+                    <MudTh>Comments</MudTh>
+                    <MudTh>Result</MudTh>
+                    <MudTh>Improved</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.StartImprove.ToString("dd.MM.yyyy")</MudTd>
+                    <MudTd>@context.Comments</MudTd>
+                    <MudTd>@context.Result</MudTd>
+                    <MudTd>
+                        @switch (context.IsImproved)
+                        {
+                            case true:
+                                <MudChip T="string" Color="Color.Success" Size="Size.Small">Yes</MudChip>
+                                break;
+                            case false:
+                                <MudChip T="string" Color="Color.Error" Size="Size.Small">No</MudChip>
+                                break;
+                            default:
+                                <MudChip T="string" Color="Color.Default" Size="Size.Small">—</MudChip>
+                                break;
+                        }
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => MudDialog.Cancel())">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public ExecutionImprovementDTO Improvement { get; set; } = new();
+}

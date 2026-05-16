@@ -1,0 +1,89 @@
+﻿@using GoalTracker.Shared.ImproveWorking
+@using GoalTracker.Shared.Enums
+@using GoalTracker.Client.Feautures.Inprove
+@using MudBlazor
+@inject ExecutionImprovementApiClient Api
+@inject IDialogService DialogService
+@if (_improvements.Count > 0)
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="1">
+        @foreach (var imp in _improvements)
+        {
+            <MudTooltip Text="@($"{imp.HistoreImproveds.Count} history entries")">
+                <MudChip T="string"
+                         Color="@GetChipColor(imp)"
+                         Size="Size.Small"
+                         Variant="Variant.Outlined"
+                         OnClick="() => OpenImprovement(imp)"
+                         Class="cursor-pointer">
+                    <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Size="Size.Small" Class="mr-1" />
+                    @imp.Name
+                </MudChip>
+            </MudTooltip>
+        }
+        <MudIconButton Icon="@Icons.Material.Filled.Add"
+                       Size="Size.Small"
+                       Title="Link improvement"
+                       OnClick="OpenLinkDialog" />
+    </MudStack>
+}
+else
+{
+    <MudIconButton Icon="@Icons.Material.Filled.Add"
+                   Size="Size.Small"
+                   Title="Link improvement"
+                   OnClick="OpenLinkDialog" />
+}
+
+@code {
+    [Parameter, EditorRequired] public int EntityId { get; set; }
+    [Parameter, EditorRequired] public TrackedEntitiesType Type { get; set; }
+
+    private List<ExecutionImprovementDTO> _improvements = [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _improvements = await Api.GetByEntitysAsync(EntityId, Type);
+    }
+
+    private async Task OpenImprovement(ExecutionImprovementDTO improvement)
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(ImprovementViewDialog.Improvement), improvement }
+        };
+        await DialogService.ShowAsync<ImprovementViewDialog>(improvement.Name, parameters);
+    }
+
+    private static Color GetChipColor(ExecutionImprovementDTO imp)
+    {
+        if (!imp.HistoreImproveds.Any()) return Color.Default;
+        var last = imp.HistoreImproveds.MaxBy(h => h.StartImprove);
+        return last?.IsImproved switch
+        {
+            true => Color.Success,
+            false => Color.Error,
+            null => Color.Warning
+        };
+    }
+    private async Task OpenLinkDialog()
+    {
+        var parameters = new DialogParameters
+    {
+        { nameof(LinkImprovementDialog.EntityId), EntityId },
+        { nameof(LinkImprovementDialog.Type), Type }
+    };
+
+        var dialog = await DialogService.ShowAsync<LinkImprovementDialog>("Link Improvement", parameters);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: ExecutionImprovementDTO linked })
+        {
+            var existing = _improvements.FirstOrDefault(i => i.Id == linked.Id);
+            if (existing is null)
+                _improvements.Add(linked);
+            else
+                existing.HistoreImproveds = linked.HistoreImproveds;
+        }
+    }
+}

@@ -47,7 +47,7 @@
                 {
                     @foreach (var task in dayTasks)
                     {
-                        <div class="day-task">
+                        <div class="day-task @(task.Overdue ? "day-task--overdue" : "")">
                             <span class="task-status-icon"
                                   title="@task.CurrentStatus.ToString()"
                                   style="color:var(@GetStatusCssVar(task.CurrentStatus))">
@@ -102,6 +102,10 @@
 </MudPaper>
 
 <style> 
+    .day-task--overdue {
+        border-color: rgb(255, 0, 0)!important;
+        background: rgba(255, 111, 80, 0.15) !important;
+    }
 
     .day-footer {
         margin-top: auto;
