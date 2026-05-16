@@ -14,8 +14,8 @@ namespace GoalTracker.Infrastructure.UnitTests.Repositories
         private static ApplicationDbContext CreateContext()
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-       .UseSqlServer(
-            "Data Source=SQL6034.site4now.net;Initial Catalog=db_ac9309_goaltracker;User Id=db_ac9309_goaltracker_admin;Password=sdfsdf332;Encrypt=True;TrustServerCertificate=True;")
+       .UseSqlServer( 
+            )
        .Options;
 
             var context = new ApplicationDbContext(options);

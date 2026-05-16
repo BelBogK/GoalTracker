@@ -168,7 +168,7 @@
             Created = DateTime.Now,
             CurrentStatus = CurrentStatus.Analyzing
         };
-        _tasks.Add(newTask);
+        _tasks.Insert(0, newTask);
         _editingRow = newTask;
         ApplyFilter();
     }
