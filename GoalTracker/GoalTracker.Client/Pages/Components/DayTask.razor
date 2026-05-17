@@ -103,14 +103,20 @@
 
 <style> 
     .day-task--overdue {
-        border-color: rgb(255, 0, 0)!important;
-        background: rgba(255, 111, 80, 0.15) !important;
+        border-color: rgb(255, 255, 0)!important;
+        background: rgba(255, 255, 0, 0.30) !important;
     }
 
     .day-task--completed {
         border-color: rgb(0, 255, 0) !important;
         background: rgba(0, 255, 0, 0.15) !important;
     }
+
+    .day-task--failed {
+        border-color: rgb(255, 0, 0) !important;
+        background: rgba(255, 111, 80, 0.15) !important;
+    }
+    
 
     .day-footer {
         margin-top: auto;
@@ -426,6 +432,8 @@
             return "day-task--overdue";
         if (task.IsCompleted)
             return "day-task--completed";
+        if (task.IsFailed)
+            return "day-task--failed";
         return "";
     }
 }

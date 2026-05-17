@@ -25,6 +25,7 @@ namespace GoalTracker.Shared
         public int AchievePoints { get; }
         public bool Overdue => StartAt.HasValue && DateTime.Now >= StartAt.Value.AddDays(1) && CurrentStatus<CurrentStatus.OnHold;
         public bool IsCompleted => CurrentStatus < CurrentStatus.Failed && CurrentStatus > CurrentStatus.OnHold;
+        public bool IsFailed => CurrentStatus == CurrentStatus.Failed;
         public ICollection<ProjectDTO> Projects { get; set; } = new List<ProjectDTO>();
         public List<EntityPathDto> Path { get; set; }
     }
