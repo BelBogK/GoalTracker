@@ -19,7 +19,7 @@
 }
 else
 {
-    <DayTask Tasks="@_tasks" OnTaskStatusChanged="@HandleStatusChanged" />
+    <DayTask Tasks="@_tasks" OnTaskStatusChanged="@HandleStatusChanged" OnWeekChanged ="@HandleWeekChanged"/>
 }
 
 @code {
@@ -44,5 +44,10 @@ else
 
         task.CurrentStatus = args.NewStatus;
         await TaskApi.UpdateTaskAsync(task);
+    }
+
+    private async Task HandleWeekChanged(DateTime weekStart)
+    {
+        _tasks = await TaskApi.GetTasksForWeekAsync(weekStart, weekStart.AddDays(7));
     }
 }

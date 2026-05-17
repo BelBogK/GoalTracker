@@ -46,8 +46,8 @@
                 else
                 {
                     @foreach (var task in dayTasks)
-                    {
-                        <div class="day-task @(task.Overdue ? "day-task--overdue" : "")">
+                    {                         
+                        <div class="day-task @(GetTheme(task))">
                             <span class="task-status-icon"
                                   title="@task.CurrentStatus.ToString()"
                                   style="color:var(@GetStatusCssVar(task.CurrentStatus))">
@@ -105,6 +105,11 @@
     .day-task--overdue {
         border-color: rgb(255, 0, 0)!important;
         background: rgba(255, 111, 80, 0.15) !important;
+    }
+
+    .day-task--completed {
+        border-color: rgb(0, 255, 0) !important;
+        background: rgba(0, 255, 0, 0.15) !important;
     }
 
     .day-footer {
@@ -311,6 +316,9 @@
     [Parameter]
     public EventCallback<(int TaskId, CurrentStatus NewStatus)> OnTaskStatusChanged { get; set; }
 
+    [Parameter]
+    public EventCallback<DateTime> OnWeekChanged{ get; set; }
+
     // Active statuses that qualify a task to show (today or overdue)
     private static readonly HashSet<CurrentStatus> ActiveStatuses =
     [
@@ -370,8 +378,16 @@
             .ToList();
     }
 
-    private void PrevWeek() => _weekStart = _weekStart.AddDays(-7);
-    private void NextWeek() => _weekStart = _weekStart.AddDays(7);
+    private async Task PrevWeek()
+    {
+        _weekStart = _weekStart.AddDays(-7);
+        await OnWeekChanged.InvokeAsync(_weekStart);
+    }
+    private async Task NextWeek()
+    {
+        _weekStart = _weekStart.AddDays(7);
+        await OnWeekChanged.InvokeAsync(_weekStart);
+    }
 
     private async Task OnStatusChanged(TaskItemDTO task, CurrentStatus newStatus, string detailsId)
     {
@@ -403,4 +419,13 @@
         CurrentStatus.MaybeInOneDay => "<svg viewBox='0 0 24 24'><path d='M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z'/></svg>",
         _ => "<svg viewBox='0 0 24 24'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z'/></svg>"
     };
+
+    private string GetTheme(TaskItemDTO task)
+    {
+        if (task.Overdue)
+            return "day-task--overdue";
+        if (task.IsCompleted)
+            return "day-task--completed";
+        return "";
+    }
 }
