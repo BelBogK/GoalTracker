@@ -21,6 +21,7 @@ builder.Services.AddScoped<GoalTracker.Client.Feautures.Projects.ProjectsAPIClie
 builder.Services.AddScoped<GoalTracker.Client.Feautures.Tasks.TaskItemApiClient>();
 builder.Services.AddScoped<GoalTracker.Client.Feautures.Lists.DoItListApiClient>();
 builder.Services.AddScoped<GoalTracker.Client.Feautures.Inprove.ExecutionImprovementApiClient>();
+builder.Services.AddScoped<GoalTracker.Client.Feautures.DayComment.DayCommentApiClient>();
 builder.Services.AddScoped<GoalScenarioApiClient>();
 
 await builder.Build().RunAsync();

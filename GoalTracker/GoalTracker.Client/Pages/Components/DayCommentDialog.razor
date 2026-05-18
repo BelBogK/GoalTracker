@@ -1,0 +1,32 @@
+﻿@using GoalTracker.Shared
+@using GoalTracker.Shared.Enums
+@using MudBlazor
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Comment for @CommentDto.Date.ToString("dd.MM.yyyy")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudSelect @bind-Value="CommentDto.DayScore" Label="Day Score" AnchorOrigin="Origin.BottomCenter" Class="mb-4">
+            <MudSelectItem Value="DayScore.None">No Score</MudSelectItem>
+            <MudSelectItem Value="DayScore.Bad">Bad 😞</MudSelectItem>
+            <MudSelectItem Value="DayScore.Normal">Normal 😐</MudSelectItem>
+            <MudSelectItem Value="DayScore.Good">Good 🙂</MudSelectItem>
+            <MudSelectItem Value="DayScore.SuperGood">Super Good ! 🚀</MudSelectItem>
+        </MudSelect>
+
+        <MudTextField T="string" Label="Comment" @bind-Value="CommentDto.Comment" 
+        Lines="4" Variant="Variant.Outlined" Counter="200" MaxLength="200"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public DayCommentDTO CommentDto { get; set; } = new();
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(CommentDto));
+    private void Cancel() => MudDialog.Cancel();
+}

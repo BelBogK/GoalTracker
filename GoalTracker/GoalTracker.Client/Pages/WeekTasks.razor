@@ -5,9 +5,14 @@
 @using GoalTracker.Client.Feautures.Tasks
 @using GoalTracker.Client.Pages.Components
 @using GoalTracker.Shared
-@using GoalTracker.Shared.Enums
+@using GoalTracker.Shared.Enums 
 @using MudBlazor
 @inject TaskItemApiClient TaskApi
+@inject GoalTracker.Client.Feautures.DayComment.DayCommentApiClient CommentApi
+@inject IDialogService DialogService
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
 
 @if (_loading)
 {
@@ -18,24 +23,127 @@
     }
 }
 else
-{
-    <DayTask Tasks="@_tasks" OnTaskStatusChanged="@HandleStatusChanged" OnWeekChanged ="@HandleWeekChanged"/>
+{ 
+    <DayTask Tasks="@_tasks" OnTaskStatusChanged="@HandleStatusChanged" OnWeekChanged="@HandleWeekChanged" />
+
+    <MudDivider Class="my-6" />
+
+    <MudText Typo="Typo.h5" Class="mb-4">Комментарии к дням недели</MudText>
+    <MudGrid>
+        @foreach (var dayDate in _currentWeekDays)
+        {
+            var comment = _comments.FirstOrDefault(c => c.Date == dayDate)
+                          ?? new DayCommentDTO { Date = dayDate, Comment = "", DayScore = DayScore.None };
+
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Outlined="true" Elevation="1" Style="height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+                    <MudCardHeader Class="pb-1">
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.subtitle1" FontStyle="FontStyle.Italic">
+                                @dayDate.ToString("dd.MM (dddd)")
+                                @GetScoreEmoji(comment.DayScore)
+                            </MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           OnClick="@(() => OpenCommentDialog(comment))" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent Class="pt-1">
+                        @if (string.IsNullOrWhiteSpace(comment.Comment))
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Style="min-height: 40px;">
+                                <i>No comments...</i>
+                            </MudText>
+                        }
+                        else
+                        {
+                            <!-- Ограничение в 2 строки текста -->
+                            <MudText Typo="Typo.body2" MaxLines="2" Style="min-height: 40px; word-break: break-word;">
+                                @comment.Comment
+                            </MudText>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
 }
 
 @code {
     private List<TaskItemDTO> _tasks = [];
+    private List<DayCommentDTO> _comments = [];
+    private List<DateOnly> _currentWeekDays = [];
     private bool _loading = true;
+    private DateTime _currentWeekStart;
 
     protected override async Task OnInitializedAsync()
     {
         var today = DateTime.Today;
         int diff = ((int)today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
-        var weekStart = today.AddDays(-diff);
+        _currentWeekStart = today.AddDays(-diff);
+
+        await LoadWeekData(_currentWeekStart);
+    }
+
+    private async Task LoadWeekData(DateTime weekStart)
+    {
+        _loading = true;
+        _currentWeekStart = weekStart;
         var weekEnd = weekStart.AddDays(7);
 
-        _tasks = await TaskApi.GetTasksForWeekAsync(weekStart, weekEnd);
+        // Генерируем массив дней недели для рендеринга карточек
+        _currentWeekDays = Enumerable.Range(0, 7)
+            .Select(i => DateOnly.FromDateTime(weekStart.AddDays(i)))
+            .ToList();
+
+        // Загружаем параллельно задачи и комментарии
+        var tasksTask = TaskApi.GetTasksForWeekAsync(weekStart, weekEnd);
+        var commentsTask = CommentApi.GetCommentsForPeriodAsync(DateOnly.FromDateTime(weekStart), DateOnly.FromDateTime(weekEnd));
+
+        await Task.WhenAll(tasksTask, commentsTask);
+
+        _tasks = tasksTask.Result;
+        _comments = commentsTask.Result;
         _loading = false;
     }
+
+    private async Task OpenCommentDialog(DayCommentDTO currentComment)
+    {
+        // Создаем копию для редактирования, чтобы изменения не применялись мгновенно при отмене
+        var editModel = new DayCommentDTO
+        {
+            Date = currentComment.Date,
+            Comment = currentComment.Comment,
+            DayScore = currentComment.DayScore
+        };
+
+        var parameters = new DialogParameters<DayCommentDialog> { { x => x.CommentDto, editModel } };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<DayCommentDialog>("Редактировать комментарий", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: DayCommentDTO updatedDto })
+        {
+            _loading = true;
+            await CommentApi.SaveCommentAsync(updatedDto);
+
+            // Перезагружаем данные, чтобы отобразить изменения
+            await LoadWeekData(_currentWeekStart);
+        }
+    }
+
+    private string GetScoreEmoji(DayScore score) => score switch
+    {
+        DayScore.Bad => "😞",
+        DayScore.Normal => "😐",
+        DayScore.Good => "🙂",
+        DayScore.SuperGood => "🚀",
+        _ => ""
+    };
 
     private async Task HandleStatusChanged((int TaskId, CurrentStatus NewStatus) args)
     {
@@ -48,6 +156,6 @@ else
 
     private async Task HandleWeekChanged(DateTime weekStart)
     {
-        _tasks = await TaskApi.GetTasksForWeekAsync(weekStart, weekStart.AddDays(7));
+        await LoadWeekData(weekStart);
     }
 }

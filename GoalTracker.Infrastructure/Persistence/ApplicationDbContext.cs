@@ -28,8 +28,10 @@ namespace GoalTracker.Data
         public DbSet<DoItListItem> DoItListItems { get; set; }
         public DbSet<ExecutionImprovement> ExecutionImprovements { get; set; }
         public DbSet<HistoreImproved> HistoreImproveds { get; set; }
+        public DbSet<DayComment> DayComments { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
+            builder.Entity<DayComment>().HasKey(dc => new { dc.UserId, dc.Date });
             base.OnModelCreating(builder); 
             builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         }

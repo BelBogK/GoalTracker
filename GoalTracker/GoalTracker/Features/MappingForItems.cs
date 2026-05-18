@@ -17,6 +17,7 @@ namespace GoalTracker.Features
             GoalScenarioEndpoints.Map(app);
             DoItListEndpoints.Map(app);
             ExecutionImprovementEndpoints.Map(app);
+            DayComment.MapDayComment.Map(app);
         }
     }
 }
